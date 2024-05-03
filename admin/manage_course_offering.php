@@ -166,11 +166,11 @@ if (isset($_GET['program_id'])) {
         array['level'] = level;
         array['period'] = period;
         array['section_name'] = section_name;
-        // Assuming you have already defined these variables in your JavaScript or they are coming from somewhere else
-        var program_id = '<?php echo $program_code; ?>'; // Get the program_id from PHP
-        // Assuming you have an input element with the id 'section_name'
-        var section_name = $("#section_name").val(); // Get the section name from the input field
-        var curriculum_year = cy; // Use the selected curriculum year
+
+        var program_id = '<?php echo $program_code; ?>';
+
+        var section_name = $("#section_name").val();
+        var curriculum_year = cy;
 
         if (section_name != "") {
             $.ajax({
