@@ -398,8 +398,8 @@ class Action
 		// Check if section already exists
 		$existing_section = $this->db->query("SELECT id FROM sections WHERE program_id = '$program_id' AND level = '$level' AND section_name = '$section_name'")->fetch_assoc();
 
-		// Debugging: Output existing section data
-		var_dump($existing_section);
+		// // Debugging: Output existing section data
+		// var_dump($existing_section);
 
 		if (empty($id)) {
 			// If section does not exist, insert it
@@ -591,34 +591,34 @@ class Action
 	function add_course_offer()
 	{
 		if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
-			// Get section_name and curriculum_id from input
-			$section_name = $_GET['section_name'] ?? null;
-			$curriculum_id = $_GET['course_id'] ?? null;
+			// Get section_name and course_id from input
+			$section_name = 12;
+			$course_id = $_GET['course_id'] ?? null;
 
-			// Check if both section_name and curriculum_id are set
-			if ($section_name !== null && $curriculum_id !== null) {
+			// Check if both section_name and course_id are set
+			if ($section_name !== null && $course_id !== null) {
 				// Check if the offering already exists
-				$sql_check = "SELECT * FROM course_offering WHERE curriculum_id = ? AND section_name = ?";
+				$sql_check = "SELECT * FROM course_offering_info WHERE courses_id = ? AND section_id = ?";
 				$stmt_check = $this->db->prepare($sql_check);
-				$stmt_check->bind_param("ss", $curriculum_id, $section_name);
+				$stmt_check->bind_param("ss", $course_id, $section_name);
 				$stmt_check->execute();
 				$result_check = $stmt_check->get_result();
 
 				// If the offering doesn't exist, create a new one
 				if ($result_check->num_rows === 0) {
 					// Find the curriculum level by ID
-					$sql_curriculum = "SELECT level FROM curriculum WHERE id = ?";
+					$sql_curriculum = "SELECT level FROM sections WHERE id = ?";
 					$stmt_curriculum = $this->db->prepare($sql_curriculum);
-					$stmt_curriculum->bind_param("s", $curriculum_id);
+					$stmt_curriculum->bind_param("s", $course_id);
 					$stmt_curriculum->execute();
 					$result_curriculum = $stmt_curriculum->get_result();
 					$row_curriculum = $result_curriculum->fetch_assoc();
 					$level = $row_curriculum['level'];
 
 					// Insert new record
-					$sql_insert = "INSERT INTO course_offering (curriculum_id, section_name, level) VALUES (?, ?, ?)";
+					$sql_insert = "INSERT INTO course_offering_info (courses_id, section_id) VALUES (?, ?)";
 					$stmt_insert = $this->db->prepare($sql_insert);
-					$stmt_insert->bind_param("sss", $curriculum_id, $section_name, $level);
+					$stmt_insert->bind_param("ss", $course_id, $section_name);
 					$stmt_insert->execute();
 					echo 'Offered Subject!';
 				} else {

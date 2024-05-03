@@ -35,8 +35,11 @@ if (isset($_GET['program_id'])) {
     } else {
         $offerings = []; // Set $offerings to an empty array if no offerings found
     }
+    // var_dump($program_code);
 }
+
 ?>
+
 
 <?php if (!empty($offerings)) : ?>
     <div class="card card-default">
@@ -57,14 +60,26 @@ if (isset($_GET['program_id'])) {
                         </tr>
                     </thead>
                     <tbody>
+                        <?php foreach ($offerings as $offering) : ?>
                             <tr>
-                                <td><?php echo $row['course_code'] ?></td>
-                                <td><?php echo $row['course_name'] ?></td>
-                                <td><?php echo $row['lec'] ?></td>
-                                <td><?php echo $row['lab'] ?></td>
-                                <td><?php echo $row['units'] ?></td>
-                                <td class="text-center"><button onclick="removeoffer('<?php echo $curriculum->id; ?>','<?php echo $section_name; ?>')" class="btn btn-danger btn-flat"><i class="fa fa-times"></i></button></td>
+                                <?php
+                                // Query to fetch course details based on course ID
+                                $course_query = $conn->prepare("SELECT * FROM courses WHERE id = ?");
+                                $course_query->bind_param("s", $offering['courses_id']);
+                                $course_query->execute();
+                                $course_result = $course_query->get_result();
+                                $course = $course_result->fetch_assoc();
+                                ?>
+                                <td><?php echo $course['course_code'] ?></td>
+                                <td><?php echo $course['course_name'] ?></td>
+                                <td><?php echo $course['lec'] ?></td>
+                                <td><?php echo $course['lab'] ?></td>
+                                <td><?php echo $course['units'] ?></td>
+                                <td class="text-center">
+                                    <button onclick="removeoffer('<?php echo $offering['id']; ?>','<?php echo $offering['section_id']; ?>')" class="btn btn-danger btn-flat"><i class="fa fa-times"></i></button>
+                                </td>
                             </tr>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
@@ -77,17 +92,18 @@ if (isset($_GET['program_id'])) {
         </div>
         <div class="card-body">
             <div class="alert alert-danger" role="alert">
-                <h5 ><strong>No Course Offered Found!</strong></h5>
+                <h5><strong>No Course Offered Found!</strong></h5>
             </div>
         </div>
     </div>
 <?php endif; ?>
 
+
 <script>
-    function removeoffer(curriculum_id, section_name) {
+    function removeoffer(curriculum_id, section_id) {
         var array = {};
         array['curriculum_id'] = curriculum_id;
-        array['section_name'] = section_name;
+        array['section_id'] = section_id;
 
         $.ajax({
             type: "GET",

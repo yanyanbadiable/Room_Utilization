@@ -179,7 +179,7 @@ if (isset($_GET['program_id'])) {
                 data: array,
                 success: function(data) {
                     $('#displaycourses').html(data).fadeIn();
-                    searchoffering(cy, level, period, section_name)
+                    searchoffering(cy, level, period, section_name, program_id); // Pass program_id to searchoffering function
                 },
                 error: function() {
                     console.error('Error fetching courses.');
@@ -190,12 +190,15 @@ if (isset($_GET['program_id'])) {
         }
     }
 
-    function searchoffering(cy, level, period, section_name) {
+
+    function searchoffering(cy, level, period, section_name, program_id) {
         var array = {};
         array['cy'] = cy;
         array['level'] = level;
         array['period'] = period;
         array['section_name'] = section_name;
+        array['program_id'] = program_id; // Include program_id in the data
+
         $.ajax({
             type: "GET",
             url: "course_offered.php",
@@ -204,8 +207,8 @@ if (isset($_GET['program_id'])) {
                 $('#displayoffered').html(data).fadeIn();
             },
             error: function() {
-
+                console.error('Error fetching offered courses.');
             }
-        })
+        });
     }
 </script>

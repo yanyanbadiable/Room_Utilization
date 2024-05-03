@@ -120,7 +120,10 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
 <script>
     var no = 1;
 
+
+
     document.addEventListener('DOMContentLoaded', function() {
+
         var no = 1; // Initialize row counter
         document.querySelector('.add').addEventListener('click', function(event) {
             event.preventDefault();

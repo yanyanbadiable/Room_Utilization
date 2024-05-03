@@ -165,15 +165,10 @@ if (isset($_GET['id'])) {
     $('#manage-section').submit(function(e) {
         e.preventDefault();
 
-        // Validate input fields
-        var program_id = $('#program_id').val();
-        var level = $('#level').val();
-        var section_name = $('#section_name').val();
 
-        if (!program_id || !level || !section_name) {
-            alert_toast("Please fill in all fields", 'danger');
-            return;
-        }
+
+
+
 
         start_load();
         $.ajax({
