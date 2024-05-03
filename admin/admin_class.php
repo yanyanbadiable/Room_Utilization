@@ -347,18 +347,38 @@ class Action
 	function save_room()
 	{
 		extract($_POST);
-		$data = "room = '$room', ";
-		$data .= "description = '$description', ";
-		$data .= "building_id = '$building_id' ";
 
+		// Check if room already exists
+		$existing_room = $this->db->query("SELECT id FROM rooms WHERE room = '$room' AND building_id = '$building_id'")->fetch_assoc();
+
+		// If room does not exist, insert it
 		if (empty($id)) {
-			$save = $this->db->query("INSERT INTO rooms set $data");
-			return 1;
+			// If room does not exist, insert it
+			if (!$existing_room) {
+				$data = "room = '$room', ";
+				$data .= "description = '$description', ";
+				$data .= "building_id = '$building_id' ";
+				$save = $this->db->query("INSERT INTO rooms SET $data");
+				return 1;
+			} else {
+				// Room already exists, return error code
+				return 0;
+			}
 		} else {
-			$save = $this->db->query("UPDATE rooms set $data where id = $id");
-			return 2;
+			// If updating existing room, ensure it's not a duplicate
+			if (empty($existing_room) || $existing_room['id'] == $id) {
+				$data = "room = '$room', ";
+				$data .= "description = '$description', ";
+				$data .= "building_id = '$building_id' ";
+				$save = $this->db->query("UPDATE rooms SET $data WHERE id = $id");
+				return 2;
+			} else {
+				// Room already exists with different ID, return error code
+				return 0;
+			}
 		}
 	}
+
 	function delete_room()
 	{
 		extract($_POST);
@@ -378,6 +398,9 @@ class Action
 		// Check if section already exists
 		$existing_section = $this->db->query("SELECT id FROM sections WHERE program_id = '$program_id' AND level = '$level' AND section_name = '$section_name'")->fetch_assoc();
 
+		// Debugging: Output existing section data
+		var_dump($existing_section);
+
 		if (empty($id)) {
 			// If section does not exist, insert it
 			if (!$existing_section) {
@@ -389,7 +412,7 @@ class Action
 			}
 		} else {
 			// If updating existing section, ensure it's not a duplicate
-			if (!$existing_section || $existing_section['id'] == $id) {
+			if (empty($existing_section) || $existing_section['id'] == $id) {
 				$save = $this->db->query("UPDATE sections SET $data WHERE id = $id");
 				return 2;
 			} else {
@@ -399,26 +422,44 @@ class Action
 		}
 	}
 
+
+
 	function get_section()
 	{
 		extract($_GET);
 
-		// Assuming $conn is your database connection
+		// Assuming $this->db is your database connection
 
 		// Fetch sections based on the selected level and where is_active is 1
-		$stmt = $this->db->prepare("SELECT DISTINCT section_name FROM sections WHERE level = ? AND is_active = 1");
+		$stmt = $this->db->prepare("
+        SELECT DISTINCT s.section_name, p.program_code, s.level 
+        FROM sections s
+        INNER JOIN program p ON s.program_id = p.id
+        WHERE s.level = ? AND s.is_active = 1
+    ");
+
+		if (!$stmt) {
+			die('Error in preparing SQL statement: ' . $this->db->error);
+		}
+
 		$stmt->bind_param("s", $level);
-		$stmt->execute();
+		if (!$stmt->execute()) {
+			die('Error in executing SQL statement: ' . $stmt->error);
+		}
+
 		$result = $stmt->get_result();
-		$sections = $result->fetch_all(MYSQLI_ASSOC);
+		if (!$result) {
+			die('Error in getting result: ' . $this->db->error);
+		}
 
 		// Generate HTML for the dropdown options
 		$html = '<label>Section</label>';
 		$html .= '<select class="form-control" id="section_name">';
 		$html .= '<option>Please Select</option>';
 
-		foreach ($sections as $section) {
-			$html .= '<option value="' . $section['section_name'] . '">' . $section['section_name'] . '</option>';
+		while ($section = $result->fetch_assoc()) {
+			$section_name_concatenated = $section['program_code'] . '-' . substr($section['level'], 0, 1) . $section['section_name'];
+			$html .= '<option value="' . $section_name_concatenated . '">' . $section_name_concatenated . '</option>';
 		}
 		$html .= '</select>';
 

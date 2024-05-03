@@ -151,6 +151,15 @@ if (isset($_GET['id'])) {
 <script>
     function _reset() {
         $('#manage-room').get(0).reset();
+        // Validate input fields
+        var room = $('[name="room"]').val();
+        var description = $('[name="description"]').val();
+        var building_id = $('[name="building_id"]').val();
+
+        if (!room || !description || !building_id) {
+            alert_toast("Please fill in all fields", 'error');
+            return; // Exit function if any field is empty
+        }
         $('#manage-room input, #manage-room textarea, #manage-room select').val('');
     }
     $('#manage-room').submit(function(e) {
@@ -169,14 +178,15 @@ if (isset($_GET['id'])) {
                     alert_toast("Data successfully added", 'success');
                     setTimeout(function() {
                         location.reload();
-                    }, 5000);
+                    }, 100);
 
                 } else if (resp == 2) {
                     alert_toast("Data successfully updated", 'success');
                     setTimeout(function() {
                         location.reload();
-                    }, 5000);
-
+                    }, 100);
+                } else {
+                    alert_toast("Room Already Exists", 'danger');
                 }
             }
         });
