@@ -12,7 +12,7 @@
                 </ol>
             </section>
             <div class="container-fluid" style="margin-top: 15px;">
-                <div class="card">
+                <div class="card shadow mb-4">
                     <div class="card-header">
                         <h5>Search by Instructor</h5>
                     </div>
@@ -33,7 +33,7 @@
                             <div class="col-sm-4">
                                 <div class="form-group" id="displayinstructor">
                                     <label>Instructor</label>
-                                    <select class="select2 form-control" id="instructor">
+                                    <select class=" form-control" id="instructor">
                                         <option>Please Select</option>
                                         @foreach($instructors as $instructor)
                                         <option value="{{$instructor->id}}">{{strtoupper($instructor->name)}}</option>
@@ -126,7 +126,6 @@ function getCurrentLoad(instructor,level){
         }
     })
 }
-
 
 function init_events(ele) {
     ele.each(function () {

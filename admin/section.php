@@ -1,7 +1,7 @@
 <?php include('db_connect.php'); ?>
 <?php
 if (isset($_GET['id'])) {
-    $qry = $conn->query("SELECT * FROM rooms WHERE id=" . $_GET['id'])->fetch_array();
+    $qry = $conn->query("SELECT * FROM sections WHERE id=" . $_GET['id'])->fetch_array();
     foreach ($qry as $k => $v) {
         $$k = $v;
     }
@@ -50,7 +50,6 @@ if (isset($_GET['id'])) {
                                 <option value="2nd Year" <?php echo isset($level) && $level == '2nd Year' ? 'selected' : ''; ?>>2nd Year</option>
                                 <option value="3rd Year" <?php echo isset($level) && $level == '3rd Year' ? 'selected' : ''; ?>>3rd Year</option>
                                 <option value="4th Year" <?php echo isset($level) && $level == '4th Year' ? 'selected' : ''; ?>>4th Year</option>
-                                <option value="5th Year" <?php echo isset($level) && $level == '5th Year' ? 'selected' : ''; ?>>5th Year</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -118,23 +117,25 @@ if (isset($_GET['id'])) {
                             <tbody>
                                 <?php
                                 $i = 1;
-                                $section = $conn->query("SELECT sections.*, program.program_code FROM sections INNER JOIN program ON sections.department_id = program.id;");
+                                $section = $conn->query("SELECT sections.*, program.program_code FROM sections INNER JOIN program ON sections.program_id = program.id;");
                                 if (!$section) {
                                     die('Invalid query: ' . $conn->error);
                                 }
                                 while ($row = $section->fetch_assoc()) :
+                                    $section_name_concatenated = $row['program_code'] . '-' . substr($row['level'], 0, 1) . $row['section_name'];
                                 ?>
                                     <tr>
                                         <td class="text-center"><?php echo $i++ ?></td>
                                         <td class=""><?php echo $row['program_code'] ?></td>
                                         <td class=""><?php echo $row['level'] ?></td>
-                                        <td class=""><?php echo $row['section_name'] ?></td>
+                                        <td class=""><?php echo $section_name_concatenated ?></td>
                                         <td class="text-center">
                                             <?php if ($row['is_active'] == 1) : ?>
                                                 <span class="badge badge-success" style="font-size: 16px;">Active</span>
                                             <?php else : ?>
                                                 <span class="badge badge-danger" style="font-size: 16px;">Inactive</span>
                                             <?php endif; ?>
+                                        </td>
                                         <td class="text-center">
                                             <button class="btn btn-sm btn-primary edit_section" type="button" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-program_id="<?php echo $row['program_id'] ?>" data-level="<?php echo $row['level'] ?>" data-section_name="<?php echo $row['section_name'] ?>">Edit</button>
                                             <button class="btn btn-sm btn-danger delete_section" type="button" data-id="<?php echo $row['id'] ?>">Delete</button>
@@ -177,13 +178,13 @@ if (isset($_GET['id'])) {
                     alert_toast("Data successfully added", 'success');
                     setTimeout(function() {
                         location.reload();
-                    }, 5000);
+                    }, 100);
 
                 } else if (resp == 2) {
                     alert_toast("Data successfully updated", 'success');
                     setTimeout(function() {
                         location.reload();
-                    }, 5000);
+                    }, 100);
 
                 }
             }
@@ -218,10 +219,10 @@ if (isset($_GET['id'])) {
             },
             success: function(resp) {
                 if (resp == 1) {
-                    alert_toast("Data successfully deleted", 'success');
+                    alert_toast("Data successfully deleted", 'danger');
                     setTimeout(function() {
                         location.reload();
-                    }, 100);
+                    }, 1000);
 
                 }
             }

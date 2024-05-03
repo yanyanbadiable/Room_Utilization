@@ -28,11 +28,15 @@ if (isset($_GET['program_id'])) {
     $years = array_column($courses, 'year');
 }
 ?>
-
+<style>
+    .card-header {
+        border-bottom: none;
+    }
+</style>
 <div class="container-fluid">
     <div class="row">
         <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
-            <h3><i class="fa  fa-hourglass-half"></i>
+            <h3><i class="fa fa-hourglass-half"></i>
                 Course Offering
                 <small style="font-size: 1.1rem;"><?php echo $row['program_code'] ?></small>
             </h3>
@@ -53,25 +57,23 @@ if (isset($_GET['program_id'])) {
                         <div class="card-body">
                             <div class="form-group">
                                 <label>Level</label>
-                                <select class=" form-control" onchange="getsections(this.value)">
-
+                                <select class="form-control" onchange="getsections(this.value)">
                                     <option>Please Select</option>
                                     <option>1st Year</option>
                                     <option>2nd Year</option>
                                     <option>3rd Year</option>
                                     <option>4th Year</option>
-
                                 </select>
                             </div>
                             <div class="form-group" id="displaysections">
-                                
+
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-7">
                     <div class="card card-default shadow mb-4" id="displaysearchcourse">
-                        <div class="card-header">
+                        <div class="card-header bg-transparent">
                             <h5 class="card-title">Search Course</h5>
                         </div>
                         <div class="card-body">
@@ -80,17 +82,16 @@ if (isset($_GET['program_id'])) {
                                     <div class="form-group">
                                         <label>Curriculum Year</label>
                                         <select class="form-control" id="cy">
-                                            <?php foreach ($years as $year) : ?>
+                                            <?php foreach (array_unique($years) as $year) : ?>
                                                 <option value="<?php echo $year; ?>"><?php echo $year; ?></option>
                                             <?php endforeach; ?>
                                         </select>
-
                                     </div>
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label>Level</label>
-                                        <select class=" form-control" id='level'>
+                                        <select class="form-control" id='level'>
                                             <option>1st Year</option>
                                             <option>2nd Year</option>
                                             <option>3rd Year</option>
@@ -110,7 +111,8 @@ if (isset($_GET['program_id'])) {
                                 </div>
                             </div>
                             <div class="form-group">
-                                <a class="btn btn-flat btn-block btn-success text-white " onclick='searchcourse(cy.value,level.value,period.value,section_name.value)'>Search</a>
+                                <!-- Pass the values of cy, level, and period to the searchcourse function -->
+                                <a id="search_button" class="btn btn-flat btn-block btn-success text-white" onclick='searchcourse($("#cy").val(), $("#level").val(), $("#period").val(), $("#section_name").val())'>Search</a>
                             </div>
                         </div>
                     </div>
@@ -127,20 +129,36 @@ if (isset($_GET['program_id'])) {
 </div>
 <script>
     function getsections(level) {
-        var array = [];
-        array['level'] = level;
-        array['program_code'] = "$row['program_code']";
         $.ajax({
             type: "GET",
             url: "ajax.php?action=get_section",
-            data: array,
-            success: function(data) {
-                $('#displaysections').html(data).fadeIn();
-                $('#displaysearcourse').fadeIn();
+            data: {
+                level: level
+            },
+            success: function(response) {
+                var data = JSON.parse(response);
+                $('#displaysections').html(data.html);
+                $('#displaysearcourse');
+            },
+            error: function() {
+                console.error('Error fetching sections.');
             }
-        })
+        });
     }
 
+    // Add onchange event handlers to the curriculum year and section dropdowns
+    $('#cy, #section_name').on('change', function() {
+        // Check if both the curriculum year and section have values
+        var cy = $("#cy").val();
+        var section_name = $("#section_name").val();
+        if (cy && section_name) {
+            // Enable the search button
+            $('#search_button').prop('disabled', false);
+        } else {
+            // Disable the search button
+            $('#search_button').prop('disabled', true);
+        }
+    });
 
     function searchcourse(cy, level, period, section_name) {
         var array = {};
@@ -148,18 +166,23 @@ if (isset($_GET['program_id'])) {
         array['level'] = level;
         array['period'] = period;
         array['section_name'] = section_name;
-        array['program_code'] = "{{$program_code}}";
+        // Assuming you have already defined these variables in your JavaScript or they are coming from somewhere else
+        var program_id = '<?php echo $program_code; ?>'; // Get the program_id from PHP
+        // Assuming you have an input element with the id 'section_name'
+        var section_name = $("#section_name").val(); // Get the section name from the input field
+        var curriculum_year = cy; // Use the selected curriculum year
+
         if (section_name != "") {
             $.ajax({
                 type: "GET",
-                url: "/ajax/admin/course_offerings/get_courses",
+                url: "add_course_offer.php?program_id=" + program_id + "&section_name=" + section_name + "&curriculum_year=" + curriculum_year,
                 data: array,
                 success: function(data) {
                     $('#displaycourses').html(data).fadeIn();
                     searchoffering(cy, level, period, section_name)
                 },
                 error: function() {
-
+                    console.error('Error fetching courses.');
                 }
             })
         } else {
@@ -175,7 +198,7 @@ if (isset($_GET['program_id'])) {
         array['section_name'] = section_name;
         $.ajax({
             type: "GET",
-            url: "/ajax/admin/course_offerings/get_courses_offered",
+            url: "course_offered.php",
             data: array,
             success: function(data) {
                 $('#displayoffered').html(data).fadeIn();

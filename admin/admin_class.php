@@ -301,11 +301,10 @@ class Action
 
 		$stmt = $this->db->prepare("INSERT INTO courses (year, period, level, program_id, course_code, course_name, lec, lab, units, is_comlab) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-
 		$stmt->bind_param("ssssssssss", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val);
 
 
-		foreach ($year as $key => $value) {
+		foreach ($course_code as $key => $value) {
 
 			$year_val = date("Y");
 			$period_val = $period[$key];
@@ -376,30 +375,60 @@ class Action
 		$data .= "level = '$level', ";
 		$data .= "section_name = '$section_name' ";
 
+		// Check if section already exists
+		$existing_section = $this->db->query("SELECT id FROM sections WHERE program_id = '$program_id' AND level = '$level' AND section_name = '$section_name'")->fetch_assoc();
+
 		if (empty($id)) {
-			$save = $this->db->query("INSERT INTO sections set $data");
-			return 1;
+			// If section does not exist, insert it
+			if (!$existing_section) {
+				$save = $this->db->query("INSERT INTO sections SET $data");
+				return 1;
+			} else {
+				// Section already exists, return error code
+				return 0;
+			}
 		} else {
-			$save = $this->db->query("UPDATE sections set $data where id = $id");
-			return 2;
+			// If updating existing section, ensure it's not a duplicate
+			if (!$existing_section || $existing_section['id'] == $id) {
+				$save = $this->db->query("UPDATE sections SET $data WHERE id = $id");
+				return 2;
+			} else {
+				// Section already exists with different ID, return error code
+				return 0;
+			}
 		}
 	}
+
 	function get_section()
 	{
-		extract($_POST);
-		$data = array();
-		$qry = $this->db->query("SELECT sections.*");
-		while ($row = $qry->fetch_assoc()) {
-			if ($row['is_repeating'] == 1) {
-				$rdata = json_decode($row['repeating_data']);
-				foreach ($rdata as $k => $v) {
-					$row[$k] = $v;
-				}
-			}
-			$data[] = $row;
+		extract($_GET);
+
+		// Assuming $conn is your database connection
+
+		// Fetch sections based on the selected level and where is_active is 1
+		$stmt = $this->db->prepare("SELECT DISTINCT section_name FROM sections WHERE level = ? AND is_active = 1");
+		$stmt->bind_param("s", $level);
+		$stmt->execute();
+		$result = $stmt->get_result();
+		$sections = $result->fetch_all(MYSQLI_ASSOC);
+
+		// Generate HTML for the dropdown options
+		$html = '<label>Section</label>';
+		$html .= '<select class="form-control" id="section_name">';
+		$html .= '<option>Please Select</option>';
+
+		foreach ($sections as $section) {
+			$html .= '<option value="' . $section['section_name'] . '">' . $section['section_name'] . '</option>';
 		}
+		$html .= '</select>';
+
+		// Return the HTML as JSON
+		$data['html'] = $html;
 		return json_encode($data);
 	}
+
+
+
 	function delete_section()
 	{
 		extract($_POST);
@@ -516,5 +545,49 @@ class Action
 			$data[] = $row;
 		}
 		return json_encode($data);
+	}
+
+	function add_course_offer()
+	{
+		if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+			// Get section_name and curriculum_id from input
+			$section_name = $_GET['section_name'] ?? null;
+			$curriculum_id = $_GET['course_id'] ?? null;
+
+			// Check if both section_name and curriculum_id are set
+			if ($section_name !== null && $curriculum_id !== null) {
+				// Check if the offering already exists
+				$sql_check = "SELECT * FROM course_offering WHERE curriculum_id = ? AND section_name = ?";
+				$stmt_check = $this->db->prepare($sql_check);
+				$stmt_check->bind_param("ss", $curriculum_id, $section_name);
+				$stmt_check->execute();
+				$result_check = $stmt_check->get_result();
+
+				// If the offering doesn't exist, create a new one
+				if ($result_check->num_rows === 0) {
+					// Find the curriculum level by ID
+					$sql_curriculum = "SELECT level FROM curriculum WHERE id = ?";
+					$stmt_curriculum = $this->db->prepare($sql_curriculum);
+					$stmt_curriculum->bind_param("s", $curriculum_id);
+					$stmt_curriculum->execute();
+					$result_curriculum = $stmt_curriculum->get_result();
+					$row_curriculum = $result_curriculum->fetch_assoc();
+					$level = $row_curriculum['level'];
+
+					// Insert new record
+					$sql_insert = "INSERT INTO course_offering (curriculum_id, section_name, level) VALUES (?, ?, ?)";
+					$stmt_insert = $this->db->prepare($sql_insert);
+					$stmt_insert->bind_param("sss", $curriculum_id, $section_name, $level);
+					$stmt_insert->execute();
+					echo 'Offered Subject!';
+				} else {
+					echo 'Offered Subject Already Exists!';
+				}
+			} else {
+				echo 'Missing required parameters!';
+			}
+		} else {
+			echo 'Invalid request!';
+		}
 	}
 }

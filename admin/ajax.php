@@ -155,6 +155,12 @@ if($action == "get_section"){
 		echo $get;
 }
 
+if($action == "add_course_offer"){
+	$save = $crud->add_course_offer();
+	if($save)
+		echo $save;
+}
+
 
 ob_end_flush();
 ?>

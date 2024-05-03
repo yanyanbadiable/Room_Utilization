@@ -26,6 +26,10 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
         height: auto;
 
     }
+
+    .remove {
+        display: block !important;
+    }
 </style>
 <section class="content container-fluid">
     <div class="row">
@@ -88,11 +92,12 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
                                                 <?php endforeach; ?>
                                             </select>
                                         </td>
-                                        <td><input type="number" class="form-control  " name="course_code[]" id="code1"></td>
-                                        <td><input type="text" class="form-control  " name="course_name[]" id="name1"></td>
-                                        <td><input type="number" class="form-control" name="lec[]" id="lec1"></td>
-                                        <td><input type="number" class="form-control" name="lab[]" id="lab1"></td>
-                                        <td><input type="number" class="form-control" name="units[]" id="units1"></td>
+
+                                        <td><input type="text" class="form-control" name="course_code[]" id="code1"></td>
+                                        <td><input type="text" class="form-control" name="course_name[]" id="name1"></td>
+                                        <td><input type="number" width: 20% class="form-control" name="lec[]" id="lec1"></td>
+                                        <td><input type="number" width: 20% class="form-control" name="lab[]" id="lab1"></td>
+                                        <td><input type="number" width: 20% class="form-control" name="units[]" id="units1"></td>
                                         <td align="center"><select class='form-control' id='complab1' name='is_comlab[]'>
                                                 <option value='0'>No</option>
                                                 <option value='1'>Yes</option>
@@ -122,8 +127,7 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
             var newRow = document.createElement('tr');
             newRow.id = 'row' + no; // Set unique ID for the new row
             newRow.innerHTML = `
-            <td><button type="button" class='btn btn-flat remove d-block' id='${no}'><i class='fas fa-times'></i></button></td>
-      
+            <td><button type="button" class='btn btn-flat btn-danger remove' id='${no}'><i class='fas fa-times'></i></button></td>
             <td><select class='form-control' name='period[]' id='period${no}'><option value='1st Semester'>1st Semester</option><option value='2nd Semester'>2nd Semester</option></select></td>
             <td><select class='form-control' name='level[]' id='level${no}'><option value='1st Year'>1st Year</option><option value='2nd Year'>2nd Year</option><option value='3rd Year'>3rd Year</option><option value='4th Year'>4th Year</option><option value='5th Year'>5th Year</option></select></td>
             <td><select class='form-control' name='program_id[]' id='program${no}'>
@@ -133,9 +137,9 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
             </select></td>
             <td><input type='text' class='form-control' name='course_code[]' id='code${no}'></td>
             <td><input type='text' class='form-control' name='course_name[]' id='name${no}'></td>
-            <td><input type='text' class='form-control' name='lec[]' id='lec${no}'></td>
-            <td><input type='text' class='form-control' name='lab[]' id='lab${no}'></td>
-            <td><input type='text' class='form-control' name='units[]' id='units${no}'></td>
+            <td><input type='number' class='form-control' name='lec[]' id='lec${no}'></td>
+            <td><input type='number' class='form-control' name='lab[]' id='lab${no}'></td>
+            <td><input type='number' class='form-control' name='units[]' id='units${no}'></td>
             <td align='center'><select class='form-control' id='complab${no}' name='is_comlab[]'><option value='0'>No</option><option value='1'>Yes</option></select></td>`;
             document.getElementById('dynamic_field').appendChild(newRow);
             no++; // Increment row counter for next row
@@ -148,6 +152,12 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
                 no--; // Decrement row counter when a row is removed
             }
         });
+
+        // Add this code to ensure the remove button is always visible
+        document.querySelectorAll('.remove').forEach(function(button) {
+            button.style.display = 'block';
+        });
+
         document.getElementById('manage_course').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -164,12 +174,13 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
                         //     location.reload();
                         // }, 100);
                     } else {
-                        $('#msg').html('<div class="alert alert-danger">Invalid Credentials</div>');
+                        $('#msg').html('<div class="alert alert-danger">' + resp + '</div>');
                         end_load();
                     }
                 }
             });
         });
+
 
     });
 </script>
