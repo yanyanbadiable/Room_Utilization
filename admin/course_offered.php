@@ -2,19 +2,23 @@
 include('db_connect.php');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Check if program code is set in the URL
+$curriculum_year = '';
+$level = '';
+$period = '';
+$section_name = '';
+
 if (isset($_GET['program_id'])) {
-    // Get the program code from the URL parameter
+
     $program_code = $_GET['program_id'];
 
-    // Query to fetch the program details based on program code
+
     $program_query = $conn->prepare("SELECT * FROM program WHERE id = ?");
     $program_query->bind_param("s", $program_code);
     $program_query->execute();
     $program_result = $program_query->get_result();
     $program = $program_result->fetch_assoc();
 
-    // Assign program details to $row
+
     $row = $program;
 
     $courses_query = $conn->prepare("SELECT * FROM courses WHERE program_id = ?");
@@ -23,23 +27,22 @@ if (isset($_GET['program_id'])) {
     $courses_result = $courses_query->get_result();
     $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
 
-    // Fetch years from the courses result
+
     $years = array_column($courses, 'year');
 
-    // Query to fetch offerings - Assuming you have a table named "offerings"
+
     $offerings_query = $conn->query("SELECT * FROM course_offering_info");
 
-    // Check if there are any offerings
+
     if ($offerings_query->num_rows > 0) {
         $offerings = $offerings_query->fetch_all(MYSQLI_ASSOC);
     } else {
-        $offerings = []; // Set $offerings to an empty array if no offerings found
+        $offerings = [];
     }
     // var_dump($program_code);
 }
 
 ?>
-
 
 <?php if (!empty($offerings)) : ?>
     <div class="card card-default">
@@ -63,7 +66,7 @@ if (isset($_GET['program_id'])) {
                         <?php foreach ($offerings as $offering) : ?>
                             <tr>
                                 <?php
-                                // Query to fetch course details based on course ID
+
                                 $course_query = $conn->prepare("SELECT * FROM courses WHERE id = ?");
                                 $course_query->bind_param("s", $offering['courses_id']);
                                 $course_query->execute();
@@ -76,7 +79,9 @@ if (isset($_GET['program_id'])) {
                                 <td><?php echo $course['lab'] ?></td>
                                 <td><?php echo $course['units'] ?></td>
                                 <td class="text-center">
-                                    <button onclick="removeoffer('<?php echo $offering['id']; ?>','<?php echo $offering['section_id']; ?>')" class="btn btn-danger btn-flat"><i class="fa fa-times"></i></button>
+                                    <button class="btn btn-danger btn-flat remove-course-offer" data-curriculum-id="<?php echo $offering['id']; ?>" data-section-id="<?php echo $offering['section_id']; ?>">
+                                        <i class="fa fa-times"></i>
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -98,24 +103,27 @@ if (isset($_GET['program_id'])) {
     </div>
 <?php endif; ?>
 
-
 <script>
-    function removeoffer(curriculum_id, section_id) {
-        var array = {};
-        array['curriculum_id'] = curriculum_id;
-        array['section_id'] = section_id;
+    $(document).ready(function() {
+        $('.remove-course-offer').click(function() {
+            var curriculumId = $(this).data('curriculum-id');
+            var sectionId = $(this).data('section-id');
 
-        $.ajax({
-            type: "GET",
-            url: "/ajax/admin/course_offerings/remove_course_offer",
-            data: array,
-            success: function(data) {
-                toast.error(data, 'Notification!');
-                searchcourse('<?php echo $curriculum_year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_name; ?>');
-            },
-            error: function() {
-                alert('Something Went Wrong');
-            }
+            $.ajax({
+                type: 'GET',
+                url: 'ajax.php?action=remove_course_offer',
+                data: {
+                    curriculum_id: curriculumId,
+                    section_id: sectionId
+                },
+                success: function(data) {
+
+                    searchcourse('<?php echo $curriculum_year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_name; ?>');
+                },
+                error: function() {
+                    alert('Something Went Wrong');
+                }
+            });
         });
-    }
+    });
 </script>

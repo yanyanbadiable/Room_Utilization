@@ -4,6 +4,7 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Check if program code is set in the URL
 if (isset($_GET['program_id'])) {
+    // var_dump($_GET);
     // Get the program code from the URL parameter
     $program_code = $_GET['program_id'];
 
@@ -17,8 +18,9 @@ if (isset($_GET['program_id'])) {
     // Assign program details to $row   
     $row = $program;
 
-    $courses_query = $conn->prepare("SELECT * FROM courses WHERE program_id = ?");
-    $courses_query->bind_param("s", $program_code);
+    // Fetch courses based on program ID and other filters
+    $courses_query = $conn->prepare("SELECT * FROM courses WHERE program_id = ? AND year = ? AND level = ? AND period = ?");
+    $courses_query->bind_param("ssss", $program_code, $_GET['cy'], $_GET['level'], $_GET['period']);
     $courses_query->execute();
     $courses_result = $courses_query->get_result();
     $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
@@ -29,6 +31,7 @@ if (isset($_GET['program_id'])) {
 }
 
 ?>
+
 
 <div>
     <?php
@@ -97,7 +100,7 @@ if (isset($_GET['program_id'])) {
                 data: array,
                 success: function(data) {
                     console.log(data);
-                    alert('Course offer added successfully!');
+
 
                     searchcourse(curriculumYear, level, period, sectionName);
                 },

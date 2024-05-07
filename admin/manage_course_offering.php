@@ -160,7 +160,7 @@ if (isset($_GET['program_id'])) {
         }
     });
 
-    function searchcourse(cy, level, period, section_name) {
+    function searchcourse(cy, level, period, section_name, program_id) {
         var array = {};
         array['cy'] = cy;
         array['level'] = level;
@@ -179,12 +179,12 @@ if (isset($_GET['program_id'])) {
                 data: array,
                 success: function(data) {
                     $('#displaycourses').html(data).fadeIn();
-                    searchoffering(cy, level, period, section_name, program_id); // Pass program_id to searchoffering function
+                    searchoffering(cy, level, period, section_name, program_id);
                 },
                 error: function() {
                     console.error('Error fetching courses.');
                 }
-            })
+            });
         } else {
             toast.error('Please input a section', 'Notification!');
         }

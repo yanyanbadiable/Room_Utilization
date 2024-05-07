@@ -631,4 +631,31 @@ class Action
 			echo 'Invalid request!';
 		}
 	}
+
+	function remove_course_offering()
+	{
+		if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+
+			$curriculum_id = $_GET['curriculum_id'] ?? null;
+			$section_id = $_GET['section_id'] ?? null;
+
+			if ($curriculum_id !== null && $section_id !== null) {
+
+				$sql_delete = "DELETE FROM course_offering_info WHERE id = ? AND section_id = ?";
+				$stmt_delete = $this->db->prepare($sql_delete);
+				$stmt_delete->bind_param("ss", $curriculum_id, $section_id);
+				$stmt_delete->execute();
+
+				if ($stmt_delete->affected_rows > 0) {
+					echo 'Course Offering Removed Successfully!';
+				} else {
+					echo 'Failed to Remove Course Offering!';
+				}
+			} else {
+				echo 'Missing required parameters!';
+			}
+		} else {
+			echo 'Invalid request!';
+		}
+	}
 }
