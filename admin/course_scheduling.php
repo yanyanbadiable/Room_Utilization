@@ -56,3 +56,54 @@
         </div>
     </div>
 </div>
+<script>
+    $(document).ready(function() {
+        $('#displaylevel').hide();
+
+        $('#program_code').on('change', function() {
+            $('#displaylevel').fadeIn();
+        })
+    })
+
+
+    function getsection(program_code, level) {
+        $.ajax({
+            type: "GET",
+            url: "ajax.php?action=get_section",
+            data: {
+                program_code: program_code,
+                level: level
+            },
+            dataType: "json", // Specify JSON data type
+            success: function(response) {
+                $('#displaysection').html(response.html).fadeIn();
+            },
+            error: function() {
+                console.error('Error fetching sections.');
+            }
+        });
+    }
+    // Call getsection when the level dropdown value changes
+    $('#level').on('change', function() {
+        var level = $(this).val();
+        if (level !== '') {
+            getsection(program_code, level);
+        }
+    });
+
+
+    function getcoursesoffered(program_code, level, section_name) {
+        var array = {};
+        array['program_code'] = program_code;
+        array['level'] = level;
+        array['section_name'] = section_name;
+        $.ajax({
+            type: "GET",
+            url: "index.php?page=get_courses_offered",
+            data: array,
+            success: function(data) {
+                $('#displayoffered').html(data).fadeIn();
+            }
+        })
+    }
+</script>
