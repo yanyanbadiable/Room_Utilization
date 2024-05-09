@@ -6,9 +6,10 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 $program_code = '';
 $offerings = [];
-
+var_dump($_GET);
 if (isset($_GET['program_id'])) {
     $program_code = $_GET['program_id'];
+
 
     // Fetch program details based on program ID
     $program_query = $conn->prepare("SELECT * FROM program WHERE id = ?");
@@ -22,19 +23,21 @@ if (isset($_GET['program_id'])) {
     $courses_query->bind_param("s", $program_code);
     $courses_query->execute();
     $courses_result = $courses_query->get_result();
-    $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
+    while ($row = $courses_result->fetch_assoc()) {
+        $courses[] = $row;
+    }
 
     // Fetch course offerings
-    $offerings_query = $conn->prepare("SELECT * FROM course_offering_info");
-    $offerings_query->execute();
-    $offerings_result = $offerings_query->get_result();
-    if ($offerings_result->num_rows > 0) {
-        $offerings = $offerings_result->fetch_all(MYSQLI_ASSOC);
+    $offerings_query = $conn->query("SELECT * FROM course_offering_info");
+    if ($offerings_query->num_rows > 0) {
+        while ($row = $offerings_query->fetch_assoc()) {
+            $offerings[] = $row;
+        }
     }
 }
 ?>
 
-<?php if (!empty($offerings)) : ?>
+<?php if (!empty($offerings)) { ?>
     <div class="box box-default">
         <div class='box-header'>
             <h5 class='box-title'>Courses Offered</h5>
@@ -51,44 +54,54 @@ if (isset($_GET['program_id'])) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($courses as $course) : ?>
-                            <?php $curricula = curriculum::find($course['curriculum_id']); ?>
+                        <?php foreach ($courses as $course) { ?>
+                            <?php
+                            $curriculum_id = $course['curriculum_id'];
+                            $curricula_query = $conn->prepare("SELECT * FROM curriculum WHERE id = ?");
+                            $curricula_query->bind_param("s", $curriculum_id);
+                            $curricula_query->execute();
+                            $curricula_result = $curricula_query->get_result();
+                            $curricula = $curricula_result->fetch_assoc();
+                            ?>
                             <tr>
-                                <td><?php echo $curricula->course_code; ?></td>
-                                <td><?php echo $curricula->course_name; ?></td>
+                                <td><?php echo $curricula['course_code']; ?></td>
+                                <td><?php echo $curricula['course_name']; ?></td>
                                 <td>
                                     <div align="center">
                                         <?php
-                                        $schedule3s = room_schedules::distinct()->where('offering_id', $course['id'])->get(['room']);
+                                        $schedule_query = $conn->prepare("SELECT DISTINCT room FROM room_schedules WHERE offering_id = ?");
+                                        $schedule_query->bind_param("s", $course['id']);
+                                        $schedule_query->execute();
+                                        $schedule_result = $schedule_query->get_result();
+                                        while ($schedule = $schedule_result->fetch_assoc()) {
+                                            echo $schedule['room'] . "<br>";
+                                        }
+
+                                        $schedule_query = $conn->prepare("SELECT time_starts, time_end, room FROM room_schedules WHERE offering_id = ?");
+                                        $schedule_query->bind_param("s", $course['id']);
+                                        $schedule_query->execute();
+                                        $schedule_result = $schedule_query->get_result();
+                                        while ($schedule = $schedule_result->fetch_assoc()) {
+                                            $days_query = $conn->prepare("SELECT day FROM room_schedules WHERE offering_id = ? AND time_starts = ? AND time_end = ? AND room = ?");
+                                            $days_query->bind_param("ssss", $course['id'], $schedule['time_starts'], $schedule['time_end'], $schedule['room']);
+                                            $days_query->execute();
+                                            $days_result = $days_query->get_result();
+                                            while ($day = $days_result->fetch_assoc()) {
+                                                echo $day['day'] . " " . date('g:iA', strtotime($schedule['time_starts'])) . "-" . date('g:iA', strtotime($schedule['time_end'])) . "<br>";
+                                            }
+                                        }
                                         ?>
-                                        <?php foreach ($schedule3s as $schedule3) : ?>
-                                            <?php echo $schedule3->room; ?>
-                                        <?php endforeach; ?>
-                                        <br>
-                                        <?php
-                                        $schedule2s = room_schedules::distinct()->where('offering_id', $course['id'])->get(['time_starts', 'time_end', 'room']);
-                                        ?>
-                                        <?php foreach ($schedule2s as $schedule2) : ?>
-                                            <?php
-                                            $days = room_schedules::where('offering_id', $course['id'])
-                                                ->where('time_starts', $schedule2->time_starts)
-                                                ->where('time_end', $schedule2->time_end)
-                                                ->where('room', $schedule2->room)
-                                                ->get(['day']);
-                                            ?>
-                                            [@foreach ($days as $day){{$day->day}}@endforeach {{date('g:iA', strtotime($schedule2->time_starts))}}-{{date('g:iA', strtotime($schedule2->time_end))}}]<br>
-                                        <?php endforeach; ?>
                                     </div>
                                 </td>
-                                <td><a href="{{url('/admin/course_scheduling/schedule',array($course['id'],$section_name))}}" target="_blank" class="btn btn-flat btn-success"><i class="fa fa-pencil"></i></a></td>
+                                <td><a href="<?php echo '/admin/course_scheduling/schedule/' . $course['id'] . '/' . $section_name; ?>" target="_blank" class="btn btn-flat btn-success"><i class="fa fa-pencil"></i></a></td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php } ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-<?php else : ?>
+<?php } else { ?>
     <div class="card shadow mb-4">
         <div class="card-header bg-transparent">
             <h5 class="card-title">Courses Offered</h5>
@@ -99,7 +112,7 @@ if (isset($_GET['program_id'])) {
             </div>
         </div>
     </div>
-<?php endif; ?>
+<?php } ?>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
