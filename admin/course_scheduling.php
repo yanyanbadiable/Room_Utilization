@@ -65,7 +65,6 @@
         })
     })
 
-
     function getsection(program_code, level) {
         $.ajax({
             type: "GET",
@@ -74,19 +73,24 @@
                 program_code: program_code,
                 level: level
             },
-            dataType: "json", // Specify JSON data type
+            dataType: "json",
             success: function(response) {
+
                 $('#displaysection').html(response.html).fadeIn();
+                // Clear the displayed courses
+                $('#displayoffered').html('').hide();
             },
             error: function() {
                 console.error('Error fetching sections.');
             }
         });
     }
+
     // Call getsection when the level dropdown value changes
     $('#level').on('change', function() {
         var level = $(this).val();
         if (level !== '') {
+            var program_code = $('#program_code').val();
             getsection(program_code, level);
         }
     });
@@ -94,17 +98,33 @@
 
 
     function getcoursesoffered(program_code, level, section_name) {
-        var array = {};
-        array['program_code'] = program_code;
-        array['level'] = level;
-        array['section_name'] = section_name;
         $.ajax({
             type: "GET",
-            url: "index.php?page=get_courses_offered",
-            data: array,
+            // url: "index.php?page=get_course_offered",
+            url: "get_course_offered.php",
+            data: {
+                program_code: program_code,
+                level: level,
+                section_name: section_name
+            },
             success: function(data) {
+                console.log(data);
                 $('#displayoffered').html(data).fadeIn();
+                // $('#displayoffered').empty().html(data).fadeIn();
             }
-        })
+        });
     }
+
+    // Call getcoursesoffered only when a section is selected
+    $(document).on('change', '#section_name', function() {
+        var section_name = $(this).val();
+        if (section_name !== '') {
+            var program_code = $('#program_code').val();
+            var level = $('#level').val();
+            getcoursesoffered(program_code, level, section_name);
+        } else {
+            // If no section is selected, hide the displayed courses
+            $('#displayoffered').html('').hide();
+        }
+    });
 </script>
