@@ -51,7 +51,7 @@
                         </div>
                     </div>
                 </div>
-                <div id='displayoffered'></div>
+                <div id='displayoffered' onchange='getcoursesoffered()'></div>
             </div>
         </div>
     </div>
@@ -90,6 +90,7 @@
             getsection(program_code, level);
         }
     });
+
 
 
     function getcoursesoffered(program_code, level, section_name) {

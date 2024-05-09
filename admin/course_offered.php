@@ -45,13 +45,13 @@ if (isset($_GET['program_id'])) {
 ?>
 
 <?php if (!empty($offerings)) : ?>
-    <div class="card card-default">
-        <div class="card-header">
+    <div class="card shadow mb-4">
+        <div class="card-header bg-transparent">
             <h5 class="card-title">Courses Offered</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-striped">
+                <table class="table table-bordered">
                     <thead>
                         <tr>
                             <th>Course Code</th>

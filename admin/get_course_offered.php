@@ -35,11 +35,11 @@ if (isset($_GET['program_id'])) {
 ?>
 
 <?php if (!empty($offerings)) : ?>
-    <div class="box box-default">
-        <div class='box-header'>
-            <h5 class='box-title'>Courses Offered</h5>
+    <div class="card shadow mb-4">
+        <div class='card-header'>
+            <h5 class='card-title'>Courses Offered</h5>
         </div>
-        <div class='box-body'>
+        <div class='card-body'>
             <div class='table-responsive'>
                 <table class='table table-bordered table-striped'>
                     <thead>
@@ -52,6 +52,9 @@ if (isset($_GET['program_id'])) {
                     </thead>
                     <tbody>
                         <?php foreach ($courses as $course) : ?>
+                            
+
+
                             <?php $curricula = curriculum::find($course['curriculum_id']); ?>
                             <tr>
                                 <td><?php echo $curricula->course_code; ?></td>
