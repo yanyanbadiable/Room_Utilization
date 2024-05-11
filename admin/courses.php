@@ -31,7 +31,7 @@ while ($row = $result->fetch_assoc()) {
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card card-default shadow mb-4">
-                        <div class="card-header d-flex justify-content-between">
+                        <div class="card-header d-flex justify-content-between bg-transparent">
                             <h4 class="card-title">Academic Programs</h4>
                             <div>
                                 <a href="index.php?page=manage_course" class="btn btn-flat btn-success"><i class="fa fa-upload"></i> New Curriculum</a>
@@ -39,7 +39,7 @@ while ($row = $result->fetch_assoc()) {
                         </div>
                         <div class="card-body">
                             <div class='table-responsive'>
-                                <table class="table table-bordered table-striped">
+                                <table class="table table-bordered">
                                     <thead>
                                         <tr>
                                             <th>Program Code</th>
@@ -90,4 +90,7 @@ while ($row = $result->fetch_assoc()) {
         max-height: 60vh;
         overflow-y: auto;
     }
+    /* .card-header {
+        border-bottom: none;
+    } */
 </style>

@@ -153,7 +153,6 @@ if (isset($_GET['program_id'])) {
         });
     }
 
-
     function searchcourse(year, level, period, section_id) {
         var array = {};
         array['year'] = year;

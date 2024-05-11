@@ -3,10 +3,6 @@ include 'db_connect.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Initialize totalLec and totalLab
-$totalLec = 0;
-$totalLab = 0;
-
 // Check if program code is set in the URL
 if (isset($_GET['program_code']) && isset($_GET['year'])) {
     $program_code = $_GET['program_code'];
@@ -28,10 +24,6 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
     $level_stmt->bind_param("is", $program_id, $year);
     $level_stmt->execute();
     $level_result = $level_stmt->get_result();
-    $levels = [];
-    while ($row = $level_result->fetch_assoc()) {
-        $levels[] = $row;
-    }
 }
 ?>
 
@@ -48,19 +40,23 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
             </ol>
         </section>
         <section class="content">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="card card-default shadow mb-4">
-                        <div class="card-header bg-transparent">
-                            <h3 class="card-title"><?php echo $program['program_name'] . ' - ' . $year . ' - ' . ($year + 1); ?></h3>
-                            <div class="card-tools pull-right">
-                                <!--<a  target="_blank" href="{{url('/registrar_college/print_course',array($program_code,$course_year))}}" class='btn btn-flat btn-primary'><i class='fa fa-print'></i> Print course</a>-->
+            <?php while ($level = $level_result->fetch_assoc()) : ?>
+                <?php
+                $totalLec = 0;
+                $totalLab = 0;
+                $totalUnits = 0;
+                ?>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card card-default shadow mb-4">
+                            <div class="card-header bg-transparent">
+                                <h3 class="card-title"><?php echo $program['program_name'] . ' - ' . $year . ' - ' . ($year + 1); ?></h3>
+                                <div class="card-tools pull-right">
+                                    <!--<a  target="_blank" href="{{url('/registrar_college/print_course',array($program_code,$course_year))}}" class='btn btn-flat btn-primary'><i class='fa fa-print'></i> Print course</a>-->
+                                </div>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <?php $totalUnits = 0; ?>
-                            <div class='table-responsive'>
-                                <?php foreach ($levels as $level) : ?>
+                            <div class="card-body">
+                                <div class='table-responsive'>
                                     <table class="table table-condensed">
                                         <thead>
                                             <th><?php echo $level['period']; ?></th>
@@ -129,30 +125,32 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
                                             </tr>
                                         </tbody>
                                     </table>
-                                <?php endforeach; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-    </section>
-    <div id="displayeditmodal">
+            <?php endwhile; ?>
+        </section>
+        <div id="displayeditmodal">
 
+        </div>
     </div>
 </div>
 <script>
-    function editmodal(id){
+    function editmodal(id) {
         var array = {};
         array['course_id'] = id;
         $.ajax({
             type: "GET",
             url: "edit_course.php",
             data: array,
-            success: function(data){
+            success: function(data) {
                 $('#displayeditmodal').html(data).fadeIn();
                 $('#editModal').modal('toggle');
-            },error: function(){
-                alert_toast('Something Went Wrong!','danger');
+            },
+            error: function() {
+                alert_toast('Something Went Wrong!', 'danger');
             }
         })
     }
