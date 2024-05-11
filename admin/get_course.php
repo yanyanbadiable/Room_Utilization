@@ -2,41 +2,64 @@
 include('db_connect.php');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Check if program code is set in the URL
-if (isset($_GET['program_id'])) {
-    // var_dump($_GET);
-    // Get the program code from the URL parameter
-    $program_code = $_GET['program_id'];
+// Check if program id is set in the URL
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET['level']) && isset($_GET['period']) && isset($_GET['section_id']) && isset($_GET['program_id'])) {
+    $year = $_GET['year'] ?? '';
+    $level = $_GET['level'] ?? '';
+    $period = $_GET['period'] ?? '';
+    $section_id = $_GET['section_id'] ?? '';
+    $program_id = $_GET['program_id'] ?? '';
 
-    // Query to fetch the program details based on program code
-    $program_query = $conn->prepare("SELECT * FROM program WHERE id = ?");
-    $program_query->bind_param("s", $program_code);
-    $program_query->execute();
-    $program_result = $program_query->get_result();
-    $program = $program_result->fetch_assoc();
+    // Fetch courses for the given section ID
+    $offered_stmt = $conn->prepare("SELECT courses_id FROM course_offering_info WHERE section_id = ?");
+    $offered_stmt->bind_param("s", $section_id);
+    $offered_stmt->execute();
+    $offered_result = $offered_stmt->get_result();
+    $offered_courses = [];
+    while ($row = $offered_result->fetch_assoc()) {
+        $offered_courses[] = $row['courses_id'];
+    }
 
-    // Assign program details to $row   
-    $row = $program;
+    // Fetch course data that meets the additional criteria
+    $courses = [];
+    if (!empty($offered_courses)) {
+        $placeholders = implode(',', array_fill(0, count($offered_courses), '?'));
+        $types = str_repeat("s", count($offered_courses));
+        $params = array_merge([$year, $level, $period, $program_id], $offered_courses);
 
-    // Fetch courses based on program ID and other filters
-    $courses_query = $conn->prepare("SELECT * FROM courses WHERE program_id = ? AND year = ? AND level = ? AND period = ?");
-    $courses_query->bind_param("ssss", $program_code, $_GET['cy'], $_GET['level'], $_GET['period']);
-    $courses_query->execute();
-    $courses_result = $courses_query->get_result();
-    $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
+        $course_stmt = $conn->prepare("
+            SELECT c.*
+            FROM courses c
+            WHERE c.year = ? 
+            AND c.level = ? 
+            AND c.period = ?
+            AND c.program_id = ?
+            AND c.id NOT IN ($placeholders)
+        ");
 
+        // Dynamically bind parameters
+        $bind_params = array_merge([$types], $params);
+        call_user_func_array([$course_stmt, 'bind_param'], $bind_params);
 
-    // Fetch years from the courses result
-    $years = array_column($courses, 'year');
+        // Execute the SQL query
+        $course_stmt->execute();
+
+        // Check for errors
+        if ($course_stmt->error) {
+            echo "Error: " . $course_stmt->error;
+        }
+
+        $course_result = $course_stmt->get_result();
+        while ($row = $course_result->fetch_assoc()) {
+            $courses[] = $row;
+        }
+    }
 }
-
 ?>
 
 
 <div>
-    <?php
-    if (!empty($courses)) {
-    ?>
+    <?php if (!empty($courses)) { ?>
         <div class="card shadow mb-4">
             <div class="card-header bg-transparent">
                 <h5 class="card-title">Courses to Offer</h5>
@@ -63,8 +86,7 @@ if (isset($_GET['program_id'])) {
                                     <td><?php echo $course['lab']; ?></td>
                                     <td><?php echo $course['units']; ?></td>
                                     <td class="text-center">
-                                        <!-- Directly call the AJAX function on button click -->
-                                        <button onclick="addOffer('<?php echo $course['id']; ?>', '<?php echo isset($section_name) ? $section_name : ''; ?>', '<?php echo isset($curriculum_year) ? $curriculum_year : ''; ?>', '<?php echo isset($level) ? $level : ''; ?>', '<?php echo isset($period) ? $period : ''; ?>')" class="btn btn-success btn-flat"><i class="fa fa-plus-circle"></i></button>
+                                        <button onclick="addOffer('<?php echo $course['id']; ?>')" class="btn btn-success btn-flat"><i class="fa fa-plus-circle"></i></button>
                                     </td>
                                 </tr>
                             <?php } ?>
@@ -88,21 +110,19 @@ if (isset($_GET['program_id'])) {
 </div>
 
 <script>
-    function addOffer(courseId, sectionName, curriculumYear, level, period) {
+    function addOffer(course_id) {
         var array = {};
-        if (sectionName == "") {
-            array['course_id'] = courseId;
-            array['section_name'] = sectionName;
+        if ('<?php echo $section_id; ?>' != "") {
+            array['course_id'] = course_id;
+            array['section_id'] = '<?php echo $section_id; ?>';
 
             $.ajax({
                 type: "GET",
                 url: "ajax.php?action=add_course_offer",
                 data: array,
                 success: function(data) {
-                    console.log(data);
-
-
-                    searchcourse(curriculumYear, level, period, sectionName);
+                    alert_toast(data, 'success');
+                    searchcourse('<?php echo $year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_id; ?>', '<?php echo $program_id; ?>');
                 },
                 error: function() {
                     alert('An error occurred while adding the course offer.');

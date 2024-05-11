@@ -43,7 +43,7 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
                     <li class="breadcrumb-item active"> Add Course</li>
                 </ol>
             </section>
-            <div class="card card-default">
+            <div class="card shadow mb-4">
                 <form id="manage_course">
                     <div class="card-header bg-transparent"><i></i>
                         <h5 class='card-title'></h5>
@@ -171,6 +171,7 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
                 method: 'POST',
                 data: $(form).serialize(),
                 success: function(resp) {
+                    console.log(resp);
                     if (resp == 1) {
                         alert_toast("Data successfully saved", 'success');
                         // setTimeout(function() {
