@@ -34,6 +34,7 @@ if (isset($_GET['program_id'])) {
             $offerings[] = $row;
         }
     }
+    var_dump($offerings_query);
 }
 ?>
 

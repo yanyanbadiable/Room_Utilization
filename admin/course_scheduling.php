@@ -86,7 +86,7 @@
         });
     }
 
-    // Call getsection when the level dropdown value changes
+
     $('#level').on('change', function() {
         var level = $(this).val();
         if (level !== '') {
@@ -98,8 +98,8 @@
     function getcoursesoffered(program_code, level, section_name) {
         $.ajax({
             type: "GET",
-            url: "index.php?page=get_course_offered",
-            // url: "get_course_offered.php",
+            // url: "index.php?page=get_course_offered",
+            url: "get_course_offered.php",
             data: {
                 program_code: program_code,
                 level: level,
