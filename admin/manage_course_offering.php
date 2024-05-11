@@ -3,22 +3,23 @@ include('db_connect.php');
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Initialize an empty array for years
+
 $years = [];
 
-// Check if program code is set in the URL
-if (isset($_GET['program_id'])) {
-    // Get the program code from the URL parameter
-    $program_code = $_GET['program_id'];
 
-    // Query to fetch the program details based on program code
+if (isset($_GET['program_id'])) {
+
+    $program_code = $_GET['program_id'];
+    // var_dump($_GET);
+
+
     $program_query = $conn->prepare("SELECT * FROM program WHERE id = ?");
     $program_query->bind_param("s", $program_code);
     $program_query->execute();
     $program_result = $program_query->get_result();
     $program = $program_result->fetch_assoc();
 
-    // Assign program details to $row
+
     $row = $program;
 
     $courses_query = $conn->prepare("SELECT * FROM courses WHERE program_id = ?");
@@ -27,11 +28,11 @@ if (isset($_GET['program_id'])) {
     $courses_result = $courses_query->get_result();
     $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
 
-    // Fetch years from the courses result and populate $years array
+
     foreach ($courses as $course) {
         $years[] = $course['year'];
     }
-    // Remove duplicate years
+
     $years = array_unique($years);
 }
 ?>
@@ -79,7 +80,7 @@ if (isset($_GET['program_id'])) {
                     </div>
                 </div>
                 <div class="col-sm-7">
-                    <div class="card card-default shadow mb-4" id="displaysearchcourse">
+                    <div class="card card-default shadow mb-4" id="displaysearchcourse" style="display: none;">
                         <div class="card-header bg-transparent">
                             <h5 class="card-title">Search Course</h5>
                         </div>
@@ -88,7 +89,7 @@ if (isset($_GET['program_id'])) {
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label>Year</label>
-                                        <select class="form-control" id="year">
+                                        <select class="form-control" id="year" disabled>
                                             <?php foreach ($years as $year) : ?>
                                                 <option value="<?php echo $year; ?>"><?php echo $year; ?></option>
                                             <?php endforeach; ?>
@@ -98,7 +99,7 @@ if (isset($_GET['program_id'])) {
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label>Level</label>
-                                        <select class="form-control" id='level'>
+                                        <select class="form-control" id='level' disabled>
                                             <option>1st Year</option>
                                             <option>2nd Year</option>
                                             <option>3rd Year</option>
@@ -138,6 +139,7 @@ if (isset($_GET['program_id'])) {
     function getsections(level) {
         var array = {};
         array['level'] = level;
+        $('#level').val(level);
         array['program_code'] = "<?php echo $row['program_code'] ?>";
         $.ajax({
             type: "GET",
@@ -145,7 +147,12 @@ if (isset($_GET['program_id'])) {
             data: array,
             success: function(data) {
                 $('#displaysections').html(data).fadeIn();
-                $('#displaysearchcourse').fadeIn();
+
+                if (level === "Please Select") {
+                    $('#displaysearchcourse').hide();
+                } else {
+                    $('#displaysearchcourse').fadeIn();
+                }
             },
             error: function(xhr, status, error) {
                 console.error('Error fetching sections: ' + error);
@@ -162,7 +169,8 @@ if (isset($_GET['program_id'])) {
         array['section_id'] = section_id;
         array['program_id'] = <?php echo $row['id'] ?>;
 
-        if (section_id != "") {
+
+        if (section_id !== "" && section_id !== "Please Select") {
             $.ajax({
                 type: "GET",
                 url: "get_course.php",
@@ -176,7 +184,8 @@ if (isset($_GET['program_id'])) {
                 }
             });
         } else {
-            alert_toast('Please input a section', 'error');
+
+            alert_toast('Please select a valid section', 'danger');
         }
     }
 

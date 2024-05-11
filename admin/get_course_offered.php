@@ -3,13 +3,17 @@ include('db_connect.php');
 
 // Enable error reporting
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['cy']) && isset($_GET['level']) && isset($_GET['period']) && isset($_GET['section_id'])) {
-    $curriculum_year = $_GET['cy'];
+
+var_dump($_GET);
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET['level']) && isset($_GET['period']) && isset($_GET['section_id'])) {
+
+    $curriculum_year = $_GET['year'];
     $level = $_GET['level'];
     $period = $_GET['period'];
     $section_id = $_GET['section_id'];
 
-    // Query the database to fetch offerings_infos_table data
+
     $offerings_query = $conn->prepare("
         SELECT course_offering_info.*, courses.course_code, courses.course_name, courses.lec, courses.lab, courses.units
         FROM course_offering_info
@@ -17,18 +21,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['cy']) && isset($_GET['l
         WHERE course_offering_info.section_id = ?
     ");
 
+
     $offerings_query->bind_param("s", $section_id);
     $offerings_query->execute();
     $offerings_result = $offerings_query->get_result();
 
-    // Fetch all rows as an associative array
+
     $offerings = [];
     while ($row = $offerings_result->fetch_assoc()) {
         $offerings[] = $row;
     }
-    var_dump($offerings_query);
 }
 ?>
+
+
 
 <?php if (!empty($offerings)) { ?>
     <div class="card shadow mb-4">
@@ -56,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['cy']) && isset($_GET['l
                                 <td><?php echo $offering['lec']; ?></td>
                                 <td><?php echo $offering['lab']; ?></td>
                                 <td><?php echo $offering['units']; ?></td>
-                                <td class="text-center"><button onclick="removeoffer('<?php echo $offering['courses_id']; ?>','<?php echo $offering['section_id']; ?>')" class="btn btn-danger btn-flat"><i class="fa fa-times"></i></button></td>
+                                <td class="text-center"><button onclick="removeOffer('<?php echo $offering['courses_id']; ?>','<?php echo $offering['section_id']; ?>')" class="btn btn-danger btn-flat"><i class="fa fa-times"></i></button></td>
                             </tr>
                         <?php } ?>
                     </tbody>
@@ -78,21 +84,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['cy']) && isset($_GET['l
 <?php } ?>
 
 <script>
-    function removeoffer(courses_id,section_id){
+    function removeOffer(courses_id, section_id) {
+
         var array = {};
         array['courses_id'] = courses_id;
         array['section_id'] = section_id;
 
         $.ajax({
             type: "GET",
-            url :"ajax.php?action=remove_course_offering",
+            url: "ajax.php?action=remove_course_offer",
             data: array,
-            success: function(data){
+            success: function(data) {
                 alert_toast(data, 'danger');
-                searchcourse('<?php echo $curriculum_year; ?>','<?php echo $level; ?>','<?php echo $period; ?>','<?php echo $section_id; ?>')
-            }, error: function(){
+                console.log(data)
+                searchcourse('<?php echo $curriculum_year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_id; ?>');
+            },
+            error: function() {
                 alert('Something Went Wrong');
             }
-        })
+        });
     }
 </script>

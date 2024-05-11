@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['level']) && isset($_GET
     ");
 
     if (!$sections_query) {
-        // If prepare() returns false, there's an error
+
         die('Error: ' . $conn->error);
     }
 

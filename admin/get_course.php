@@ -2,61 +2,63 @@
 include('db_connect.php');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Check if program id is set in the URL
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET['level']) && isset($_GET['period']) && isset($_GET['section_id']) && isset($_GET['program_id'])) {
+
     $year = $_GET['year'] ?? '';
     $level = $_GET['level'] ?? '';
     $period = $_GET['period'] ?? '';
     $section_id = $_GET['section_id'] ?? '';
     $program_id = $_GET['program_id'] ?? '';
 
-    // Fetch courses for the given section ID
+
     $offered_stmt = $conn->prepare("SELECT courses_id FROM course_offering_info WHERE section_id = ?");
     $offered_stmt->bind_param("s", $section_id);
     $offered_stmt->execute();
     $offered_result = $offered_stmt->get_result();
+
+
     $offered_courses = [];
     while ($row = $offered_result->fetch_assoc()) {
         $offered_courses[] = $row['courses_id'];
     }
 
-    // Fetch course data that meets the additional criteria
+
     $courses = [];
+
+    $sql = "SELECT c.* FROM courses c WHERE c.year = ? AND c.level = ? AND c.period = ? AND c.program_id = ?";
     if (!empty($offered_courses)) {
-        $placeholders = implode(',', array_fill(0, count($offered_courses), '?'));
-        $types = str_repeat("s", count($offered_courses));
-        $params = array_merge([$year, $level, $period, $program_id], $offered_courses);
-
-        $course_stmt = $conn->prepare("
-            SELECT c.*
-            FROM courses c
-            WHERE c.year = ? 
-            AND c.level = ? 
-            AND c.period = ?
-            AND c.program_id = ?
-            AND c.id NOT IN ($placeholders)
-        ");
-
-        // Dynamically bind parameters
-        $bind_params = array_merge([$types], $params);
-        call_user_func_array([$course_stmt, 'bind_param'], $bind_params);
-
-        // Execute the SQL query
-        $course_stmt->execute();
-
-        // Check for errors
-        if ($course_stmt->error) {
-            echo "Error: " . $course_stmt->error;
+        $sql .= " AND c.id NOT IN (";
+        foreach ($offered_courses as $course_id) {
+            $sql .= '?,';
         }
 
-        $course_result = $course_stmt->get_result();
-        while ($row = $course_result->fetch_assoc()) {
-            $courses[] = $row;
-        }
+        $sql = rtrim($sql, ',') . ')';
+    }
+
+
+
+    $course_stmt = $conn->prepare($sql);
+
+
+    $bindParams = array_merge([$year, $level, $period, $program_id], $offered_courses);
+    $types = str_repeat('s', count($bindParams));
+    $course_stmt->bind_param($types, ...$bindParams);
+
+
+    $course_stmt->execute();
+
+
+    if ($course_stmt->error) {
+        echo "Error: " . $course_stmt->error;
+    }
+
+
+    $course_result = $course_stmt->get_result();
+    while ($row = $course_result->fetch_assoc()) {
+        $courses[] = $row;
     }
 }
 ?>
-
 
 <div>
     <?php if (!empty($courses)) { ?>

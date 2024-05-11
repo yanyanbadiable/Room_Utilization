@@ -639,14 +639,13 @@ class Action
 				echo 'Error preparing query: ' . $this->db->error;
 				return;
 			}
-			$stmt->bind_param("ss", $courses_id, $section_id);
+			$stmt->bind_param("ii", $courses_id, $section_id);
 			$stmt->execute();
 			$result = $stmt->get_result();
 
-			// Fetch the first row
 			$check_if_exists = $result->fetch_assoc();
 
-			// If the record exists, delete it
+
 			if ($check_if_exists) {
 				// Prepare and execute DELETE query
 				$delete_query = "DELETE FROM course_offering_info WHERE courses_id = ? AND section_id = ?";
@@ -655,10 +654,10 @@ class Action
 					echo 'Error preparing delete query: ' . $this->db->error;
 					return;
 				}
-				$stmt->bind_param("ss", $courses_id, $section_id);
+				$stmt->bind_param("ii", $courses_id, $section_id);
 				$stmt->execute();
 
-				// Check if deletion was successful
+
 				if ($stmt->affected_rows > 0) {
 					echo 'Removed Course Offered!';
 				} else {
