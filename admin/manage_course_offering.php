@@ -3,6 +3,9 @@ include('db_connect.php');
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
+// Initialize an empty array for years
+$years = [];
+
 // Check if program code is set in the URL
 if (isset($_GET['program_id'])) {
     // Get the program code from the URL parameter
@@ -24,8 +27,12 @@ if (isset($_GET['program_id'])) {
     $courses_result = $courses_query->get_result();
     $courses = $courses_result->fetch_all(MYSQLI_ASSOC);
 
-    // Fetch years from the courses result
-    $years = array_column($courses, 'year');
+    // Fetch years from the courses result and populate $years array
+    foreach ($courses as $course) {
+        $years[] = $course['year'];
+    }
+    // Remove duplicate years
+    $years = array_unique($years);
 }
 ?>
 <style>
@@ -80,9 +87,9 @@ if (isset($_GET['program_id'])) {
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label>Curriculum Year</label>
-                                        <select class="form-control" id="cy">
-                                            <?php foreach (array_unique($years) as $year) : ?>
+                                        <label>Year</label>
+                                        <select class="form-control" id="year">
+                                            <?php foreach ($years as $year) : ?>
                                                 <option value="<?php echo $year; ?>"><?php echo $year; ?></option>
                                             <?php endforeach; ?>
                                         </select>
@@ -111,8 +118,7 @@ if (isset($_GET['program_id'])) {
                                 </div>
                             </div>
                             <div class="form-group">
-                                <!-- Pass the values of cy, level, and period to the searchcourse function -->
-                                <a id="search_button" class="btn btn-flat btn-block btn-success text-white" onclick='searchcourse($("#cy").val(), $("#level").val(), $("#period").val(), $("#section_name").val())'>Search</a>
+                                <a id="search_button" class="btn btn-flat btn-block btn-success text-white" onclick='searchcourse($("#year").val(), $("#level").val(), $("#period").val(), $("#section_id").val())'>Search</a>
                             </div>
                         </div>
                     </div>
@@ -127,87 +133,70 @@ if (isset($_GET['program_id'])) {
         </div>
     </div>
 </div>
+
 <script>
     function getsections(level) {
+        var array = {};
+        array['level'] = level;
+        array['program_code'] = "<?php echo $row['program_code'] ?>";
         $.ajax({
             type: "GET",
-            url: "ajax.php?action=get_section",
-            data: {
-                level: level
+            url: "get_section.php",
+            data: array,
+            success: function(data) {
+                $('#displaysections').html(data).fadeIn();
+                $('#displaysearchcourse').fadeIn();
             },
-            success: function(response) {
-                var data = JSON.parse(response);
-                $('#displaysections').html(data.html);
-                $('#displaysearcourse');
-            },
-            error: function() {
-                console.error('Error fetching sections.');
+            error: function(xhr, status, error) {
+                console.error('Error fetching sections: ' + error);
             }
         });
     }
 
-    // Add onchange event handlers to the curriculum year and section dropdowns
-    $('#cy, #section_name').on('change', function() {
-        // Check if both the curriculum year and section have values
-        var cy = $("#cy").val();
-        var section_name = $("#section_name").val();
-        if (cy && section_name) {
-            // Enable the search button
-            $('#search_button').prop('disabled', false);
-        } else {
-            // Disable the search button
-            $('#search_button').prop('disabled', true);
-        }
-    });
 
-    function searchcourse(cy, level, period, section_name, program_id) {
+    function searchcourse(year, level, period, section_id) {
         var array = {};
-        array['cy'] = cy;
+        array['year'] = year;
         array['level'] = level;
         array['period'] = period;
-        array['section_name'] = section_name;
+        array['section_id'] = section_id;
+        array['program_id'] = <?php echo $row['id'] ?>;
 
-        var program_id = '<?php echo $program_code; ?>';
-
-        var section_name = $("#section_name").val();
-        var curriculum_year = cy;
-
-        if (section_name != "") {
+        if (section_id != "") {
             $.ajax({
                 type: "GET",
-                url: "add_course_offer.php?program_id=" + program_id + "&section_name=" + section_name + "&curriculum_year=" + curriculum_year,
+                url: "get_course.php",
                 data: array,
                 success: function(data) {
                     $('#displaycourses').html(data).fadeIn();
-                    searchoffering(cy, level, period, section_name, program_id);
+                    searchoffering(year, level, period, section_id);
                 },
-                error: function() {
-                    console.error('Error fetching courses.');
+                error: function(xhr, status, error) {
+                    console.error('Error fetching courses: ' + error);
                 }
             });
         } else {
-            toast.error('Please input a section', 'Notification!');
+            alert_toast('Please input a section', 'error');
         }
     }
 
 
-    function searchoffering(cy, level, period, section_name, program_id) {
+    function searchoffering(year, level, period, section_id) {
         var array = {};
-        array['cy'] = cy;
+        array['year'] = year;
         array['level'] = level;
         array['period'] = period;
-        array['section_name'] = section_name;
-        array['program_id'] = program_id; // Include program_id in the data
+        array['section_id'] = section_id;
 
         $.ajax({
             type: "GET",
-            url: "course_offered.php",
+            url: "get_course_offered.php",
             data: array,
             success: function(data) {
                 $('#displayoffered').html(data).fadeIn();
             },
-            error: function() {
-                console.error('Error fetching offered courses.');
+            error: function(xhr, status, error) {
+                alert_toast('Error fetching offered courses: ' + error, 'error');
             }
         });
     }

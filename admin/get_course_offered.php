@@ -3,56 +3,31 @@ include('db_connect.php');
 
 // Enable error reporting
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
-$program_code = '';
-$level = '';
-$section_name = '';
-$offerings = [];
-
-if (isset($_GET['program_code'], $_GET['level'], $_GET['section_name'])) {
-    $program_code = $_GET['program_code'];
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['cy']) && isset($_GET['level']) && isset($_GET['period']) && isset($_GET['section_id'])) {
+    $curriculum_year = $_GET['cy'];
     $level = $_GET['level'];
-    $section_name = $_GET['section_name'];
+    $period = $_GET['period'];
+    $section_id = $_GET['section_id'];
 
-    // Prepare the query
+    // Query the database to fetch offerings_infos_table data
     $offerings_query = $conn->prepare("
-        SELECT 
-            course_offering_info.*,
-            courses.course_code,
-            courses.course_name
-        FROM 
-            course_offering_info
-        INNER JOIN
-            courses ON course_offering_info.courses_id = courses.id
-        INNER JOIN
-            sections ON course_offering_info.section_id = sections.id
-        WHERE 
-        course_offering_info.courses_id = 63 AND
-        sections.id = 12 AND
-        courses.program_id = ? AND
-        sections.level = ?
+        SELECT course_offering_info.*, courses.course_code, courses.course_name, courses.lec, courses.lab, courses.units
+        FROM course_offering_info
+        INNER JOIN courses ON course_offering_info.courses_id = courses.id
+        WHERE course_offering_info.section_id = ?
     ");
-    
-    // Bind parameters
-    $offerings_query->bind_param("is", $program_code, $level);
 
-    // Execute the query
+    $offerings_query->bind_param("s", $section_id);
     $offerings_query->execute();
-    
-    // Check for errors after executing the query
-    if ($offerings_query->error) {
-        printf("Error: %s.\n", $offerings_query->error);
-        exit();
-    }
-    
-    // Get the result
     $offerings_result = $offerings_query->get_result();
-    $offerings = $offerings_result->fetch_all(MYSQLI_ASSOC);
-    
-    var_dump($offerings);
+
+    // Fetch all rows as an associative array
+    $offerings = [];
+    while ($row = $offerings_result->fetch_assoc()) {
+        $offerings[] = $row;
+    }
 }
 ?>
-
 
 <?php if (!empty($offerings)) { ?>
     <div class="card shadow mb-4">
@@ -61,13 +36,15 @@ if (isset($_GET['program_code'], $_GET['level'], $_GET['section_name'])) {
         </div>
         <div class='card-body'>
             <div class='table-responsive'>
-                <table class='table table-bordered table-striped'>
+                <table class='table table-bordered'>
                     <thead>
                         <tr>
                             <th>Course Code</th>
-                            <th>Course Name</th>
-                            <th width="40%">Schedule</th>
-                            <th width="5%">Action</th>
+                            <th width="35%">Description</th>
+                            <th>Lec</th>
+                            <th>Lab</th>
+                            <th>Units</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,13 +52,10 @@ if (isset($_GET['program_code'], $_GET['level'], $_GET['section_name'])) {
                             <tr>
                                 <td><?php echo $offering['course_code']; ?></td>
                                 <td><?php echo $offering['course_name']; ?></td>
-                                <td>
-                                    <!-- Display schedule information here -->
-                                    <?php echo $offering['schedule']; ?>
-                                </td>
-                                <td>
-                                <td><a href="<?php echo '/admin/course_scheduling/schedule/' . $course['id'] . '/' . $section_name; ?>" target="_blank" class="btn btn-flat btn-success"><i class="fa fa-pencil"></i></a></td>
-                                </td>
+                                <td><?php echo $offering['lec']; ?></td>
+                                <td><?php echo $offering['lab']; ?></td>
+                                <td><?php echo $offering['units']; ?></td>
+                                <td class="text-center"><button onclick="removeoffer('<?php echo $offering['courses_id']; ?>','<?php echo $offering['section_id']; ?>')" class="btn btn-danger btn-flat"><i class="fa fa-times"></i></button></td>
                             </tr>
                         <?php } ?>
                     </tbody>
@@ -103,16 +77,21 @@ if (isset($_GET['program_code'], $_GET['level'], $_GET['section_name'])) {
 <?php } ?>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var removeButtons = document.querySelectorAll('.remove-course-offer');
-        removeButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
-                var courseId = button.getAttribute('data-course-id');
-                var sectionId = button.getAttribute('data-section-id');
+    function removeoffer(courses_id,section_id){
+        var array = {};
+        array['courses_id'] = courses_id;
+        array['section_id'] = section_id;
 
-                // Assuming you have a function searchcourse defined
-                searchcourse('<?php echo $course_year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_name; ?>');
-            });
-        });
-    });
+        $.ajax({
+            type: "GET",
+            url :"ajax.php?action=remove_course_offering",
+            data: array,
+            success: function(data){
+                alert_toast(data, 'danger');
+                searchcourse('<?php echo $curriculum_year; ?>','<?php echo $level; ?>','<?php echo $period; ?>','<?php echo $section_id; ?>')
+            }, error: function(){
+                alert('Something Went Wrong');
+            }
+        })
+    }
 </script>
