@@ -297,45 +297,46 @@ class Action
 	{
 		$res = 1;
 		extract($_POST);
-		var_dump($_POST);
 		$stmt = $this->db->prepare("INSERT INTO courses (year, period, level, program_id, course_code, course_name, lec, lab, units, is_comlab) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		$stmt->bind_param("ssssssssss", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val);
+		$stmt->bind_param("ssssssdddd", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val);
 
-		foreach ($course_code as $key => $value) {
-			// Set values for each iteration
-			$year_val = date("Y");
-			$period_val = $period[$key];
-			$level_val = $level[$key];
-			$program_id_val = $program_id[$key];
-			$course_code_val = $course_code[$key];
-			$course_name_val = $course_name[$key];
-			$lec_val = $lec[$key];
-			$lab_val = $lab[$key];
-			$units_val = $units[$key];
-			$is_comlab_val = $is_comlab[$key];
+		foreach ($year as $key => $value) {
+			if (array_key_exists($key, $year)) {
+				// Set values for each iteration
+				$year_val = date("Y");
+				$period_val = $period[$key];
+				$level_val = $level[$key];
+				$program_id_val = $program_id[$key];
+				$course_code_val = $course_code[$key];
+				$course_name_val = $course_name[$key];
+				$lec_val = $lec[$key];
+				$lab_val = $lab[$key];
+				$units_val = $units[$key];
+				$is_comlab_val = $is_comlab[$key];
 
-			// Check if the course already exists in the database
-			$check_stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_code = ? AND course_name = ?");
-			$check_stmt->bind_param("ss", $course_code_val, $course_name_val);
-			$check_stmt->execute();
-			$check_stmt->bind_result($count);
-			$check_stmt->fetch();
-			$check_stmt->close();
+				// Check if the course already exists in the database
+				$check_stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_code = ? AND course_name = ?");
+				$check_stmt->bind_param("ss", $course_code_val, $course_name_val);
+				$check_stmt->execute();
+				$check_stmt->bind_result($count);
+				$check_stmt->fetch();
+				$check_stmt->close();
 
-			var_dump($count);
+				// var_dump($count);
 
-			// If course already exists, set $res to 0 and skip insertion
-			if ($count > 0) {
-				$res = 0;
-				continue; // Skip insertion
-			}
+				// If course already exists, set $res to 0 and skip insertion
+				if ($count > 0) {
+					$res = 0;
+					continue; // Skip insertion
+				}
 
-			// Execute the insert query
-			$save = $stmt->execute();
+				// Execute the insert query
+				$save = $stmt->execute();
 
-			// If insertion fails, set $res to 0
-			if (!$save) {
-				$res = 0;
+				// If insertion fails, set $res to 0
+				if (!$save) {
+					$res = 0;
+				}
 			}
 		}
 
@@ -343,6 +344,46 @@ class Action
 
 		return $res;
 	}
+
+
+
+	function edit_course() {
+		// Assuming this function is within a class context and $this->db represents your database connection
+	
+		if (isset($_POST['course_id'], $_POST['course_code'], $_POST['course_name'], $_POST['lec'], $_POST['lab'], $_POST['units'], $_POST['comlab'], $_POST['program_code'], $_POST['year'])) {
+			$course_id = $_POST['course_id'];
+			
+			// Retrieve form data from POST    
+			$course_code = $_POST['course_code'];
+			$course_name = $_POST['course_name'];
+			$lec = $_POST['lec'];
+			$lab = $_POST['lab'];
+			$units = $_POST['units'];
+			$is_comlab = $_POST['comlab'];
+			$program_code = $_POST['program_code'];
+			$year = $_POST['year'];
+	
+			// Prepare and execute the update query
+			$update_query = "UPDATE courses SET course_code = ?, course_name = ?, lec = ?, lab = ?, units = ?, is_comlab = ? WHERE id = ?";
+			$update_stmt = $this->db->prepare($update_query);
+			$update_stmt->bind_param("ssdddsi", $course_code, $course_name, $lec, $lab, $units, $is_comlab, $course_id); // Use 'i' for integer, 'd' for double/float
+	
+			// Execute the statement
+			$update_result = $update_stmt->execute();
+	
+			if ($update_result) {
+				// Send response of "1" for success
+				return 1;
+			} else {
+				// Send response of "0" for failure
+				return 0;
+			}
+		} else {
+			// Send response of 0 for missing parameters
+			return 0;
+		}
+	}
+	
 
 
 
@@ -432,47 +473,6 @@ class Action
 			}
 		}
 	}
-
-
-
-	// function get_section()
-	// {
-	// 	if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['level']) && isset($_GET['program_code'])) {
-	// 		// Retrieve level and program_code from the request
-	// 		$level = $_GET['level'];
-	// 		$program_code = $_GET['program_code'];
-
-	// 		$query = "
-	//         SELECT s.*, p.program_code 
-	//         FROM sections s 
-	//         INNER JOIN program p ON s.program_id = p.id
-	//         WHERE s.level = ? AND s.is_active = 1 AND p.program_code = ?
-	//     	";
-	// 		$stmt = $this->db->prepare($query);
-	// 		$stmt->bind_param("ss", $level, $program_code);
-	// 		$stmt->execute();
-	// 		$result = $stmt->get_result();
-
-	// 		// Generate HTML for the dropdown options
-	// 		$html = '<label>Section</label>';
-	// 		$html .= '<select class="form-control" id="section_id">';
-	// 		$html .= '<option>Please Select</option>';
-
-	// 		// Fetch and append the sections to HTML
-	// 		while ($section = $result->fetch_assoc()) {
-	// 			$section_name_concatenated = $section['program_code'] . '-' . substr($section['level'], 0, 1) . $section['section_name'];
-	// 			$html .= '<option value="' . $section['id'] . '">' . $section_name_concatenated . '</option>';
-	// 		}
-	// 		$html .= '</select>';
-
-	// 		// Return the HTML as JSON
-	// 		$data['html'] = $html;
-	// 		return json_encode($data);
-	// 	}
-	// }
-
-
-
 
 
 

@@ -81,6 +81,12 @@ if ($action == "save_course") {
 		echo $save;
 }
 
+if ($action == "edit_course") {
+	$edit = $crud->edit_course();
+	if ($edit)
+		echo $edit;
+}
+
 if ($action == "delete_course") {
 	$delete = $crud->delete_course();
 	if ($delete)
@@ -145,12 +151,6 @@ if ($action == "delete_schedule") {
 }
 if ($action == "get_schedule") {
 	$get = $crud->get_schedule();
-	if ($get)
-		echo $get;
-}
-
-if ($action == "get_section") {
-	$get = $crud->get_section();
 	if ($get)
 		echo $get;
 }

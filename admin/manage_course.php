@@ -1,21 +1,17 @@
 <?php
 include('db_connect.php');
 
-// Prepare and execute the query
-$program_query = $conn->prepare("SELECT * FROM program");
-$program_query->execute();
+$query = "SELECT id, program_code, program_name FROM program ORDER BY program_code";
+$result = mysqli_query($conn, $query);
 
-// Get the result set
-$program_result = $program_query->get_result();
-
-// Fetch all rows as associative arrays
-$programs = $program_result->fetch_all(MYSQLI_ASSOC);
-
-
-
-
-
+$programs = [];
+if ($result) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $programs[] = $row;
+    }
+}
 ?>
+
 <style>
     .card-header {
         border-bottom: none;
@@ -24,13 +20,13 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
     .form-control {
         width: auto;
         height: auto;
-
     }
 
-    .remove {
+    /* .remove {
         display: block !important;
-    }
+    } */
 </style>
+
 <section class="content container-fluid">
     <div class="row">
         <div class="col-sm-12">
@@ -45,7 +41,7 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
             </section>
             <div class="card shadow mb-4">
                 <form id="manage_course">
-                    <div class="card-header bg-transparent"><i></i>
+                    <div class="card-header bg-transparent">
                         <h5 class='card-title'></h5>
                     </div>
                     <div class="card-body">
@@ -54,7 +50,6 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
                                 <thead>
                                     <tr>
                                         <th>Action</th>
-
                                         <th>Period</th>
                                         <th>Level</th>
                                         <th>Program Code</th>
@@ -68,49 +63,52 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
                                 </thead>
                                 <tbody>
                                     <tr>
+                                        <input type="hidden" class="form-control" name="year[]" id="year" value="<?php echo date('Y'); ?>">
                                         <td><button type="button" class="add btn btn-flat btn-primary"><i class="fa fa-plus-circle"></i></button></td>
-
                                         <td>
-                                            <select class=" form-control" id="period1" name="period[]">
+                                            <select class="form-control" id="period1" name="period[]">
                                                 <option value="1st Semester">1st Semester</option>
                                                 <option value="2nd Semester">2nd Semester</option>
                                             </select>
                                         </td>
                                         <td>
-                                            <select class=" form-control" id="level1" name="level[]">
+                                            <select class="form-control" id="level1" name="level[]">
                                                 <option value="1st Year">1st Year</option>
                                                 <option value="2nd Year">2nd Year</option>
                                                 <option value="3rd Year">3rd Year</option>
                                                 <option value="4th Year">4th Year</option>
-                                                <option value="5th Year">5th Year</option>
                                             </select>
                                         </td>
                                         <td>
-                                            <select class="form-control " id="program1" name="program_id[]">
+                                            <select class="form-control" id="program1" name="program_id[]">
                                                 <?php foreach ($programs as $program) : ?>
-                                                    <option value="<?php echo $program['id'] ?>"><?php echo $program['program_code']; ?></option>
+                                                    <option value="<?php echo $program['id']; ?>">
+                                                        <?php echo $program['program_code']; ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </td>
-
-                                        <td><input type="text" class="form-control" name="course_code[]" id="code1"></td>
-                                        <td><input type="text" class="form-control" name="course_name[]" id="name1"></td>
-                                        <td><input type="number" width: 20% class="form-control" name="lec[]" id="lec1"></td>
-                                        <td><input type="number" width: 20% class="form-control" name="lab[]" id="lab1"></td>
-                                        <td><input type="number" width: 20% class="form-control" name="units[]" id="units1"></td>
-                                        <td align="center"><select class='form-control' id='complab1' name='is_comlab[]'>
-                                                <option value='0'>No</option>
-                                                <option value='1'>Yes</option>
-                                            </select></td>
+                                        <td><input type="text" class="form-control" name="course_code[]" id="code1">
+                                        </td>
+                                        <td><input type="text" class="form-control" name="course_name[]" id="name1">
+                                        </td>
+                                        <td><input type="number" class="form-control" name="lec[]" id="lec1"></td>
+                                        <td><input type="number" class="form-control" name="lab[]" id="lab1"></td>
+                                        <td><input type="number" class="form-control" name="units[]" id="units1"></td>
+                                        <td align="center">
+                                            <select class="form-control" id="comlab1" name="is_comlab[]">
+                                                <option value="0">No</option>
+                                                <option value="1">Yes</option>
+                                            </select>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                     <div class="card-footer d-flex justify-content-end bg-transparent">
-                        <button type="submit" class="btn btn-flat btn-success"><i class="fa fa-check-circle"></i> Save Changes</button>
+                        <button type="submit" class="btn btn-flat btn-success"><i class="fa fa-check-circle"></i> Save
+                            Changes</button>
                     </div>
-
                 </form>
             </div>
         </div>
@@ -118,47 +116,54 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
 </section>
 
 <script>
-    var no = 1;
-
-
-
-    document.addEventListener('DOMContentLoaded', function() {
-
-        var no = 1; // Initialize row counter
-        document.querySelector('.add').addEventListener('click', function(event) {
-            event.preventDefault();
-            var newRow = document.createElement('tr');
-            newRow.id = 'row' + no; // Set unique ID for the new row
-            newRow.innerHTML = `
-            <td><button type="button" class='btn btn-flat btn-danger remove' id='${no}'><i class='fas fa-times'></i></button></td>
-            <td><select class='form-control' name='period[]' id='period${no}'><option value='1st Semester'>1st Semester</option><option value='2nd Semester'>2nd Semester</option></select></td>
-            <td><select class='form-control' name='level[]' id='level${no}'><option value='1st Year'>1st Year</option><option value='2nd Year'>2nd Year</option><option value='3rd Year'>3rd Year</option><option value='4th Year'>4th Year</option><option value='5th Year'>5th Year</option></select></td>
-            <td><select class='form-control' name='program_id[]' id='program${no}'>
-                <?php foreach ($programs as $program) : ?>
-                    <option value='<?php echo $program['id']; ?>'><?php echo $program['program_code']; ?></option>
-                <?php endforeach; ?>
-            </select></td>
-            <td><input type='text' class='form-control' name='course_code[]' id='code${no}'></td>
-            <td><input type='text' class='form-control' name='course_name[]' id='name${no}'></td>
-            <td><input type='number' class='form-control' name='lec[]' id='lec${no}'></td>
-            <td><input type='number' class='form-control' name='lab[]' id='lab${no}'></td>
-            <td><input type='number' class='form-control' name='units[]' id='units${no}'></td>
-            <td align='center'><select class='form-control' id='complab${no}' name='is_comlab[]'><option value='0'>No</option><option value='1'>Yes</option></select></td>`;
-            document.getElementById('dynamic_field').appendChild(newRow);
-            no++; // Increment row counter for next row
-        });
-
-        document.getElementById('dynamic_field').addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove')) {
-                var button_id = e.target.getAttribute('id');
-                document.getElementById('row' + button_id).remove();
-                no--; // Decrement row counter when a row is removed
+    function fetchPrograms(programSelect) {
+        $.ajax({
+            url: 'get_program.php',
+            method: 'GET',
+            success: function(response) {
+                var programs = JSON.parse(response);
+                programs.forEach(function(program) {
+                    $(programSelect).append('<option value="' + program.id + '">' + program.program_code + '</option>');
+                });
             }
         });
+    }
 
-        // Add this code to ensure the remove button is always visible
-        document.querySelectorAll('.remove').forEach(function(button) {
-            button.style.display = 'block';
+    $(document).ready(function() {
+        var no = 1;
+        $('.add').on('click', function(e) {
+            if ($("#code" + no).val() == "" || $("#name" + no).val() == "" || $("#lec" + no).val() == "" || $("#lab" +
+                    no).val() == "" || $("#units" + no).val() == "") {
+                alert_toast('Please Fill-up Required Fields', 'danger');
+            } else {
+                no++;
+                $('#dynamic_field').append(`<tr id='row${no}'>
+                    <input type="hidden" class="form-control" name="year[]" id="year" value="<?php echo date('Y'); ?>">
+                    <td><button class='btn btn-flat btn-danger remove' id='${no}'><i class='fa fa-times'></i></button></td>
+                    <td><select class='form-control' name='period[]' id='period${no}'><option value='1st Semester'>1st Semester</option><option value='2nd Semester'>2nd Semester</option></select></td>
+                    <td><select class='form-control' name='level[]' id='level${no}'><option value='1st Year'>1st Year</option><option value='2nd Year'>2nd Year</option><option value='3rd Year'>3rd Year</option><option value='4th Year'>4th Year</option><option value='5th Year'>5th Year</option></select></td>
+                    <td><select class='form-control' name='program_id[]' id='program${no}'></select></td>
+                    <td><input type='text' class='form-control' name='course_code[]' id='code${no}'></td>
+                    <td><input type='text' class='form-control' name='course_name[]' id='name${no}'></td>
+                    <td><input type='text' class='form-control' name='lec[]' id='lec${no}'></td>
+                    <td><input type='text' class='form-control' name='lab[]' id='lab${no}'></td>
+                    <td><input type='text' class='form-control' name='units[]' id='units${no}'></td>
+                    <td align='center'><select class='form-control' id='comlab${no}' name='comlab[]'><option value='0'>No</option><option value='1'>Yes</option></select></td>
+                </tr>`);
+
+                var programSelect = '#program' + no;
+                fetchPrograms(programSelect);
+            }
+            e.preventDefault();
+            return false;
+        });
+
+        $('#dynamic_field').on('click', '.remove', function(e) {
+            var button_id = $(this).attr("id");
+            $("#row" + button_id + "").remove();
+            no--;
+            e.preventDefault();
+            return false;
         });
 
         document.getElementById('manage_course').addEventListener('submit', function(e) {
@@ -174,17 +179,12 @@ $programs = $program_result->fetch_all(MYSQLI_ASSOC);
                     console.log(resp);
                     if (resp == 1) {
                         alert_toast("Data successfully saved", 'success');
-                        // setTimeout(function() {
-                        //     location.reload();
-                        // }, 100);
+                        window.location.href = 'index.php?page=courses';
                     } else {
-                        $('#msg').html('<div class="alert alert-danger">' + resp + '</div>');
-                        end_load();
+                        alert_toast("Course already exists", 'danger');
                     }
                 }
             });
         });
-
-
     });
 </script>
