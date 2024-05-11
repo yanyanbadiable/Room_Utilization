@@ -1,4 +1,17 @@
-<?php include('db_connect.php'); ?>
+<?php
+include 'db_connect.php'; // Assuming this file contains database connection logic
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+$query = "SELECT DISTINCT program_code, program_name FROM program ORDER BY program_code";
+$result = $conn->query($query);
+
+// Fetch the results into an array
+$programs = [];
+while ($row = $result->fetch_assoc()) {
+    $programs[] = $row;
+}
+?>
 
 <div class="container-fluid">
     <div class="row">
@@ -7,11 +20,10 @@
             <h3><i class="fa fa-folder"></i> View Courses</h3>
             <ol class="breadcrumb bg-transparent p-0 m-0">
                 <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
-                <li class="breadcrumb-item active"> Course Management</li>
+                <li class="breadcrumb-item active">Course Management</li>
                 <li class="breadcrumb-item active">View Course</li>
             </ol>
         </section>
-        
         <!-- End Section Header -->
 
         <!-- Course Table -->
@@ -36,21 +48,15 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php
-                                        $program = $conn->query("SELECT * FROM program");
-                                        if (!$program) {
-                                            die('Invalid query: ' . $conn->error);
-                                        }
-                                        while ($row = $program->fetch_assoc()) :
-                                        ?>
+                                        <?php foreach ($programs as $program) : ?>
                                             <tr>
-                                                <td><?php echo $row['program_code'] ?></td>
-                                                <td><?php echo $row['program_name'] ?></td>
+                                                <td><?php echo $program['program_code'] ?></td>
+                                                <td><?php echo $program['program_name'] ?></td>
                                                 <td class="text-center">
-                                                    <a href="index.php?page=view_course&program_id=<?php echo $row['id'] ?>" class="btn btn-flat btn-primary"><i class="fa fa-eye"></i></a>
+                                                    <a href="index.php?page=view_course&program_code=<?php echo $program['program_code'] ?>" class="btn btn-flat btn-primary"><i class="fa fa-eye"></i></a>
                                                 </td>
                                             </tr>
-                                        <?php endwhile; ?>
+                                        <?php endforeach; ?>
                                     </tbody>
                                 </table>
                             </div>
@@ -85,9 +91,3 @@
         overflow-y: auto;
     }
 </style>
-
-<script>
-    $(document).ready(function() {
-        $('#dataTable').DataTable();
-    });
-</script>

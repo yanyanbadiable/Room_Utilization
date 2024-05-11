@@ -297,15 +297,12 @@ class Action
 	{
 		$res = 1;
 		extract($_POST);
-
-
+		var_dump($_POST);
 		$stmt = $this->db->prepare("INSERT INTO courses (year, period, level, program_id, course_code, course_name, lec, lab, units, is_comlab) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
 		$stmt->bind_param("ssssssssss", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val);
 
-
 		foreach ($course_code as $key => $value) {
-
+			// Set values for each iteration
 			$year_val = date("Y");
 			$period_val = $period[$key];
 			$level_val = $level[$key];
@@ -317,21 +314,35 @@ class Action
 			$units_val = $units[$key];
 			$is_comlab_val = $is_comlab[$key];
 
+			// Check if the course already exists in the database
+			$check_stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_code = ? AND course_name = ?");
+			$check_stmt->bind_param("ss", $course_code_val, $course_name_val);
+			$check_stmt->execute();
+			$check_stmt->bind_result($count);
+			$check_stmt->fetch();
+			$check_stmt->close();
 
+			var_dump($count);
+
+			// If course already exists, set $res to 0 and skip insertion
+			if ($count > 0) {
+				$res = 0;
+				continue; // Skip insertion
+			}
+
+			// Execute the insert query
 			$save = $stmt->execute();
 
-
+			// If insertion fails, set $res to 0
 			if (!$save) {
 				$res = 0;
 			}
 		}
 
-
 		$stmt->close();
 
 		return $res;
 	}
-
 
 
 
@@ -424,49 +435,44 @@ class Action
 
 
 
-	function get_section()
-	{
-		extract($_GET);
+	// function get_section()
+	// {
+	// 	if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['level']) && isset($_GET['program_code'])) {
+	// 		// Retrieve level and program_code from the request
+	// 		$level = $_GET['level'];
+	// 		$program_code = $_GET['program_code'];
 
-		// Assuming $this->db is your database connection
+	// 		$query = "
+	//         SELECT s.*, p.program_code 
+	//         FROM sections s 
+	//         INNER JOIN program p ON s.program_id = p.id
+	//         WHERE s.level = ? AND s.is_active = 1 AND p.program_code = ?
+	//     	";
+	// 		$stmt = $this->db->prepare($query);
+	// 		$stmt->bind_param("ss", $level, $program_code);
+	// 		$stmt->execute();
+	// 		$result = $stmt->get_result();
 
-		// Fetch sections based on the selected level and where is_active is 1
-		$stmt = $this->db->prepare("
-        SELECT DISTINCT s.section_name, p.program_code, s.level 
-        FROM sections s
-        INNER JOIN program p ON s.program_id = p.id
-        WHERE s.level = ? AND s.is_active = 1
-    ");
+	// 		// Generate HTML for the dropdown options
+	// 		$html = '<label>Section</label>';
+	// 		$html .= '<select class="form-control" id="section_id">';
+	// 		$html .= '<option>Please Select</option>';
 
-		if (!$stmt) {
-			die('Error in preparing SQL statement: ' . $this->db->error);
-		}
+	// 		// Fetch and append the sections to HTML
+	// 		while ($section = $result->fetch_assoc()) {
+	// 			$section_name_concatenated = $section['program_code'] . '-' . substr($section['level'], 0, 1) . $section['section_name'];
+	// 			$html .= '<option value="' . $section['id'] . '">' . $section_name_concatenated . '</option>';
+	// 		}
+	// 		$html .= '</select>';
 
-		$stmt->bind_param("s", $level);
-		if (!$stmt->execute()) {
-			die('Error in executing SQL statement: ' . $stmt->error);
-		}
+	// 		// Return the HTML as JSON
+	// 		$data['html'] = $html;
+	// 		return json_encode($data);
+	// 	}
+	// }
 
-		$result = $stmt->get_result();
-		if (!$result) {
-			die('Error in getting result: ' . $this->db->error);
-		}
 
-		// Generate HTML for the dropdown options
-		$html = '<label>Section</label>';
-		$html .= '<select class="form-control" id="section_name">';
-		$html .= '<option>Please Select</option>';
 
-		while ($section = $result->fetch_assoc()) {
-			$section_name_concatenated = $section['program_code'] . '-' . substr($section['level'], 0, 1) . $section['section_name'];
-			$html .= '<option value="' . $section_name_concatenated . '">' . $section_name_concatenated . '</option>';
-		}
-		$html .= '</select>';
-
-		// Return the HTML as JSON
-		$data['html'] = $html;
-		return json_encode($data);
-	}
 
 
 
@@ -590,72 +596,79 @@ class Action
 
 	function add_course_offer()
 	{
-		if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
-			// Get section_name and course_id from input
-			$section_name = 12;
-			$course_id = $_GET['course_id'] ?? null;
+		if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['section_id']) && isset($_GET['course_id'])) {
+			$section_id = $_GET['section_id'];
+			$course_id = $_GET['course_id'];
 
-			// Check if both section_name and course_id are set
-			if ($section_name !== null && $course_id !== null) {
-				// Check if the offering already exists
-				$sql_check = "SELECT * FROM course_offering_info WHERE courses_id = ? AND section_id = ?";
-				$stmt_check = $this->db->prepare($sql_check);
-				$stmt_check->bind_param("ss", $course_id, $section_name);
-				$stmt_check->execute();
-				$result_check = $stmt_check->get_result();
+			// Query to check if the offering already exists
+			$check_query = $this->db->prepare("SELECT * FROM course_offering_info WHERE courses_id = ? AND section_id = ?");
+			$check_query->bind_param("ss", $course_id, $section_id);
+			$check_query->execute();
+			$check_result = $check_query->get_result();
 
-				// If the offering doesn't exist, create a new one
-				if ($result_check->num_rows === 0) {
-					// Find the curriculum level by ID
-					$sql_curriculum = "SELECT level FROM sections WHERE id = ?";
-					$stmt_curriculum = $this->db->prepare($sql_curriculum);
-					$stmt_curriculum->bind_param("s", $course_id);
-					$stmt_curriculum->execute();
-					$result_curriculum = $stmt_curriculum->get_result();
-					$row_curriculum = $result_curriculum->fetch_assoc();
-					$level = $row_curriculum['level'];
+			// Fetch the curriculum details
+			$course_query = $this->db->prepare("SELECT level FROM courses WHERE id = ?");
+			$course_query->bind_param("s", $course_id);
+			$course_query->execute();
+			$course_result = $course_query->get_result();
+			$course_row = $course_result->fetch_assoc();
+			$level = $course_row['level'];
 
-					// Insert new record
-					$sql_insert = "INSERT INTO course_offering_info (courses_id, section_id) VALUES (?, ?)";
-					$stmt_insert = $this->db->prepare($sql_insert);
-					$stmt_insert->bind_param("ss", $course_id, $section_name);
-					$stmt_insert->execute();
-					echo 'Offered Subject!';
-				} else {
-					echo 'Offered Subject Already Exists!';
-				}
+			// If the offering doesn't exist, add it to the database
+			if ($check_result->num_rows === 0) {
+				$offering_query = $this->db->prepare("INSERT INTO course_offering_info (courses_id, section_id) VALUES (?, ?)");
+				$offering_query->bind_param("ss", $course_id, $section_id);
+				$offering_query->execute();
+				echo 'Offered Subject!';
 			} else {
-				echo 'Missing required parameters!';
+				echo 'Offered Subject Already Exists!';
 			}
-		} else {
-			echo 'Invalid request!';
 		}
 	}
 
 	function remove_course_offering()
 	{
-		if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+		if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['section_id']) && isset($_GET['courses_id'])) {
+			$section_id = $_GET['section_id'];
+			$courses_id = $_GET['courses_id'];
 
-			$curriculum_id = $_GET['curriculum_id'] ?? null;
-			$section_id = $_GET['section_id'] ?? null;
+			// Prepare and execute SELECT query
+			$check_if_exists_query = "SELECT * FROM course_offering_info WHERE courses_id = ? AND section_id = ? LIMIT 1";
+			$stmt = $this->db->prepare($check_if_exists_query);
+			if (!$stmt) {
+				echo 'Error preparing query: ' . $this->db->error;
+				return;
+			}
+			$stmt->bind_param("ss", $courses_id, $section_id);
+			$stmt->execute();
+			$result = $stmt->get_result();
 
-			if ($curriculum_id !== null && $section_id !== null) {
+			// Fetch the first row
+			$check_if_exists = $result->fetch_assoc();
 
-				$sql_delete = "DELETE FROM course_offering_info WHERE id = ? AND section_id = ?";
-				$stmt_delete = $this->db->prepare($sql_delete);
-				$stmt_delete->bind_param("ss", $curriculum_id, $section_id);
-				$stmt_delete->execute();
+			// If the record exists, delete it
+			if ($check_if_exists) {
+				// Prepare and execute DELETE query
+				$delete_query = "DELETE FROM course_offering_info WHERE courses_id = ? AND section_id = ?";
+				$stmt = $this->db->prepare($delete_query);
+				if (!$stmt) {
+					echo 'Error preparing delete query: ' . $this->db->error;
+					return;
+				}
+				$stmt->bind_param("ss", $courses_id, $section_id);
+				$stmt->execute();
 
-				if ($stmt_delete->affected_rows > 0) {
-					echo 'Course Offering Removed Successfully!';
+				// Check if deletion was successful
+				if ($stmt->affected_rows > 0) {
+					echo 'Removed Course Offered!';
 				} else {
-					echo 'Failed to Remove Course Offering!';
+					echo 'Failed to remove Course Offered!';
 				}
 			} else {
-				echo 'Missing required parameters!';
+				echo 'Course Offered not found!';
 			}
 		} else {
-			echo 'Invalid request!';
+			echo 'Invalid Request!';
 		}
 	}
 }
