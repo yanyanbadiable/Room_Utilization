@@ -1,10 +1,10 @@
 <?php
-include('db_connect.php');
+include('../db_connect.php');
 
 // Enable error reporting
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-var_dump($_GET);
+// var_dump($_GET);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET['level']) && isset($_GET['period']) && isset($_GET['section_id'])) {
 

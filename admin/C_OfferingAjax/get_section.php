@@ -1,5 +1,5 @@
 <?php
-include('db_connect.php');
+include('../db_connect.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['level']) && isset($_GET['program_code'])) {
     $level = $_GET['level'];
@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['level']) && isset($_GET
         FROM sections
         INNER JOIN program ON sections.program_id = program.id
         WHERE sections.level = ? AND sections.is_active = 1 AND program.program_code = ?
+        ORDER BY sections.section_name ASC
     ");
 
     if (!$sections_query) {
@@ -25,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['level']) && isset($_GET
     while ($row = $sections_result->fetch_assoc()) {
         $sections[] = $row;
     }
-}
+}     
 ?>
 <label>Section</label>
 <select class="form-control" id="section_id">

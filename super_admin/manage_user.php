@@ -60,7 +60,7 @@ if (isset($_GET['id'])) {
 		e.preventDefault();
 		start_load()
 		$.ajax({
-			url: 'ajax.php?action=save_user',
+			url: '../admin/ajax.php?action=save_user',
 			method: 'POST',
 			data: $(this).serialize(),
 			success: function(resp) {

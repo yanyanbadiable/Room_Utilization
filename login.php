@@ -47,8 +47,7 @@ header("location:index.php");
   <main id="main" class=" bg-dark">
   		<div id="login" class="col-md-4">
   			<div class="card">
-  				<div class="card-body">
-  						
+  				<div class="card-body">	
   					<form id="login-form" >
 					  <h4><b>Welcome To Faculty Scheduling System</b></h4>
   						<div class="form-group">
@@ -60,8 +59,6 @@ header("location:index.php");
   				</div>
   			</div>
   		</div>
-   
-
   </main>
 
   <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a>

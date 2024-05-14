@@ -28,7 +28,7 @@ class Action
 				if ($key != 'password' && !is_numeric($key))
 					$_SESSION['login_' . $key] = $value;
 			}
-			if ($_SESSION['login_type'] != 1) {
+			if ($_SESSION['login_type'] != 0) {
 				foreach ($_SESSION as $key => $value) {
 					unset($_SESSION[$key]);
 				}
@@ -107,28 +107,40 @@ class Action
 
 	function save_user()
 	{
-		extract($_POST);
-		$data = " name = '$name' ";
-		$data .= ", username = '$username' ";
-		if (!empty($password))
-			$data .= ", password = '" . md5($password) . "' ";
-		$data .= ", type = '$type' ";
-		$data .= ", department_id = '$department_id' ";
+		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+			// Retrieve form data
+			$username = $_POST['username'];
+			$firstname = $_POST['firstname'];
+			$middlename = $_POST['middlename'];
+			$lastname = $_POST['lastname'];
+			$extensionname = $_POST['extensionname'];
+			$password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+			$program_id = $_POST['program_id'];
+			$type = 1;
 
-		$chk = $this->db->query("Select * from users where username = '$username' and id !='$id' ")->num_rows;
-		if ($chk > 0) {
-			return 2;
-			exit;
-		}
-		if (empty($id)) {
-			$save = $this->db->query("INSERT INTO users set " . $data);
-		} else {
-			$save = $this->db->query("UPDATE users set " . $data . " where id = " . $id);
-		}
-		if ($save) {
-			return 1;
+			// Insert data into the database using prepared statements
+			$query = "INSERT INTO users (username, fname, mname, lname, extname, password, type, program_id) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+			$stmt = mysqli_prepare($this->db, $query);
+
+			// Bind parameters
+			mysqli_stmt_bind_param($stmt, "ssssssii", $username, $firstname, $middlename, $lastname, $extensionname, $password, $type, $program_id);
+
+			// Execute statement
+			if (mysqli_stmt_execute($stmt)) {
+				// Insertion successful
+				echo '1'; // Return '1' to indicate success to the client-side JavaScript
+			} else {
+				// Insertion failed
+				echo 'Error: ' . mysqli_stmt_error($stmt); // Return error message to the client-side JavaScript
+			}
+
+			// Close statement
+			mysqli_stmt_close($stmt);
 		}
 	}
+
 	function delete_user()
 	{
 		extract($_POST);
@@ -347,12 +359,13 @@ class Action
 
 
 
-	function edit_course() {
+	function edit_course()
+	{
 		// Assuming this function is within a class context and $this->db represents your database connection
-	
+
 		if (isset($_POST['course_id'], $_POST['course_code'], $_POST['course_name'], $_POST['lec'], $_POST['lab'], $_POST['units'], $_POST['comlab'], $_POST['program_code'], $_POST['year'])) {
 			$course_id = $_POST['course_id'];
-			
+
 			// Retrieve form data from POST    
 			$course_code = $_POST['course_code'];
 			$course_name = $_POST['course_name'];
@@ -362,15 +375,15 @@ class Action
 			$is_comlab = $_POST['comlab'];
 			$program_code = $_POST['program_code'];
 			$year = $_POST['year'];
-	
+
 			// Prepare and execute the update query
 			$update_query = "UPDATE courses SET course_code = ?, course_name = ?, lec = ?, lab = ?, units = ?, is_comlab = ? WHERE id = ?";
 			$update_stmt = $this->db->prepare($update_query);
 			$update_stmt->bind_param("ssdddsi", $course_code, $course_name, $lec, $lab, $units, $is_comlab, $course_id); // Use 'i' for integer, 'd' for double/float
-	
+
 			// Execute the statement
 			$update_result = $update_stmt->execute();
-	
+
 			if ($update_result) {
 				// Send response of "1" for success
 				return 1;
@@ -383,7 +396,7 @@ class Action
 			return 0;
 		}
 	}
-	
+
 
 
 
@@ -487,51 +500,57 @@ class Action
 
 	function save_faculty()
 	{
-		extract($_POST);
-		$data = '';
-		foreach ($_POST as $k => $v) {
-			if (!empty($v)) {
-				if ($k != 'id') {
-					if (empty($data))
-						$data .= " $k='{$v}' ";
-					else
-						$data .= ", $k='{$v}' ";
-				}
-			}
-		}
-		if (empty($id_no)) {
-			$i = 1;
-			while ($i == 1) {
-				$rand = mt_rand(1, 99999999);
-				$rand = sprintf("%'08d", $rand);
-				$chk = $this->db->query("SELECT * FROM faculty where id_no = '$rand' ")->num_rows;
-				if ($chk <= 0) {
-					$data .= ", id_no='$rand' ";
-					$i = 0;
-				}
-			}
-		}
+		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+			// Retrieve form data
+			$program_id = $_POST['program_id'];
+			$gender = $_POST['gender'];
+			$designation = $_POST['designation'];
+			$street = $_POST['street'];
+			$barangay = $_POST['barangay'];
+			$municipality = $_POST['municipality'];
+			$province = $_POST['province'];
+			$contact = $_POST['contact'];
+			$email = $_POST['email'];
 
-		if (empty($id)) {
-			if (!empty($id_no)) {
-				$chk = $this->db->query("SELECT * FROM faculty where id_no = '$id_no' ")->num_rows;
-				if ($chk > 0) {
-					return 2;
-				}
+			// Query to get the latest ID from the users table
+			$latestUserIdQuery = "SELECT id FROM users ORDER BY id DESC LIMIT 1";
+
+			// Execute the query to get the latest user ID
+			$latestUserIdResult = mysqli_query($this->db, $latestUserIdQuery);
+
+			if ($latestUserIdResult && mysqli_num_rows($latestUserIdResult) > 0) {
+				$row = mysqli_fetch_assoc($latestUserIdResult);
+				$latestUserId = $row['id'];
+			} else {
+				echo "No users found";
+				return; // Exit the function if no user found
 			}
-			$save = $this->db->query("INSERT INTO faculty set $data ");
-		} else {
-			if (!empty($id_no)) {
-				$chk = $this->db->query("SELECT * FROM faculty where id_no = '$id_no' and id != $id ")->num_rows;
-				if ($chk > 0) {
-					return 2;
-				}
+
+			// Insert data into the database using prepared statements
+			$insertQuery = "INSERT INTO faculty (program_id, gender, designation, street, barangay, municipality, province, contact, email, user_id) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+			$stmt = mysqli_prepare($this->db, $insertQuery);
+
+			// Bind parameters
+			mysqli_stmt_bind_param($stmt, "issssssssi", $program_id, $gender, $designation, $street, $barangay, $municipality, $province, $contact, $email, $latestUserId);
+
+			// Execute statement
+			if (mysqli_stmt_execute($stmt)) {
+				// Insertion successful
+				echo '1'; // Return '1' to indicate success to the client-side JavaScript
+			} else {
+				// Insertion failed
+				echo 'Error: ' . mysqli_stmt_error($stmt); // Return error message to the client-side JavaScript
 			}
-			$save = $this->db->query("UPDATE faculty set $data where id=" . $id);
+
+			// Close statement
+			mysqli_stmt_close($stmt);
 		}
-		if ($save)
-			return 1;
 	}
+
+
+
 	function delete_faculty()
 	{
 		extract($_POST);
@@ -576,23 +595,72 @@ class Action
 	}
 	function get_schedule()
 	{
-		extract($_POST);
-		$data = array();
-		$qry = $this->db->query("SELECT schedules.*, rooms.id as room_id, rooms.room, subjects.id as subject_id, subjects.subject FROM schedules 
-								 LEFT JOIN rooms ON schedules.room_id = rooms.id 
-								 LEFT JOIN subjects ON schedules.subject_id = subjects.id 
-								 WHERE faculty_id = 0 OR faculty_id = $faculty_id");
-		while ($row = $qry->fetch_assoc()) {
-			if ($row['is_repeating'] == 1) {
-				$rdata = json_decode($row['repeating_data']);
-				foreach ($rdata as $k => $v) {
-					$row[$k] = $v;
-				}
-			}
-			$data[] = $row;
-		}
-		return json_encode($data);
+		// if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['course_offering_info_id'])) {
+		// 	$course_offering_info_id = $_GET['course_offering_info_id'];
+		// 	$event_array = array();
+
+		// 	$schedules_result = $this->db->query("SELECT * FROM schedules WHERE course_offering_info_id = $course_offering_info_id");
+		// 	while ($sched = $schedules_result->fetch_assoc()) {
+		// 		// Query to get course detail
+		// 		$course_detail_result = $this->db->query("SELECT courses.course_code, course_offering_info.section_id
+        //                                               FROM courses 
+        //                                               JOIN course_offering_info ON course_offering_info.courses_id = courses.id 
+        //                                               WHERE course_offering_info.id = $course_offering_info_id");
+		// 		if (!$course_detail_result) {
+		// 			throw new Exception("Error fetching course detail information: " . $this->db->error);
+		// 		}
+		// 		$course_detail = $course_detail_result->fetch_assoc();
+
+		// 		// Determine day and color
+		// 		$day = '';
+		// 		$color = '';
+		// 		switch ($sched['day']) {
+		// 			case 'M':
+		// 				$day = 'Monday';
+		// 				$color = 'LightSalmon';
+		// 				break;
+		// 			case 'T':
+		// 				$day = 'Tuesday';
+		// 				$color = 'lightblue';
+		// 				break;
+		// 			case 'W':
+		// 				$day = 'Wednesday';
+		// 				$color = 'LightSalmon';
+		// 				break;
+		// 			case 'Th':
+		// 				$day = 'Thursday';
+		// 				$color = 'lightblue';
+		// 				break;
+		// 			case 'F':
+		// 				$day = 'Friday';
+		// 				$color = 'LightSalmon';
+		// 				break;
+		// 			case 'Sa':
+		// 				$day = 'Saturday';
+		// 				$color = 'lightblue';
+		// 				break;
+		// 			case 'Su':
+		// 				$day = 'Sunday';
+		// 				$color = 'LightSalmon';
+		// 				break;
+		// 		}
+
+		// 		// Add event to event array
+		// 		$event_array[] = array(
+		// 			'id' => $sched['id'],
+		// 			'title' => $course_detail['course_code'] . '<br>' . $sched['room_id'] . '<br>' . $course_detail['section_id'],
+		// 			'start' => date('Y-m-d', strtotime('this ' . $day)) . 'T' . $sched['time_start'],
+		// 			'end' => date('Y-m-d', strtotime('this ' . $day)) . 'T' . $sched['time_end'],
+		// 			'color' => $color,
+		// 			"textEscape" => 'false',
+		// 			'textColor' => 'black',
+		// 			'course_offering_info_id' => $course_offering_info_id
+		// 		);
+		// 	}
+		// 	echo json_encode($event_array);
+		// }
 	}
+
 
 	function add_course_offer()
 	{
@@ -668,6 +736,52 @@ class Action
 			}
 		} else {
 			echo 'Invalid Request!';
+		}
+	}
+
+	function add_schedule()
+	{
+		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+			// Retrieving data from the request
+			$course_offering_info_id = $_POST['course_offering_info_id'];
+			$day = $_POST['day'];
+			$time_start = $_POST['time_start'];
+			$time_end = $_POST['time_end'];
+			$section_id = $_POST['section_id'];
+			$room_id = $_POST['room_id'];
+
+			// Query to check if the same schedule exists
+			$query = "SELECT * FROM course_offering_info
+                  JOIN schedules ON course_offering_info.id = schedules.course_offering_info_id
+                  WHERE course_offering_info.section_id = '$section_id'
+                  AND schedules.day = '$day'
+                  AND schedules.time_start = '" . date('H:i:s', strtotime($time_start)) . "'
+                  AND schedules.time_end = '" . date('H:i:s', strtotime($time_end)) . "'";
+
+			// Execute the query
+			$result = mysqli_query($this->db, $query);
+
+			// Check if the same schedule exists
+			if (mysqli_num_rows($result) == 0) {
+				// Insert new schedule
+				$new_schedule_query = "INSERT INTO schedules (day, time_start, time_end, room_id, course_offering_info_id)
+                                   VALUES ('$day', '" . date('H:i:s', strtotime($time_start)) . "', '" . date('H:i:s', strtotime($time_end)) . "', '$room_id', '$course_offering_info_id')";
+
+				// Execute the insert query
+				if (mysqli_query($this->db, $new_schedule_query)) {
+					// Respond with success
+					header('Content-Type: application/json');
+					echo json_encode(array('status' => 'success'));
+				} else {
+					// Respond with error
+					header('Content-Type: application/json');
+					echo json_encode(array('status' => 'error', 'message' => mysqli_error($this->db)));
+				}
+			} else {
+				// Respond with error (same schedule found)
+				header('Content-Type: application/json');
+				echo json_encode(array('status' => 'error', 'message' => 'Same schedule already exists.'));
+			}
 		}
 	}
 }

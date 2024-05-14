@@ -167,6 +167,12 @@ if ($action == "remove_course_offer") {
 		echo $save;
 }
 
+if ($action == "add_schedule") {
+	$save = $crud->add_schedule();
+	if ($save)
+		echo $save;
+}
+
 
 
 ob_end_flush();

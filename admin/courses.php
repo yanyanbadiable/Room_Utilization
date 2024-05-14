@@ -3,7 +3,7 @@ include 'db_connect.php'; // Assuming this file contains database connection log
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-$query = "SELECT DISTINCT program_code, program_name FROM program ORDER BY program_code";
+$query = "SELECT DISTINCT program_code, program_name FROM program";
 $result = $conn->query($query);
 
 // Fetch the results into an array

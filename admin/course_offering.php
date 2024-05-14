@@ -19,7 +19,7 @@
                         </div>
                         <div class="card-body">
                             <div class='table-responsive'>
-                                <table class="table table-bordered table-striped">
+                                <table class="table table-bordered">
                                     <thead>
                                         <tr>
                                             <th>Program Code</th>
@@ -40,7 +40,6 @@
                                                 <td><?php echo $row['program_name'] ?></td>
                                                 <td class="text-center">
                                                     <a href="index.php?page=manage_course_offering&program_id=<?php echo $row['id'] ?>" class="btn btn-flat btn-primary"><i class="fas fa-chevron-right"></i></a>
-
                                                 </td>
                                             </tr>
                                         <?php endwhile; ?>

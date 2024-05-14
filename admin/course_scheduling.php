@@ -28,7 +28,7 @@
                                         $program = $conn->query("SELECT id, program_code FROM program");
                                         while ($row = $program->fetch_assoc()) :
                                         ?>
-                                            <option value="<?php echo $row['id'] ?>"><?php echo $row['program_code'] ?></option>
+                                            <option value="<?php echo $row['program_code'] ?>"><?php echo $row['program_code'] ?></option>
                                         <?php endwhile; ?>
                                     </select>
                                 </div>
@@ -66,17 +66,15 @@
     })
 
     function getsection(program_code, level) {
+        var array = {};
+        array['program_code'] = program_code;
+        array['level'] = level;
         $.ajax({
             type: "GET",
-            url: "ajax.php?action=get_section",
-            data: {
-                program_code: program_code,
-                level: level
-            },
-            dataType: "json",
-            success: function(response) {
-
-                $('#displaysection').html(response.html).fadeIn();
+            url: "SchedAjax/CS_get_section.php",
+            data: array,
+            success: function(data) {
+                $('#displaysection').html(data).fadeIn();
                 // Clear the displayed courses
                 $('#displayoffered').html('').hide();
             },
@@ -86,27 +84,25 @@
         });
     }
 
-
-    $('#level').on('change', function() {
-        var level = $(this).val();
-        if (level !== '') {
-            var program_code = $('#program_code').val();
-            getsection(program_code, level);
-        }
-    });
-
+    // $('#level').on('change', function() {
+    //     var level = $(this).val();
+    //     if (level !== '') {
+    //         var program_code = $('#program_code').val();
+    //         getsection(program_code, level);
+    //     }
+    // });
 
 
-    function getcoursesoffered(program_code, level, section_name) {
+    function getcoursesoffered(program_code, level, section_id) {
+        var array = {};
+        array['program_code'] = program_code;
+        array['level'] = level;
+        array['section_id'] = section_id;
         $.ajax({
             type: "GET",
             // url: "index.php?page=get_course_offered",
-            url: "get_course_offered.php",
-            data: {
-                program_code: program_code,
-                level: level,
-                section_name: section_name
-            },
+            url: "SchedAjax/CS_get_course_offered.php",
+            data: array,
             success: function(data) {
                 console.log(data);
                 $('#displayoffered').html(data).fadeIn();
@@ -115,16 +111,16 @@
         });
     }
 
-    // Call getcoursesoffered only when a section is selected
-    $(document).on('change', '#section_name', function() {
-        var section_name = $(this).val();
-        if (section_name !== '') {
-            var program_code = $('#program_code').val();
-            var level = $('#level').val();
-            getcoursesoffered(program_code, level, section_name);
-        } else {
-            // If no section is selected, hide the displayed courses
-            $('#displayoffered').html('').hide();
-        }
-    });
+    // // Call getcoursesoffered only when a section is selected
+    // $(document).on('change', '#section_id', function() {
+    //     var section_id = $(this).val();
+    //     if (section_id !== '') {
+    //         var program_code = $('#program_code').val();
+    //         var level = $('#level').val();
+    //         getcoursesoffered(program_code, level, section_id);
+    //     } else {
+    //         // If no section is selected, hide the displayed courses
+    //         $('#displayoffered').html('').hide();
+    //     }
+    // });
 </script>

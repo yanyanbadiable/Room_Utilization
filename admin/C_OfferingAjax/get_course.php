@@ -1,5 +1,5 @@
 <?php
-include('db_connect.php');
+include('../db_connect.php');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET['level']) && isset($_GET['period']) && isset($_GET['section_id']) && isset($_GET['program_id'])) {

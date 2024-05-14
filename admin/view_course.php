@@ -4,8 +4,8 @@ include('db_connect.php');
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Initialize variables
-$curricula = [];
-
+$courses = [];
+// var_dump($_GET['program_code']);
 // Check if program code is set in the URL
 if (isset($_GET['program_code'])) {
     // Get the program code from the URL parameter
@@ -32,7 +32,7 @@ if (isset($_GET['program_code'])) {
 
         // Fetch the results into an array
         while ($row = $result->fetch_assoc()) {
-            $curricula[] = $row['year'];
+            $courses[] = $row['year'];
         }
     } else {
         // Program not found, handle error if needed
@@ -73,7 +73,7 @@ if (isset($_GET['program_code'])) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($curricula as $year) : ?>
+                                    <?php foreach ($courses as $year) : ?>
                                         <tr>
                                         <td><?php echo $year . ' - ' . ($year + 1); ?></td>
                                             <td class="text-center">

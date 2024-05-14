@@ -143,7 +143,7 @@ if (isset($_GET['program_id'])) {
         array['program_code'] = "<?php echo $row['program_code'] ?>";
         $.ajax({
             type: "GET",
-            url: "get_section.php",
+            url: "C_OfferingAjax/get_section.php",
             data: array,
             success: function(data) {
                 $('#displaysections').html(data).fadeIn();
@@ -172,7 +172,7 @@ if (isset($_GET['program_id'])) {
         if (section_id !== "" && section_id !== "Please Select") {
             $.ajax({
                 type: "GET",
-                url: "get_course.php",
+                url: "C_OfferingAjax/get_course.php",
                 data: array,
                 success: function(data) {
                     $('#displaycourses').html(data).fadeIn();
@@ -198,7 +198,7 @@ if (isset($_GET['program_id'])) {
 
         $.ajax({
             type: "GET",
-            url: "get_course_offered.php",
+            url: "C_OfferingAjax/get_course_offered.php",
             data: array,
             success: function(data) {
                 $('#displayoffered').html(data).fadeIn();
