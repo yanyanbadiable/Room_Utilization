@@ -161,7 +161,7 @@ if ($result) {
                         </div>
                     </div>
 
-                    <div class='form-group'>
+                    <div class='form-group row'>
                         <div class='col-sm-12'>
                             <input type='submit' class='col-sm-12 btn btn-primary' value='SAVE'>
                         </div>

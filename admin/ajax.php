@@ -33,6 +33,11 @@ if ($action == 'save_user') {
 	if ($save)
 		echo $save;
 }
+if ($action == 'edit_user') {
+	$save = $crud->edit_user();
+	if ($save)
+		echo $save;
+}
 if ($action == 'delete_user') {
 	$save = $crud->delete_user();
 	if ($save)
@@ -130,6 +135,11 @@ if ($action == "delete_room") {
 
 if ($action == "save_faculty") {
 	$save = $crud->save_faculty();
+	if ($save)
+		echo $save;
+}
+if ($action == 'edit_faculty') {
+	$save = $crud->edit_faculty();
 	if ($save)
 		echo $save;
 }

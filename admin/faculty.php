@@ -47,7 +47,6 @@ if ($result) {
                                 <tbody>
                                     <?php foreach ($instructors as $instructor) : ?>
                                         <?php
-                                        // Fetch additional information about the instructor
                                         $infoQuery = "SELECT * FROM faculty WHERE user_id = " . $instructor['id'];
                                         // var_dump($instructor['id']);
                                         $infoResult = mysqli_query($conn, $infoQuery);
@@ -58,7 +57,7 @@ if ($result) {
                                             <td><?php echo strtoupper($instructor['lname']) . ', ' . strtoupper($instructor['fname']); ?></td>
                                             <td><?php echo $instructor['program_name'] . ' (' . $instructor['program_code'] . ')'; ?></td>
                                             <td><?php echo $info['designation']; ?></td>
-                                            <td><a href="index.php?page=view_faculty&instructor_id=<?php echo $instructor['id'] ?>" class="btn btn-flat btn-success"><i class="fa fa-user"></i></a></td>
+                                            <td><a href="index.php?page=view_faculty&id=<?php echo $instructor['id'] ?>" class="btn btn-flat btn-success"><i class="fa fa-user"></i></a></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>

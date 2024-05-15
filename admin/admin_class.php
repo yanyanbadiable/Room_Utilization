@@ -21,24 +21,41 @@ class Action
 	function login()
 	{
 
-		extract($_POST);
-		$qry = $this->db->query("SELECT * FROM users where username = '" . $username . "' and password = '" . md5($password) . "' ");
-		if ($qry->num_rows > 0) {
-			foreach ($qry->fetch_array() as $key => $value) {
-				if ($key != 'password' && !is_numeric($key))
-					$_SESSION['login_' . $key] = $value;
-			}
-			if ($_SESSION['login_type'] != 0) {
-				foreach ($_SESSION as $key => $value) {
-					unset($_SESSION[$key]);
+		$username = $_POST['username'];
+		$password = $_POST['password'];
+
+		// Prepare the SQL query
+		$stmt = $this->db->prepare("SELECT * FROM users WHERE username = ?");
+		$stmt->bind_param("s", $username);
+		$stmt->execute();
+		$result = $stmt->get_result();
+
+		// Check if user exists
+		if ($result->num_rows > 0) {
+			$user = $result->fetch_assoc();
+
+			if (password_verify($password, $user['password'])) {
+				// Store user data in session, excluding password
+				foreach ($user as $key => $value) {
+					if ($key !== 'password') {
+						$_SESSION['login_' . $key] = $value;
+					}
 				}
-				return 2;
-				exit;
+
+				// Check user type
+				if ($_SESSION['login_type'] != 0) {
+					// Unset session variables and return status 2 for non-privileged users
+					session_unset();
+					return 2;
+				}
+
+				// Return status 1 for successful login
+				return 1;
 			}
-			return 1;
-		} else {
-			return 3;
 		}
+
+		// Return status 3 for invalid credentials
+		return 3;
 	}
 	function login_faculty()
 	{
@@ -138,6 +155,38 @@ class Action
 
 			// Close statement
 			mysqli_stmt_close($stmt);
+		}
+	}
+
+	function edit_user()
+	{
+		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+			// Get data from the POST request
+			$idno = $_POST['idno'];
+			$firstname = $_POST['firstname'];
+			$middlename = $_POST['middlename'];
+			$lastname = $_POST['lastname'];
+			$extensionname = $_POST['extensionname'];
+			$email = $_POST['email'];
+			$program_id = $_POST['program_id'];
+			$password = $_POST['password'];
+
+			$query = "SELECT * FROM users WHERE idno = '$idno'";
+			$result = mysqli_query($this->db, $query);
+
+			// Check if user exists
+			if (mysqli_num_rows($result) > 0) {
+				// Update user details
+				$update_query = "UPDATE users SET fname = '$firstname', mname = '$middlename', lname = '$lastname', extname = '$extensionname', type = 1, program_id = '$program_id', email = '$email', password = '" . password_hash($password, PASSWORD_DEFAULT) . "' WHERE idno = '$idno'";
+
+				if (mysqli_query($this->db, $update_query)) {
+					echo "User updated successfully.";
+				} else {
+					echo "Error updating user: " . mysqli_error($this->db);
+				}
+			} else {
+				echo "User not found.";
+			}
 		}
 	}
 
@@ -549,6 +598,9 @@ class Action
 		}
 	}
 
+	function edit_faculty()
+	{
+	}
 
 
 	function delete_faculty()
@@ -603,9 +655,9 @@ class Action
 		// 	while ($sched = $schedules_result->fetch_assoc()) {
 		// 		// Query to get course detail
 		// 		$course_detail_result = $this->db->query("SELECT courses.course_code, course_offering_info.section_id
-        //                                               FROM courses 
-        //                                               JOIN course_offering_info ON course_offering_info.courses_id = courses.id 
-        //                                               WHERE course_offering_info.id = $course_offering_info_id");
+		//                                               FROM courses 
+		//                                               JOIN course_offering_info ON course_offering_info.courses_id = courses.id 
+		//                                               WHERE course_offering_info.id = $course_offering_info_id");
 		// 		if (!$course_detail_result) {
 		// 			throw new Exception("Error fetching course detail information: " . $this->db->error);
 		// 		}
