@@ -144,16 +144,12 @@ class Action
 			// Bind parameters
 			mysqli_stmt_bind_param($stmt, "ssssssii", $username, $firstname, $middlename, $lastname, $extensionname, $password, $type, $program_id);
 
-			// Execute statement
 			if (mysqli_stmt_execute($stmt)) {
-				// Insertion successful
-				echo '1'; // Return '1' to indicate success to the client-side JavaScript
+				echo '1';
 			} else {
-				// Insertion failed
-				echo 'Error: ' . mysqli_stmt_error($stmt); // Return error message to the client-side JavaScript
+				echo 'Error: ' . mysqli_stmt_error($stmt);
 			}
 
-			// Close statement
 			mysqli_stmt_close($stmt);
 		}
 	}
@@ -169,7 +165,6 @@ class Action
 			$extensionname = $_POST['extensionname'];
 			$email = $_POST['email'];
 			$program_id = $_POST['program_id'];
-			$password = $_POST['password'];
 
 			$query = "SELECT * FROM users WHERE idno = '$idno'";
 			$result = mysqli_query($this->db, $query);
@@ -177,7 +172,7 @@ class Action
 			// Check if user exists
 			if (mysqli_num_rows($result) > 0) {
 				// Update user details
-				$update_query = "UPDATE users SET fname = '$firstname', mname = '$middlename', lname = '$lastname', extname = '$extensionname', type = 1, program_id = '$program_id', email = '$email', password = '" . password_hash($password, PASSWORD_DEFAULT) . "' WHERE idno = '$idno'";
+				$update_query = "UPDATE users SET fname = '$firstname', mname = '$middlename', lname = '$lastname', extname = '$extensionname', program_id = '$program_id', email = '$email', password = '" . "' WHERE idno = '$idno'";
 
 				if (mysqli_query($this->db, $update_query)) {
 					echo "User updated successfully.";
@@ -600,6 +595,32 @@ class Action
 
 	function edit_faculty()
 	{
+		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+			$idno = $_POST['idno'];
+			$firstname = $_POST['firstname'];
+			$middlename = $_POST['middlename'];
+			$lastname = $_POST['lastname'];
+			$extensionname = $_POST['extensionname'];
+			$designation = $_POST['designation'];
+			$program_id = $_POST['program_id'];
+
+			$query = "SELECT * FROM users WHERE idno = '$idno'";
+			$result = mysqli_query($this->db, $query);
+
+			if (mysqli_num_rows($result) > 0) {
+				
+				$update_query = "UPDATE users SET fname = '$firstname', mname = '$middlename', lname = '$lastname', extname = '$extensionname', program_id = '$program_id', designation = '$designation', password = '" . "' WHERE idno = '$idno'";
+
+				if (mysqli_query($this->db, $update_query)) {
+					echo "User updated successfully.";
+				} else {
+					echo "Error updating user: " . mysqli_error($this->db);
+				}
+			} else {
+				echo "User not found.";
+			}
+		}
 	}
 
 

@@ -103,7 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                                                     <option value="Th">Thursday</option>
                                                     <option value="F">Friday</option>
                                                     <option value="Sa">Saturday</option>
-                                                    <option value="Su">Sunday</option>
                                                 </select>
                                             </div>
                                         </div>

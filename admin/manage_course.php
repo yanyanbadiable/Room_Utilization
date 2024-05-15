@@ -118,7 +118,7 @@ if ($result) {
 <script>
     function fetchPrograms(programSelect) {
         $.ajax({
-            url: 'get_program.php',
+            url: 'CourseAjax/get_program.php',
             method: 'GET',
             success: function(response) {
                 var programs = JSON.parse(response);

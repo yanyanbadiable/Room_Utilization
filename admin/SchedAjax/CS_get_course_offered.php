@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['program_code']) && isse
                                         ?>
                                     </div>
                                 </td>
-                                <td><a href="index.php?page=add_course_schedule&id=<?php echo $course['id']; ?>&section_id=<?php echo $section_id; ?>" class="btn btn-flat btn-success"><i class="fa fa-pencil-alt"></i></a></td>
+                                <td class="text-center"><a href="index.php?page=add_course_schedule&id=<?php echo $course['id']; ?>&section_id=<?php echo $section_id; ?>" class="btn btn-flat btn-success"><i class="fa fa-pencil-alt"></i></a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

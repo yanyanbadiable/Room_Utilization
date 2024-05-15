@@ -57,7 +57,7 @@ if ($result) {
                                             <td><?php echo strtoupper($instructor['lname']) . ', ' . strtoupper($instructor['fname']); ?></td>
                                             <td><?php echo $instructor['program_name'] . ' (' . $instructor['program_code'] . ')'; ?></td>
                                             <td><?php echo $info['designation']; ?></td>
-                                            <td><a href="index.php?page=view_faculty&id=<?php echo $instructor['id'] ?>" class="btn btn-flat btn-success"><i class="fa fa-user"></i></a></td>
+                                            <td class="text-center"><a href="index.php?page=view_faculty&id=<?php echo $instructor['id'] ?>" class="btn btn-flat btn-success"><i class="fa fa-user"></i></a></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
