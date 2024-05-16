@@ -14,8 +14,8 @@
             </section>
             <div class="container-fluid" style="margin-top: 15px;">
                 <div class="card shadow mb-4">
-                    <div class="card-header">
-                        <h5 class="card-title">Academic Programs</h5>
+                    <div class="card-header py-3">
+                        <h5 class="card-title m-0">Academic Programs</h5>
                     </div>
                     <div class="card-body">
                         <div class='row'>

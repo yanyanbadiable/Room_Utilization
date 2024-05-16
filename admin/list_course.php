@@ -39,7 +39,7 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
                 <li class="breadcrumb-item active">List of Course</li>
             </ol>
         </section>
-        <section class="content">
+        <section class="content col-md-12">
             <?php while ($level = $level_result->fetch_assoc()) : ?>
                 <?php
                 $totalLec = 0;

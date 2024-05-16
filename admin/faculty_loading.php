@@ -1,4 +1,16 @@
-<?php include('db_connect.php'); ?>
+<?php
+include('db_connect.php');
+
+$query = "SELECT * FROM users WHERE type = 1";
+$result = $conn->query($query);
+
+$instructors = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $instructors[] = $row;
+    }
+}
+?>
 
 <div class="container-fluid">
     <div class="row">
@@ -13,13 +25,13 @@
             </section>
             <div class="container-fluid" style="margin-top: 15px;">
                 <div class="card shadow mb-4">
-                    <div class="card-header">
-                        <h5>Search by Instructor</h5>
+                    <div class="card-header py-3">
+                        <h5 class="m-0" >Search by Instructor</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-sm-4">
-                                <div class="form-group" id="displaylevel">
+                                <div class="form-group" id="displayLevel">
                                     <label>Level</label>
                                     <select class="form-control" id="level">
                                         <option>Please Select</option>
@@ -31,113 +43,111 @@
                                 </div>
                             </div>
                             <div class="col-sm-4">
-                                <div class="form-group" id="displayinstructor">
+                                <div class="form-group" id="displayInstructor">
                                     <label>Instructor</label>
-                                    <select class=" form-control" id="instructor">
+                                    <select class="form-control" id="instructor">
                                         <option>Please Select</option>
-                                        @foreach($instructors as $instructor)
-                                        <option value="{{$instructor->id}}">{{strtoupper($instructor->name)}}</option>
-                                        @endforeach
+                                        <?php foreach ($instructors as $instructor) : ?>
+                                            <?php
+                                            $middle_initial = !empty($instructor['mname']) ? strtoupper(substr($instructor['mname'], 0, 1)) . '.' : '';
+                                            $name = $instructor['lname'] . ', ' . $instructor['fname'] . ' ' . $middle_initial; 
+                                            ?>
+                                            <option value="<?php echo $instructor['id']; ?>"><?php echo strtoupper($name); ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
 
-                            <div class="col-sm-4" id="displaysearch">
+                            <div class="col-sm-4" id="displaySearch">
                                 <label>Search</label>
-                                <button class='btn btn-flat btn-primary btn-block' onclick='displaycourses(level.value,instructor.value)'>Search</button>
+                                <button class='btn btn-flat btn-primary btn-block' onclick='displayCourses(level.value,instructor.value)'>Search</button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class='row'>
-                    <div class='col-sm-5' id='displaycourses'></div>
-                    <div class='col-sm-7' id='displaycalendar'></div>
+                    <div class='col-sm-5' id='displayCourses'></div>
+                    <div class='col-sm-7' id='displayCalendar'></div>
                 </div>
             </div>
 
-            <div id="displaygetunitsloaded"></div>
+            <div id="displayGetUnitsLoaded"></div>
         </div>
     </div>
 </div>
 <script>
-$(document).ready(function(){
-    $('.draggable').data('duration', '03:00');
-    //hide yung instructor at search button
-    $('#displayinstructor').hide();
-    $('#displaysearch').hide();
-    
-    //lalabas yung instructor
-    $('#displaylevel').on('change',function(){
-        $('#displayinstructor').fadeIn();
+    $(document).ready(function() {
+        // $('.draggable').data('duration', '03:00');
+
+        $('#displayInstructor').hide();
+        $('#displaySearch').hide();
+
+        $('#displayLevel').on('change', function() {
+            $('#displayInstructor').fadeIn();
+        })
+
+        $('#displayInstructor').on('change', function() {
+            $('#displaySearch').fadeIn();
+        })
     })
-    
-    //lalabas yung search button
-    $('#displayinstructor').on('change',function(){
-        $('#displaysearch').fadeIn();
-    })
-})
 
 
-//upon clicking the search button
-//kukuninniya lang yung available at walang nakafaculty load
+    function displayCourses(level, instructor) {
+        var array = {};
+        array['level'] = level;
+        array['instructor'] = instructor;
+        $.ajax({
+            type: "GET",
+            url: "FL_Ajax/courses_to_load.php",
+            data: array,
+            success: function(data) {
+                $('#displayCourses').html(data).fadeIn();
+                // init_events($('.draggable div.callout'));
+                getCurrentLoad(instructor, level);
+            }
+        })
+    }
 
-function displaycourses(level,instructor){
-    var array = {};
-    array['level'] = level;
-    array['instructor'] = instructor;
-    $.ajax({
-        type: "GET",
-        url: "/ajax/admin/faculty_loading/courses_to_load",
-        data: array,
-        success: function(data){
-            $('#displaycourses').html(data).fadeIn();
-            init_events($('.draggable div.callout'));
-            getCurrentLoad(instructor,level);
-        }
-    })
-}
+    function search(event, value, level) {
+        var array = {};
+        array['value'] = value;
+        array['level'] = level;
+        $.ajax({
+            type: "GET",
+            url: "FL_Ajax/search_courses.php",
+            data: array,
+            success: function(data) {
+                $('#searchCourses').html(data).fadeIn();
+                // init_events($('.draggable div.callout'));
+            }
+        })
+    }
 
-function search(event,value,level){
-   var array = {};
-   array['value'] = value;
-   array['level'] = level;
-   $.ajax({
-       type: "GET",
-       url: "/ajax/admin/faculty_loading/search_courses",
-       data: array,
-       success: function(data){
-           $('#searchcourse').html(data).fadeIn();
-           init_events($('.draggable div.callout'));
-       }
-   })
-}
+    function getCurrentLoad(instructor, level) {
+        var array = {};
+        array['instructor'] = instructor;
+        array['level'] = level;
+        $.ajax({
+            type: "GET",
+            url: "/ajax/admin/faculty_loading/current_load",
+            data: array,
+            success: function(data) {
+                $('#displayCalendar').html(data).fadeIn();
+            }
+        })
+    }
 
-//mga nakafaculty load sa kanya sa ngayon.
-function getCurrentLoad(instructor,level){
-    var array = {};
-    array['instructor'] = instructor;
-    array['level'] = level;
-    $.ajax({
-        type: "GET",
-        url: "/ajax/admin/faculty_loading/current_load",
-        data: array,
-        success: function(data){
-            $('#displaycalendar').html(data).fadeIn();
-        }
-    })
-}
-
-function init_events(ele) {
-    ele.each(function () {
-      var eventObject = {
-        title: $(this).attr("data-object")
-      }
-      $(this).data('eventObject', eventObject);
-      $(this).draggable({
-        zIndex        : 1070,
-        revert        : true,
-        revertDuration: 0 
-      })
-    })
-}
+    function init_events(ele) {
+        ele.each(function() {
+            var eventObject = {
+                title: $(this).attr("data-object")
+            }
+            $(this).data('eventObject', eventObject);
+            $(this).draggable({
+                zIndex: 1070,
+                revert: true,
+                revertDuration: 0
+            })
+        })
+    }
 </script>

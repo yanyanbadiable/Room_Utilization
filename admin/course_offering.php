@@ -10,12 +10,12 @@
                 <li class="breadcrumb-item active">Course Offerings</li>
             </ol>
         </section>
-        <section class="content">
+        <section class="content col-md-12">
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card card-default shadow mb-4">
-                        <div class="card-header d-flex justify-content-between">
-                            <h4 class="card-title">Academic Programs</h4>
+                        <div class="card-header d-flex justify-content-between py-3">
+                            <h4 class="card-title m-0">Academic Programs</h4>
                         </div>
                         <div class="card-body">
                             <div class='table-responsive'>

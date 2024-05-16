@@ -14,15 +14,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
 
     // Fetch conflict schedules
     $conflict_schedules = [];
-    $conflict_query = "SELECT room_id FROM schedules
-                      WHERE course_offering_info_id = '$course_offering_info_id'
-                      AND day = '$day'
-                      AND (
-                          (time_start BETWEEN '$time_start' AND '$time_end')
-                          OR (time_end BETWEEN '$time_start' AND '$time_end')
-                          OR ('$time_start' BETWEEN time_start AND time_end)
-                          OR ('$time_end' BETWEEN time_start AND time_end)
-                      )";
+    $conflict_query = "SELECT DISTINCT room_id FROM schedules
+    WHERE room_id IS NOT NULL
+    AND day = '$day'
+    AND (
+        (time_start < '$time_end' AND time_end > '$time_start')
+        OR (time_start >= '$time_start' AND time_end <= '$time_end')
+        OR (time_start <= '$time_start' AND time_end >= '$time_end')
+    )
+    AND course_offering_info_id != '$course_offering_info_id'";
 
     $conflict_result = mysqli_query($conn, $conflict_query);
     if ($conflict_result) {

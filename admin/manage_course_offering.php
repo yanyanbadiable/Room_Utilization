@@ -59,8 +59,8 @@ if (isset($_GET['program_id'])) {
             <div class="row">
                 <div class="col-sm-5">
                     <div class="card card-solid card-default shadow mb-4">
-                        <div class="card-header bg-secondary text-white">
-                            <h5 class="card-title"><?php echo $row['program_name'] ?></h5>
+                        <div class="card-header bg-dark text-white py-3">
+                            <h5 class="card-title m-0"><?php echo $row['program_name'] ?></h5>
                         </div>
                         <div class="card-body">
                             <div class="form-group">
@@ -81,10 +81,10 @@ if (isset($_GET['program_id'])) {
                 </div>
                 <div class="col-sm-7">
                     <div class="card card-default shadow mb-4" id="displaysearchcourse" style="display: none;">
-                        <div class="card-header bg-transparent">
-                            <h5 class="card-title">Search Course</h5>
+                        <div class="card-header bg-transparent py-3">
+                            <h5 class="card-title m-0">Search Course</h5>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body pb-3">
                             <div class="row">
                                 <div class="col-sm-4">
                                     <div class="form-group">

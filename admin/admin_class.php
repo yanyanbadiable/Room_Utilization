@@ -155,35 +155,53 @@ class Action
 	}
 
 	function edit_user()
-	{
-		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			// Get data from the POST request
-			$idno = $_POST['idno'];
-			$firstname = $_POST['firstname'];
-			$middlename = $_POST['middlename'];
-			$lastname = $_POST['lastname'];
-			$extensionname = $_POST['extensionname'];
-			$email = $_POST['email'];
-			$program_id = $_POST['program_id'];
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Get data from the POST request
+        $id = $_POST['id'];
+        $username = $_POST['username'];
+        $firstname = $_POST['firstname'];
+        $middlename = $_POST['middlename'];
+        $lastname = $_POST['lastname'];
+        $extensionname = $_POST['extensionname'];
+        $program_id = $_POST['program_id'];
 
-			$query = "SELECT * FROM users WHERE idno = '$idno'";
-			$result = mysqli_query($this->db, $query);
+        // Prepare and execute the query
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
+        if (!$stmt) {
+            echo "Error preparing query: " . $this->db->error;
+            return;
+        }
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-			// Check if user exists
-			if (mysqli_num_rows($result) > 0) {
-				// Update user details
-				$update_query = "UPDATE users SET fname = '$firstname', mname = '$middlename', lname = '$lastname', extname = '$extensionname', program_id = '$program_id', email = '$email', password = '" . "' WHERE idno = '$idno'";
+        // Check if user exists
+        if ($result->num_rows > 0) {
+            // Prepare update query
+            $update_query = "UPDATE users SET username = ?, fname = ?, mname = ?, lname = ?, extname = ?, program_id = ? WHERE id = ?";
+            $stmt = $this->db->prepare($update_query);
+            if (!$stmt) {
+                echo "Error preparing update query: " . $this->db->error;
+                return;
+            }
+            $stmt->bind_param("ssssssi", $username, $firstname, $middlename, $lastname, $extensionname, $program_id, $id);
 
-				if (mysqli_query($this->db, $update_query)) {
-					echo "User updated successfully.";
-				} else {
-					echo "Error updating user: " . mysqli_error($this->db);
-				}
-			} else {
-				echo "User not found.";
-			}
-		}
-	}
+            // Execute the update query
+            if ($stmt->execute()) {
+                echo '1';
+            } else {
+                echo "Error updating user: " . $stmt->error;
+            }
+        } else {
+            echo "User not found.";
+        }
+        $stmt->close();
+    }
+}
+
+
+
 
 	function delete_user()
 	{
@@ -507,25 +525,21 @@ class Action
 		// Check if section already exists
 		$existing_section = $this->db->query("SELECT id FROM sections WHERE program_id = '$program_id' AND level = '$level' AND section_name = '$section_name'")->fetch_assoc();
 
-		// // Debugging: Output existing section data
 		// var_dump($existing_section);
 
 		if (empty($id)) {
-			// If section does not exist, insert it
 			if (!$existing_section) {
 				$save = $this->db->query("INSERT INTO sections SET $data");
 				return 1;
 			} else {
-				// Section already exists, return error code
 				return 0;
 			}
 		} else {
-			// If updating existing section, ensure it's not a duplicate
 			if (empty($existing_section) || $existing_section['id'] == $id) {
 				$save = $this->db->query("UPDATE sections SET $data WHERE id = $id");
 				return 2;
 			} else {
-				// Section already exists with different ID, return error code
+
 				return 0;
 			}
 		}
@@ -594,34 +608,69 @@ class Action
 	}
 
 	function edit_faculty()
-	{
-		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $idno = $_POST['id'];
+        $program_id = $_POST['program_id'];
+        $gender = $_POST['gender'];
+        $designation = $_POST['designation'];
+        $street = $_POST['street'];
+        $barangay = $_POST['barangay'];
+        $municipality = $_POST['municipality'];
+        $province = $_POST['province'];
+        $contact = $_POST['contact'];
+        $email = $_POST['email'];
 
-			$idno = $_POST['idno'];
-			$firstname = $_POST['firstname'];
-			$middlename = $_POST['middlename'];
-			$lastname = $_POST['lastname'];
-			$extensionname = $_POST['extensionname'];
-			$designation = $_POST['designation'];
-			$program_id = $_POST['program_id'];
+        $query = "SELECT * FROM faculty WHERE user_id = ?";
+        $stmt = $this->db->prepare($query);
+        $stmt->bind_param("i", $idno);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-			$query = "SELECT * FROM users WHERE idno = '$idno'";
-			$result = mysqli_query($this->db, $query);
+        if ($result->num_rows > 0) {
+            $update_query = "
+            UPDATE faculty 
+            SET 
+                program_id = ?, 
+                gender = ?, 
+                designation = ?, 
+                street = ?, 
+                barangay = ?, 
+                municipality = ?, 
+                province = ?, 
+                contact = ?, 
+                email = ?
+            WHERE user_id = ?";
 
-			if (mysqli_num_rows($result) > 0) {
-				
-				$update_query = "UPDATE users SET fname = '$firstname', mname = '$middlename', lname = '$lastname', extname = '$extensionname', program_id = '$program_id', designation = '$designation', password = '" . "' WHERE idno = '$idno'";
+            $stmt = $this->db->prepare($update_query);
+            $stmt->bind_param(
+                "issssssssi",
+                $program_id,
+                $gender,
+                $designation,
+                $street,
+                $barangay,
+                $municipality,
+                $province,
+                $contact,
+                $email,
+                $idno
+            );
 
-				if (mysqli_query($this->db, $update_query)) {
-					echo "User updated successfully.";
-				} else {
-					echo "Error updating user: " . mysqli_error($this->db);
-				}
-			} else {
-				echo "User not found.";
-			}
-		}
-	}
+            // Execute the update query
+            if ($stmt->execute()) {
+                echo '1';
+            } else {
+                echo "Error updating instructor info: " . $stmt->error;
+            }
+            $stmt->close();
+        } else {
+            echo "Instructor with ID number $idno not found.";
+        }
+    }
+}
+
+
 
 
 	function delete_faculty()

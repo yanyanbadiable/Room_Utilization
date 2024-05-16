@@ -27,18 +27,18 @@ while ($row = $result->fetch_assoc()) {
         <!-- End Section Header -->
 
         <!-- Course Table -->
-        <section class="content">
+        <section class="content col-sm-12">
             <div class="row">
                 <div class="col-sm-12">
                     <div class="card card-default shadow mb-4">
                         <div class="card-header d-flex justify-content-between bg-transparent">
                             <h4 class="card-title">Academic Programs</h4>
                             <div>
-                                <a href="index.php?page=manage_course" class="btn btn-flat btn-success"><i class="fa fa-upload"></i> New Curriculum</a>
+                                <a href="index.php?page=manage_course" class="btn btn-success"><i class="fa fa-upload"></i> New Curriculum</a>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class='table-responsive'>
+                            <div class="table-responsive">
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
@@ -53,7 +53,7 @@ while ($row = $result->fetch_assoc()) {
                                                 <td><?php echo $program['program_code'] ?></td>
                                                 <td><?php echo $program['program_name'] ?></td>
                                                 <td class="text-center">
-                                                    <a href="index.php?page=view_course&program_code=<?php echo $program['program_code'] ?>" class="btn btn-flat btn-primary"><i class="fa fa-eye"></i></a>
+                                                    <a href="index.php?page=view_course&program_code=<?php echo $program['program_code'] ?>" class="btn btn-primary"><i class="fa fa-eye"></i></a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -68,29 +68,3 @@ while ($row = $result->fetch_assoc()) {
         <!-- End Course Table -->
     </div>
 </div>
-
-<style>
-    /* Custom CSS for better visibility */
-    th,
-    td {
-        vertical-align: middle !important;
-    }
-
-    th {
-        white-space: nowrap;
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Add a max-height to the card-body to avoid excessive height */
-    .card-body {
-        max-height: 60vh;
-        overflow-y: auto;
-    }
-    /* .card-header {
-        border-bottom: none;
-    } */
-</style>

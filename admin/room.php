@@ -63,8 +63,6 @@ if (isset($_GET['id'])) {
         </section>
         <!-- End Room Form Panel -->
 
-        <!-- Table Panel -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/css/bootstrap.min.css" integrity="sha512-Qn9O6MzF66UY6D6I5J5Flr3T10/FZ1m26xJIrG668JB15Yl5xlCa7kDPr3eiD5EI8C6dXV5+jKxIQA1C8dggQg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <style>
             /* Custom CSS for better visibility */
             th,

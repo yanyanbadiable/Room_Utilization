@@ -1,11 +1,14 @@
-<?php include('db_connect.php'); ?>
 <?php
+
+include('db_connect.php');
+
 if (isset($_GET['id'])) {
     $qry = $conn->query("SELECT * FROM sections WHERE id=" . $_GET['id'])->fetch_array();
     foreach ($qry as $k => $v) {
         $$k = $v;
     }
 }
+$user_program_id = $_SESSION['login_program_id'];
 ?>
 
 <div class="container-fluid">
@@ -32,15 +35,14 @@ if (isset($_GET['id'])) {
                         <input type="hidden" name="id">
                         <div class="form-group">
                             <label class="control-label">Program Code</label>
-                            <select class="form-control" name="program_id">
-                                <option>Please Select here</option>
+                            <select class="form-control" name="program_id" disabled>
                                 <?php
-                                $program = $conn->query("SELECT id, program_code FROM program");
-                                while ($row = $program->fetch_assoc()) :
+                                $program = $conn->query("SELECT id, program_code FROM program WHERE id = $user_program_id");
+                                $row = $program->fetch_assoc();
                                 ?>
-                                    <option value="<?php echo $row['id'] ?>"><?php echo $row['program_code'] ?></option>
-                                <?php endwhile; ?>
+                                <option value="<?php echo $row['id'] ?>"><?php echo $row['program_code'] ?></option>
                             </select>
+                            <input type="hidden" name="program_id" value="<?php echo $row['id'] ?>">
                         </div>
                         <div class="form-group">
                             <label for="" class="control-label">Level</label>
@@ -56,46 +58,21 @@ if (isset($_GET['id'])) {
                             <label class="control-label">Section Name</label>
                             <input type="text" class="form-control" name="section_name">
                         </div>
-                        <div class="card-footer">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
-                                    <button class="btn btn-sm btn-light col-sm-3" type="button" onclick="_reset()">Cancel</button>
-                                </div>
-                            </div>
-                        </div>
                     </form>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
+                            <button class="btn btn-sm btn-light col-sm-3" type="button" onclick="_reset()">Cancel</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
-
-        <!-- End Room Form Panel -->
+        <!-- End Section Form Panel -->
 
         <!-- Table Panel -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0-alpha1/css/bootstrap.min.css" integrity="sha512-Qn9O6MzF66UY6D6I5J5Flr3T10/FZ1m26xJIrG668JB15Yl5xlCa7kDPr3eiD5EI8C6dXV5+jKxIQA1C8dggQg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <style>
-            /* Custom CSS for better visibility */
-            th,
-            td {
-                vertical-align: middle !important;
-            }
-
-            th {
-                white-space: nowrap;
-            }
-
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            /* Add a max-height to the card-body to avoid excessive height */
-            .card-body {
-                max-height: 60vh;
-                overflow-y: auto;
-            }
-        </style>
-
         <section class="col-md-8">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
@@ -117,7 +94,7 @@ if (isset($_GET['id'])) {
                             <tbody>
                                 <?php
                                 $i = 1;
-                                $section = $conn->query("SELECT sections.*, program.program_code FROM sections INNER JOIN program ON sections.program_id = program.id;");
+                                $section = $conn->query("SELECT sections.*, program.program_code FROM sections INNER JOIN program ON sections.program_id = program.id WHERE sections.program_id = $user_program_id");
                                 if (!$section) {
                                     die('Invalid query: ' . $conn->error);
                                 }
@@ -152,11 +129,6 @@ if (isset($_GET['id'])) {
     </div>
 </div>
 
-<style>
-    td {
-        vertical-align: middle !important;
-    }
-</style>
 <script>
     function _reset() {
         $('#manage-section').get(0).reset();
@@ -164,12 +136,6 @@ if (isset($_GET['id'])) {
     }
     $('#manage-section').submit(function(e) {
         e.preventDefault();
-
-
-
-
-
-
         start_load();
         $.ajax({
             url: 'ajax.php?action=save_section',
@@ -235,7 +201,7 @@ if (isset($_GET['id'])) {
             }
         });
     }
-    $(document).ready(function() {
-        $('#dataTable').DataTable();
-    });
+    // $(document).ready(function() {
+    //     $('#dataTable').DataTable();
+    // });
 </script>
