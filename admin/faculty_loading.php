@@ -16,14 +16,14 @@ if ($result->num_rows > 0) {
     <div class="row">
         <div class="col-sm-12">
             <!-- Section Header -->
-            <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
+            <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3 p-0">
                 <h3><i class="fa fa-calendar"></i> Faculty Loading</h3>
                 <ol class="breadcrumb bg-transparent p-0 m-0">
                     <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
                     <li class="breadcrumb-item active"> Faculty Loading</li>
                 </ol>
             </section>
-            <div class="container-fluid" style="margin-top: 15px;">
+            <div class="container-fluid p-0" style="margin-top: 15px;">
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h5 class="m-0" >Search by Instructor</h5>
@@ -118,7 +118,6 @@ if ($result->num_rows > 0) {
             data: array,
             success: function(data) {
                 $('#searchCourses').html(data).fadeIn();
-                // init_events($('.draggable div.callout'));
             }
         })
     }
@@ -129,7 +128,7 @@ if ($result->num_rows > 0) {
         array['level'] = level;
         $.ajax({
             type: "GET",
-            url: "/ajax/admin/faculty_loading/current_load",
+            url: "FL_Ajax/current_load.php",
             data: array,
             success: function(data) {
                 $('#displayCalendar').html(data).fadeIn();

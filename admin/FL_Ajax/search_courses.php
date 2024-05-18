@@ -1,107 +1,195 @@
 <?php
 include '../db_connect.php';
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['level'])) {
 
-    $value = $_GET['instructor'];
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['value']) && isset($_GET['level'])) {
+
+    $value = $_GET['value'];
     $level = $_GET['level'];
 
-    $collection = [];
+    session_start();
+    $program_id = $_SESSION['login_program_id'];
 
-    if (!$curriculum->isEmpty()) {
-        foreach ($curriculum as $curricula) {
-            $offering_query = "SELECT * FROM offerings_infos_table WHERE curriculum_id = {$curricula->id}";
-            $offering_result = mysqli_query($connection, $offering_query);
+    $value = mysqli_real_escape_string($conn, $value);
 
-            if ($offering_result && mysqli_num_rows($offering_result) > 0) {
-                while ($offer = mysqli_fetch_assoc($offering_result)) {
-                    $schedules_query = "SELECT DISTINCT offering_id FROM room_schedules WHERE offering_id = {$offer['id']} AND instructor IS NULL AND is_active = 1";
-                    $schedules_result = mysqli_query($connection, $schedules_query);
+    // Query to fetch courses and their offering information
+    $courses_query = "
+        SELECT courses.id AS course_id, courses.course_code, coi.id AS course_offering_info_id
+        FROM courses
+        JOIN course_offering_info coi ON courses.id = coi.courses_id
+        JOIN sections s ON coi.section_id = s.id
+        JOIN program p ON s.program_id = p.id
+        JOIN schedules sch ON coi.id = sch.course_offering_info_id
+        WHERE courses.course_code LIKE '%$value%'
+        AND p.id = $program_id
+        AND sch.is_active = 1
+        AND sch.faculty_id IS NULL
+    ";
 
-                    if ($schedules_result && mysqli_num_rows($schedules_result) > 0) {
-                        while ($schedule = mysqli_fetch_assoc($schedules_result)) {
-                            $collection[] = (object)[
-                                'level' => $offer['level'],
-                                'offering_id' => $offer['id'],
-                                'section_name' => $offer['section_name'],
-                                'curriculum_id' => $curricula->id
-                            ];
-                        }
+    $courses_result = mysqli_query($conn, $courses_query);
+
+    // Debugging: Check if the query executed successfully
+    if (!$courses_result) {
+        die('Query Error: ' . mysqli_error($conn));
+    }
+
+    $collection = []; // Initialize collection array
+
+    if ($courses_result) {
+        $courses = [];
+        while ($row = mysqli_fetch_assoc($courses_result)) {
+            $courses[] = $row;
+        }
+
+        // Debugging: Print the courses array
+        // echo '<pre>';
+        // print_r($courses);
+        // echo '</pre>';
+
+        if (!empty($courses)) {
+            foreach ($courses as $course) {
+                if (isset($course['course_offering_info_id'])) {
+                    $course_offering_info_id = $course['course_offering_info_id'];
+                    // Fetch details for each course offering
+                    $detail_query = "
+                        SELECT coi.id AS course_offering_id, s.section_name, c.level, coi.courses_id AS courses_id, p.program_code
+                        FROM course_offering_info coi
+                        JOIN sections s ON coi.section_id = s.id
+                        JOIN courses c ON coi.courses_id = c.id
+                        JOIN program p ON s.program_id = p.id
+                        WHERE coi.id = {$course_offering_info_id}
+                    ";
+                    $detail_result = mysqli_query($conn, $detail_query);
+
+                    // Error checking for detail query
+                    if (!$detail_result) {
+                        die('Detail Query Error: ' . mysqli_error($conn));
+                    }
+
+                    if ($detail_result && mysqli_num_rows($detail_result) > 0) {
+                        $detail = mysqli_fetch_assoc($detail_result);
+                        $section_name_concatenated = $detail['program_code'] . '-' . substr($detail['level'], 0, 1) . $detail['section_name'];
+                        $collection[] = (object)[
+                            'level' => $detail['level'],
+                            'offering_id' => $detail['course_offering_id'],
+                            'section_name' => $section_name_concatenated,
+                            'courses_id' => $detail['courses_id']
+                        ];
                     }
                 }
             }
         }
     }
-
-    $color_array = ['info', 'danger', 'warning', 'danger'];
-    $ctr = 0;
 }
 ?>
-<div class='col-sm-12'>
-    <?php if (!empty(array_filter($collection, function ($data) use ($level) {
-        return $data->level == $level;
-    }))) { ?>
-        <table class="table table-bordered">
-            <tr>
-                <th width="30%">Course</th>
-                <th>Schedule</th>
-                <th>Add to Calendar</th>
-            </tr>
-            <?php foreach (array_filter($collection, function ($data) use ($level) {
-                return $data->level == $level;
-            }) as $data) {
-                $curricula_query = "SELECT * FROM curriculum WHERE id = {$data->curriculum_id}";
-                $curricula_result = mysqli_query($connection, $curricula_query);
-                $curricula = mysqli_fetch_assoc($curricula_result); ?>
+
+<div class='col-sm-12 mb-3 p-0'>
+    <div class="table-responsive">
+        <table class="table table-bordered table-condensed">
+            <thead>
                 <tr>
-                    <td>
-                        <div align="center"><?php echo $curricula['course_code']; ?><br><?php echo $data->section_name; ?>
-                        </div>
-                    </td>
-                    <td>
-                        <div class='callout callout-<?php echo $color_array[$ctr]; ?>'>
-                            <div align="center">
-                                <?php
-                                $schedule3_query = "SELECT DISTINCT room FROM room_schedules WHERE offering_id = {$data->offering_id}";
-                                $schedule3_result = mysqli_query($connection, $schedule3_query);
-                                if ($schedule3_result && mysqli_num_rows($schedule3_result) > 0) {
-                                    while ($schedule3 = mysqli_fetch_assoc($schedule3_result)) {
-                                        echo $schedule3['room'];
-                                    }
-                                }
-                                ?><br>
-                                <?php
-                                $schedule2_query = "SELECT DISTINCT time_starts, time_end, room FROM room_schedules WHERE offering_id = {$data->offering_id}";
-                                $schedule2_result = mysqli_query($connection, $schedule2_query);
-                                if ($schedule2_result && mysqli_num_rows($schedule2_result) > 0) {
-                                    while ($schedule2 = mysqli_fetch_assoc($schedule2_result)) {
-                                        $days_query = "SELECT day FROM room_schedules WHERE offering_id = {$data->offering_id} AND time_starts = '{$schedule2['time_starts']}' AND time_end = '{$schedule2['time_end']}' AND room = '{$schedule2['room']}'";
-                                        $days_result = mysqli_query($connection, $days_query);
-                                        if ($days_result && mysqli_num_rows($days_result) > 0) {
-                                            while ($day = mysqli_fetch_assoc($days_result)) {
-                                                echo $day['day'];
-                                            }
-                                        }
-                                        echo date('g:iA', strtotime($schedule2['time_starts'])) . '-' . date('g:iA', strtotime($schedule2['time_end'])) . "<br>";
-                                    }
-                                }
-                                ?>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <button class="btn btn-primary add-to-calendar" data-offering-id="<?php echo $data->offering_id; ?>">Add</button>
-                    </td>
+                    <th>Course</th>
+                    <th>Schedule</th>
+                    <th>Action</th>
                 </tr>
-            <?php $ctr++;
-            } ?>
+            </thead>
+            <tbody>
+                <?php if (!empty(array_filter($collection, function ($item) use ($level) {
+                    return $item->level == $level;
+                }))) : ?>
+                    <?php
+                    $color_array = ['info', 'danger', 'warning', 'danger'];
+                    $ctr = 0;
+                    foreach ($collection as $data) : ?>
+                        <?php if ($data->level == $level) : ?>
+                            <?php
+                            // Fetch courses details
+                            $course_query = "SELECT * FROM courses WHERE id = {$data->courses_id}";
+                            $course_result = mysqli_query($conn, $course_query);
+
+                            // Error checking for course query
+                            if (!$course_result) {
+                                die('Course Query Error: ' . mysqli_error($conn));
+                            }
+
+                            $course = mysqli_fetch_assoc($course_result);
+                            ?>
+                            <tr>
+                                <td>
+                                    <div align="center"><?php echo $course['course_code']; ?><br><?php echo $data->section_name; ?></div>
+                                </td>
+                                <td>
+                                    <div data-object="<?php echo $data->offering_id; ?>" class='callout callout-<?php echo $color_array[$ctr]; ?>'>
+                                        <div align="center">
+                                            <?php
+                                            $schedule_query = "
+                                                SELECT DISTINCT s.room_id, r.room
+                                                FROM schedules s
+                                                INNER JOIN rooms r ON s.room_id = r.id
+                                                WHERE s.course_offering_info_id = {$data->offering_id}
+                                            ";
+                                            $schedule3_result = mysqli_query($conn, $schedule_query);
+
+                                            // Error checking for schedule query
+                                            if (!$schedule3_result) {
+                                                die('Schedule Query Error: ' . mysqli_error($conn));
+                                            }
+
+                                            while ($schedule3 = mysqli_fetch_assoc($schedule3_result)) {
+                                                echo $schedule3['room'] . "<br>";
+                                            }
+
+                                            $schedule2_query = "
+                                                SELECT DISTINCT time_start, time_end 
+                                                FROM schedules 
+                                                WHERE course_offering_info_id = {$data->offering_id}
+                                            ";
+                                            $schedule2_result = mysqli_query($conn, $schedule2_query);
+
+                                            // Error checking for schedule time query
+                                            if (!$schedule2_result) {
+                                                die('Schedule Time Query Error: ' . mysqli_error($conn));
+                                            }
+
+                                            while ($schedule2 = mysqli_fetch_assoc($schedule2_result)) {
+                                                $day_query = "
+                                                    SELECT day 
+                                                    FROM schedules 
+                                                    WHERE course_offering_info_id = {$data->offering_id} 
+                                                    AND time_start = '{$schedule2['time_start']}' 
+                                                    AND time_end = '{$schedule2['time_end']}'
+                                                ";
+                                                $day_result = mysqli_query($conn, $day_query);
+
+                                                // Error checking for day query
+                                                if (!$day_result) {
+                                                    die('Day Query Error: ' . mysqli_error($conn));
+                                                }
+
+                                                $days = [];
+                                                while ($day = mysqli_fetch_assoc($day_result)) {
+                                                    $days[] = $day['day'];
+                                                }
+                                                echo "[" . implode("", $days) . " " . date('g:iA', strtotime($schedule2['time_start'])) . "-" . date('g:iA', strtotime($schedule2['time_end'])) . "]<br>";
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-success" onclick="addToCalendar(<?php echo $data->offering_id; ?>)">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <?php $ctr = ($ctr + 1) % count($color_array); ?>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <tr>
+                        <td colspan="3" class="text-center">No courses found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
         </table>
-    <?php } else { ?>
-        <div class='row'>
-            <div class="callout callout-warning">
-                <div align="center">
-                    <h5>No Course to be Found!</h5>
-                </div>
-            </div>
-        </div>
-    <?php } ?>
+    </div>
 </div>

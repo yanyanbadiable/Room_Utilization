@@ -213,22 +213,16 @@ if ($result) {
 
         $('input[type="submit"]').prop('disabled', true);
 
+        // Send AJAX requests only if form is valid
         addUser();
         addInstructor();
     });
 
     function addUser() {
-        if (!formIsValid) {
-            return;
-        }
         var array = {};
         array['username'] = $("input[name='username']").val();
-        array['firstname'] = $("input[name='fname']").val();
-        array['middlename'] = $("input[name='middlename']").val();
-        array['lastname'] = $("input[name='lastname']").val();
-        array['extensionname'] = $("input[name='extensionname']").val();
-        array['password'] = $("input[name='password']").val();
-        array['program_id'] = $("select[name='program']").val();
+        // Add other form data to the array...
+
         $.ajax({
             type: "POST",
             url: "ajax.php?action=save_user",
@@ -236,36 +230,24 @@ if ($result) {
             success: function(data) {
                 if (data.trim() === '1') {
                     alert_toast('User Successfully Saved', 'success');
-                    resetForm();
-                    reloadPage();
+                    resetForm(); // Reset the form
+                    reloadPage(); // Reload the page after successful submission
                 } else {
                     alert_toast('Failed to add user', 'danger');
-                    resetForm();
-                    reloadPage();
+                    $('input[type="submit"]').prop('disabled', false); // Re-enable submit button on failure
                 }
             },
             error: function() {
                 alert_toast('Something Went Wrong!', 'danger');
-                resetForm();
-                reloadPage();
+                $('input[type="submit"]').prop('disabled', false); // Re-enable submit button on error
             }
         });
     }
 
     function addInstructor() {
-        if (!formIsValid) {
-            return; // Do not proceed if form is not valid
-        }
         var array = {};
         array['program_id'] = $("select[name='program']").val();
-        array['gender'] = $("select[name='gender']").val();
-        array['designation'] = $("select[name='designation']").val();
-        array['street'] = $("input[name='street']").val();
-        array['barangay'] = $("input[name='barangay']").val();
-        array['municipality'] = $("input[name='municipality']").val();
-        array['province'] = $("input[name='province']").val();
-        array['contact'] = $("input[name='contact']").val();
-        array['email'] = $("input[name='email']").val();
+        // Add other form data to the array...
 
         $.ajax({
             type: "POST",
@@ -274,24 +256,21 @@ if ($result) {
             success: function(data) {
                 if (data.trim() === '1') {
                     alert_toast('Instructor Successfully Saved', 'success');
-                    resetForm(); // Reset the form
-                    reloadPage(); // Call reloadPage() instead of location.reload()
+                    // No need to reset the form or reload the page here, as it's handled in addUser
                 } else {
                     alert_toast('Failed to save instructor', 'danger');
-                    resetForm(); // Reset the form
-                    reloadPage(); // Call reloadPage() instead of location.reload()
+                    $('input[type="submit"]').prop('disabled', false); // Re-enable submit button on failure
                 }
             },
             error: function() {
                 alert_toast('Something Went Wrong!', 'danger');
-                resetForm(); // Reset the form
-                reloadPage(); // Call reloadPage() instead of location.reload()
+                $('input[type="submit"]').prop('disabled', false); // Re-enable submit button on error
             }
         });
     }
 
     function resetForm() {
         document.getElementById("instructorForm").reset(); // Reset the form
-        $('input[type="submit"]').prop('disabled', false); // Enable the submit button
+        $('input[type="submit"]').prop('disabled', false); // Re-enable submit button
     }
 </script>

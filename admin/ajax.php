@@ -165,6 +165,12 @@ if ($action == "get_schedule") {
 		echo $get;
 }
 
+if ($action == "getFullCalendar") {
+	$get = $crud->getFullCalendar();
+	if ($get)
+		echo $get;
+}
+
 if ($action == "add_course_offer") {
 	$save = $crud->add_course_offer();
 	if ($save)
@@ -182,6 +188,19 @@ if ($action == "add_schedule") {
 	if ($save)
 		echo $save;
 }
+
+if ($action == "add_faculty_load") {
+	$save = $crud->add_faculty_load();
+	if ($save)
+		echo $save;
+}
+
+if ($action == "add_load") {
+	$save = $crud->add_load();
+	if ($save)
+		echo $save;
+}
+
 
 
 

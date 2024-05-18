@@ -89,9 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['program_code']) && isse
         <div class='card-header bg-transparent'>
             <h5 class='card-title'>Courses Offered</h5>
         </div>
-        <div class='card-body'>
-            <div class="alert alert-danger" role="alert">
-                <h3><strong>No Course Offered Found!</strong></h3>
+        <div class='card-body m-0'>
+            <div class="rounded-sm bg-warning p-3 text-white text-center " role="alert">
+                <h5>No Course Offered Found!</h5>
             </div>
         </div>
     </div>

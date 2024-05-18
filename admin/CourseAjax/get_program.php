@@ -12,4 +12,4 @@ if ($result) {
 }
 
 echo json_encode($programs);
-?>
+
