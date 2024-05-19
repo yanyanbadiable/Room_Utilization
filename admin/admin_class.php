@@ -948,7 +948,6 @@ class Action
 			$section_id = $_POST['section_id'];
 			$room_id = $_POST['room_id'];
 
-			// Query to check if the same schedule exists
 			$query = "SELECT * FROM course_offering_info
                   JOIN schedules ON course_offering_info.id = schedules.course_offering_info_id
                   WHERE course_offering_info.section_id = '$section_id'
@@ -1003,15 +1002,15 @@ class Action
 					$conflict_query = "
 						SELECT DISTINCT course_offering_info_id
 						FROM schedules
-						WHERE faculty_id = ?
+						WHERE users_id = ?
 						AND day = ?
 						AND (
-							(time_starts BETWEEN ? AND ?)
+							(time_start BETWEEN ? AND ?)
 							OR
 							(time_end BETWEEN ? AND ?)
 						)";
 					$conflict_stmt = $this->db->prepare($conflict_query);
-					$conflict_stmt->bind_param('isssss', $instructor, $schedule['day'], $schedule['time_starts'], $schedule['time_end'], $schedule['time_starts'], $schedule['time_end']);
+					$conflict_stmt->bind_param('isssss', $instructor, $schedule['day'], $schedule['time_start'], $schedule['time_end'], $schedule['time_start'], $schedule['time_end']);
 					$conflict_stmt->execute();
 					$conflicts = $conflict_stmt->get_result();
 
@@ -1024,7 +1023,7 @@ class Action
 				if (!$conflict_found) {
 					// No conflict, update schedules
 					foreach ($schedules as $schedule) {
-						$update_schedule_query = "UPDATE schedules SET faculty_id = ? WHERE id = ?";
+						$update_schedule_query = "UPDATE schedules SET users_id = ? WHERE id = ?";
 						$update_schedule_stmt = $this->db->prepare($update_schedule_query);
 						$update_schedule_stmt->bind_param('ii', $instructor, $schedule['id']);
 						$update_schedule_stmt->execute();
@@ -1039,5 +1038,43 @@ class Action
 		} else {
 			echo 'Invalid request.';
 		}
+	}
+
+	function remove_faculty_load()
+	{
+		$response = array();
+
+		if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['offering_id'])) {
+			$instructor = $_GET['instructor'];
+			$offering_id = $_GET['offering_id'];
+
+
+			$stmt = $this->db->prepare("SELECT id FROM schedules WHERE users_id = ? AND course_offering_info_id = ?");
+			$stmt->bind_param("ii", $instructor, $offering_id);
+			$stmt->execute();
+			$result = $stmt->get_result();
+
+			if ($result->num_rows > 0) {
+				$response['success'] = true;
+				$response['message'] = "Schedules updated successfully.";
+
+				while ($row = $result->fetch_assoc()) {
+					$schedule_id = $row['id'];
+
+					$update_stmt = $this->db->prepare("UPDATE schedules SET users_id = NULL, is_loaded = 0 WHERE id = ?");
+					$update_stmt->bind_param("i", $schedule_id);
+					$update_stmt->execute();
+				}
+			} else {
+				$response['success'] = false;
+				$response['message'] = "No schedules found for instructor $instructor and offering ID $offering_id.";
+			}
+		} else {
+			$response['success'] = false;
+			$response['message'] = "Invalid request parameters.";
+		}
+
+		// Return the response as JSON
+		echo json_encode($response);
 	}
 }

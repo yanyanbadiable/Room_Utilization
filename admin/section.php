@@ -178,6 +178,7 @@ $user_program_id = $_SESSION['login_program_id'];
         cat.find("[name='section_name']").val($(this).attr('data-section_name'));
         end_load();
     });
+    
     $('.delete_section').click(function() {
         _conf("Are you sure to delete this section?", "delete_section", [$(this).attr('data-id')]);
     });

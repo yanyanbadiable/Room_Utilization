@@ -102,7 +102,6 @@ if ($result->num_rows > 0) {
             data: array,
             success: function(data) {
                 $('#displayCourses').html(data).fadeIn();
-                // init_events($('.draggable div.callout'));
                 getCurrentLoad(instructor, level);
             }
         })
@@ -136,17 +135,4 @@ if ($result->num_rows > 0) {
         })
     }
 
-    function init_events(ele) {
-        ele.each(function() {
-            var eventObject = {
-                title: $(this).attr("data-object")
-            }
-            $(this).data('eventObject', eventObject);
-            $(this).draggable({
-                zIndex: 1070,
-                revert: true,
-                revertDuration: 0
-            })
-        })
-    }
 </script>

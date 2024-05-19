@@ -221,8 +221,12 @@ if ($result) {
     function addUser() {
         var array = {};
         array['username'] = $("input[name='username']").val();
-        // Add other form data to the array...
-
+        array['firstname'] = $("input[name='fname']").val();
+        array['middlename'] = $("input[name='middlename']").val();
+        array['lastname'] = $("input[name='lastname']").val();
+        array['extensionname'] = $("input[name='extensionname']").val();
+        array['password'] = $("input[name='password']").val();
+        array['program_id'] = $("select[name='program']").val();
         $.ajax({
             type: "POST",
             url: "ajax.php?action=save_user",
@@ -247,8 +251,15 @@ if ($result) {
     function addInstructor() {
         var array = {};
         array['program_id'] = $("select[name='program']").val();
-        // Add other form data to the array...
-
+        array['gender'] = $("select[name='gender']").val();
+        array['designation'] = $("select[name='designation']").val();
+        array['street'] = $("input[name='street']").val();
+        array['barangay'] = $("input[name='barangay']").val();
+        array['municipality'] = $("input[name='municipality']").val();
+        array['province'] = $("input[name='province']").val();
+        array['contact'] = $("input[name='contact']").val();
+        array['email'] = $("input[name='email']").val();
+        
         $.ajax({
             type: "POST",
             url: "ajax.php?action=save_faculty",

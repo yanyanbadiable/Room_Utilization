@@ -33,7 +33,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
         echo "Error fetching conflict schedules: " . mysqli_error($conn);
     }
 
-
     // Fetch available rooms
     if (!empty($conflict_schedules)) {
         $room_conditions = implode(',', array_map('intval', $conflict_schedules));

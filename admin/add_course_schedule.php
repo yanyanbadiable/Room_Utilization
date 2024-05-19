@@ -1,29 +1,33 @@
 <?php
 include 'db_connect.php';
 
-// Check if it's a GET request and if the required parameters are set
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['section_id'])) {
     $course_offering_info_id = $_GET['id'];
     $section_id = $_GET['section_id'];
 
-    // Query to get course_offering_info information
-    $course_offering_info_result = $conn->query("SELECT * FROM course_offering_info WHERE id = $course_offering_info_id");
-    if (!$course_offering_info_result) {
-        throw new Exception("Error fetching course offering information: " . $conn->error);
-    }
+    $stmt = $conn->prepare("SELECT * FROM course_offering_info WHERE id = ?");
+    $stmt->bind_param("i", $course_offering_info_id);
+    $stmt->execute();
+    $course_offering_info_result = $stmt->get_result();
     $course_offering_info = $course_offering_info_result->fetch_assoc();
 
-    // Query to get inactive room schedules
-    $inactive_result = $conn->query("SELECT * FROM schedules WHERE is_active = 0");
-    if (!$inactive_result) {
-        throw new Exception("Error fetching inactive room schedules: " . $conn->error);
+    if (!$course_offering_info) {
+        throw new Exception("Error fetching course offering information: " . $conn->error);
     }
+
+    $stmt = $conn->prepare("SELECT * FROM schedules WHERE is_active = 0");
+    $stmt->execute();
+    $inactive_result = $stmt->get_result();
+
     $inactive = [];
     while ($row = $inactive_result->fetch_assoc()) {
         $inactive[] = $row;
     }
 
-    $is_comlab = $conn->query("SELECT is_comlab FROM courses WHERE id = " . $course_offering_info['courses_id'])->fetch_assoc()['is_comlab'];
+    $stmt = $conn->prepare("SELECT is_comlab FROM courses WHERE id = ?");
+    $stmt->bind_param("i", $course_offering_info['courses_id']);
+    $stmt->execute();
+    $is_comlab = $stmt->get_result()->fetch_assoc()['is_comlab'];
 }
 ?>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
@@ -120,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                             </div>
                             <div class="col-sm-1">
                                 <label>Add</label>
-                                <a onclick="addSchedule(day.value, time_start.value, time_end)" class="btn btn-flat btn-success text-white"><i class="fa fa-plus-circle"></i></a>
+                                <a onclick="addSchedule(day.value, time_start.value, time_end.value)" class="btn btn-flat btn-success text-white"><i class="fa fa-plus-circle"></i></a>
                             </div>
                         </div>
                     </div>
@@ -140,6 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
 </div>
 
 <script>
+    var courseOfferingInfoId = <?php echo json_encode($course_offering_info_id); ?>;
+    var sectionId = <?php echo json_encode($section_id); ?>;
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
@@ -201,21 +207,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
         }
 
         if (isValid) {
-            $.ajax({
-                type: "GET",
-                url: "SchedAjax/CS_get_room_available.php",
-                data: {
-                    day: day,
-                    time_start: time_start,
-                    time_end: time_end,
-                    course_offering_info_id: courseOfferingInfoId,
-                    section_id: sectionId
-                },
-                success: function(data) {
-                    $('#displayroom').html(data).fadeIn();
-                    $('#myModal').modal('show');
-                }
-            });
+            // Ensure values are defined and not null
+            if (courseOfferingInfoId && sectionId && day && time_start && time_end) {
+                $.ajax({
+                    type: "GET",
+                    url: "SchedAjax/CS_get_room_available.php",
+                    data: {
+                        day: day,
+                        time_start: time_start,
+                        time_end: time_end,
+                        course_offering_info_id: courseOfferingInfoId,
+                        section_id: sectionId
+                    },
+                    success: function(data) {
+                        $('#displayroom').html(data).fadeIn();
+                        $('#myModal').modal('show');
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        alert('Error: ' + textStatus + ' - ' + errorThrown);
+                    }
+                });
+            } else {
+                alert('Error: Invalid data passed to AJAX request.');
+            }
         }
     }
 

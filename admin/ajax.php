@@ -195,6 +195,12 @@ if ($action == "add_faculty_load") {
 		echo $save;
 }
 
+if ($action == "remove_faculty_load") {
+	$save = $crud->remove_faculty_load();
+	if ($save)
+		echo $save;
+}
+
 if ($action == "add_load") {
 	$save = $crud->add_load();
 	if ($save)

@@ -11,7 +11,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     session_start();
     $program_id = $_SESSION['login_program_id'];
 
-    // Modify the SQL query to retrieve course offering IDs based on the program ID and level
     $courses_query = "SELECT DISTINCT coi.id AS course_offering_info_id
                       FROM schedules s
                       JOIN course_offering_info coi ON s.course_offering_info_id = coi.id
@@ -19,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                       JOIN program prog ON sec.program_id = prog.id
                       JOIN courses c ON coi.courses_id = c.id
                       WHERE s.is_active = 1
-                      AND s.faculty_id IS NULL
+                      AND s.users_id IS NULL
                       AND prog.id = ?
                       AND c.level = ?";
 
@@ -34,17 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
             $courses[] = $row;
         }
     }
-    // else {
-    //     echo "No courses found for the given program_id and level.";
-    // }
 
     if (!empty($courses)) {
         foreach ($courses as $course) {
-            $detail_query = "SELECT coi.id AS course_offering_id, s.section_name, c.level, coi.courses_id AS courses_id, p.program_code
+            $detail_query = "SELECT coi.id AS course_offering_id, sec.section_name, c.level, coi.courses_id AS courses_id, p.program_code
                              FROM course_offering_info coi
-                             JOIN sections s ON coi.section_id = s.id
+                             JOIN sections sec ON coi.section_id = sec.id
                              JOIN courses c ON coi.courses_id = c.id
-                             JOIN program p ON s.program_id = p.id
+                             JOIN program p ON sec.program_id = p.id
                              WHERE coi.id = ?
                              AND c.level = ?";
 
