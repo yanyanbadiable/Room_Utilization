@@ -34,7 +34,7 @@ while ($row = $result->fetch_assoc()) {
                         <div class="card-header d-flex justify-content-between bg-transparent">
                             <h4 class="card-title">Academic Programs</h4>
                             <div>
-                                <a href="index.php?page=manage_course" class="btn btn-success"><i class="fa fa-upload"></i> New Curriculum</a>
+                                <a href="index.php?page=manage_course" class="btn btn-success"><i class="fa fa-upload"></i> Add Courses</a>
                             </div>
                         </div>
                         <div class="card-body">

@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['value']) && isset($_GET
         WHERE courses.course_code LIKE '%$value%'
         AND p.id = $program_id
         AND sch.is_active = 1
-        AND sch.faculty_id IS NULL
+        AND sch.users_id IS NULL
     ";
 
     $courses_result = mysqli_query($conn, $courses_query);

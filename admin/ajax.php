@@ -149,16 +149,7 @@ if ($action == "delete_faculty") {
 		echo $save;
 }
 
-if ($action == "save_schedule") {
-	$save = $crud->save_schedule();
-	if ($save)
-		echo $save;
-}
-if ($action == "delete_schedule") {
-	$save = $crud->delete_schedule();
-	if ($save)
-		echo $save;
-}
+
 if ($action == "get_schedule") {
 	$get = $crud->get_schedule();
 	if ($get)
@@ -185,6 +176,12 @@ if ($action == "remove_course_offer") {
 
 if ($action == "add_schedule") {
 	$save = $crud->add_schedule();
+	if ($save)
+		echo $save;
+}
+
+if ($action == "remove_schedule") {
+	$save = $crud->remove_schedule();
 	if ($save)
 		echo $save;
 }

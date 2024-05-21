@@ -176,11 +176,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
             type: "GET",
             url: "ajax.php?action=add_faculty_load",
             data: data,
-            success: function(response) {
-                alert_toast(response, 'success');
+            success: function(data) {
+                displayCourses('<?php echo $level; ?>', "<?php echo $instructor; ?>");
+                getCurrentLoad("<?php echo $instructor; ?>", '<?php echo $level; ?>');
+                alert_toast(data, 'success');
             },
-            error: function() {
-                alert('An error occurred while adding the faculty loads.');
+            error: function(xhr, status, error) {
+                if (xhr.status == 409) {
+                    alert_toast('Conflict in Schedule Found!', 'danger');
+                }
+                if (xhr.status == 404) {
+                    var boolean = confirm('The no. of units loaded exceeds. Do you want to override?');
+                    if (boolean == true) {
+                        function getUnitsLoaded(offering_id) {
+                            var array = {};
+                            array['offering_id'] = offering_id;
+                            array['instructor'] = "<?php echo $instructor; ?>";
+                            array['level'] = "<?php echo $level; ?>";
+                            $.ajax({
+                                type: "GET",
+                                url: "FL_Ajax/get_units_loaded.php",
+                                data: array,
+                                success: function(data) {
+                                    $('#displayGetUnitsLoaded').html(data).fadeIn();
+                                    $('#modalunits').modal('toggle');
+                                },
+                                error: function() {
+                                    alert_toast('Something Went Wrong!', 'Notification!');
+                                }
+                            })
+                        }
+                    }
+                }
             }
         });
     }

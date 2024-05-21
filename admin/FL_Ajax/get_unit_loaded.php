@@ -1,156 +1,62 @@
 <?php
 include '../db_connect.php';
-
-$schedules = []; // Initialize $schedules as an empty array
-
-// Check if the request method is GET and if instructor and level are set
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['level'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['level']) && isset($_GET['offering_id'])) {
     $instructor = $_GET['instructor'];
+    $offering_id = $_GET['offering_id'];
     $level = $_GET['level'];
 
-    $loads_query = "
-        SELECT courses.*, course_offering_info.*, schedules.* 
-        FROM courses 
-        INNER JOIN course_offering_info ON courses.id = course_offering_info.courses_id 
-        INNER JOIN schedules ON schedules.course_offering_info_id = course_offering_info.id 
-        WHERE schedules.users_id = '$instructor'
-    ";
-    $loads_result = mysqli_query($conn, $loads_query);
-
-    if (!$loads_result) {
-        die('Query Error: ' . mysqli_error($conn));
+    $instructor_info = [];
+    $designation_query = "SELECT designation FROM faculty WHERE user_id = ?";
+    $designation_stmt = $conn->prepare($designation_query);
+    $designation_stmt->bind_param('i', $instructor);
+    $designation_stmt->execute();
+    $designation_result = $designation_stmt->get_result();
+    if ($designation_result->num_rows > 0) {
+        $instructor_info = $designation_result->fetch_assoc();
     }
+    $designation = $instructor_info['designation'];
 
-    $loads = [];
-    while ($row = mysqli_fetch_assoc($loads_result)) {
-        $loads[] = $row;
+    // Fetching units
+    $units_load = [];
+    $units_query = "SELECT units FROM units_load WHERE users_id = ?";
+    $units_stmt = $conn->prepare($units_query);
+    $units_stmt->bind_param('i', $instructor);
+    $units_stmt->execute();
+    $units_result = $units_stmt->get_result();
+    if ($units_result->num_rows > 0) {
+        $units_load = $units_result->fetch_assoc();
     }
+    $units = $units_load['units'];
 
-    $tabular_schedules_query = "
-        SELECT DISTINCT course_offering_info_id 
-        FROM schedules 
-        WHERE is_active = 1 AND users_id = '$instructor'
-    ";
-    $tabular_schedules_result = mysqli_query($conn, $tabular_schedules_query);
-
-    if (!$tabular_schedules_result) {
-        die('Query Error: ' . mysqli_error($conn));
-    }
-
+    // Fetching tabular schedules
     $tabular_schedules = [];
-    while ($row = mysqli_fetch_assoc($tabular_schedules_result)) {
-        $tabular_schedules[] = $row;
-    }
-
-    $schedules_query = "
-        SELECT * 
-        FROM schedules 
-        WHERE is_active = 1 AND users_id = '$instructor'
-    ";
-    $schedules_result = mysqli_query($conn, $schedules_query);
-
-    if (!$schedules_result) {
-        die('Query Error: ' . mysqli_error($conn));
-    }
-
-    $schedules = [];
-    while ($row = mysqli_fetch_assoc($schedules_result)) {
-        $schedules[] = $row;
-    }
-}
-
-$event_array = [];
-if (!empty($schedules)) {
-    foreach ($schedules as $sched) {
-        // Prepare the statement for course details
-        $course_detail_query = "
-        SELECT 
-        courses.course_code, 
-        rooms.room AS room, 
-        sections.section_name
-        FROM courses 
-        JOIN course_offering_info ON course_offering_info.courses_id = courses.id
-        JOIN schedules ON schedules.course_offering_info_id = course_offering_info.id
-        JOIN rooms ON rooms.id = schedules.room_id
-        JOIN sections ON sections.id = course_offering_info.section_id
-        WHERE course_offering_info.id = ?";
-
-        $course_detail_stmt = $conn->prepare($course_detail_query);
-        $course_detail_stmt->bind_param('i', $sched['course_offering_info_id']);
-        $course_detail_stmt->execute();
-        $course_detail_result = $course_detail_stmt->get_result();
-
-        if (!$course_detail_result) {
-            die('Query Error: ' . mysqli_error($conn));
+    $tabular_schedules_query = "
+    SELECT DISTINCT course_offering_info_id
+    FROM schedules 
+    WHERE is_active = 1 AND users_id = ?
+";
+    $tabular_schedules_stmt = $conn->prepare($tabular_schedules_query);
+    $tabular_schedules_stmt->bind_param('i', $instructor);
+    $tabular_schedules_stmt->execute();
+    $tabular_schedules_result = $tabular_schedules_stmt->get_result();
+    if ($tabular_schedules_result->num_rows > 0) {
+        while ($row = $tabular_schedules_result->fetch_assoc()) {
+            $tabular_schedules[] = $row;
         }
-        $course_detail = mysqli_fetch_assoc($course_detail_result);
-
-        // Determine color based on day
-        $day_map = [
-            'M' => 'Monday',
-            'T' => 'Tuesday',
-            'W' => 'Wednesday',
-            'Th' => 'Thursday',
-            'F' => 'Friday',
-            'Sa' => 'Saturday',
-            'Su' => 'Sunday'
-        ];
-
-        $color_map = [
-            'M' => 'LightSalmon',
-            'T' => 'lightblue',
-            'W' => 'LightSalmon',
-            'Th' => 'lightblue',
-            'F' => 'LightSalmon',
-            'Sa' => 'LightSalmon',
-            'Su' => 'LightSalmon'
-        ];
-
-        $day = $day_map[$sched['day']] ?? '';
-        $color = $color_map[$sched['day']] ?? '';
-
-        $event_array[] = [
-            'id' => $sched['id'],
-            'title' => $course_detail['course_code'] . '<br>' . $course_detail['room'] . '<br>' . $course_detail['section_name'],
-            'start' => date('Y-m-d', strtotime('next ' . $day)) . 'T' . $sched['time_start'],
-            'end' => date('Y-m-d', strtotime('next ' . $day)) . 'T' . $sched['time_end'],
-            'color' => $color,
-            'textColor' => 'black',
-            'extendedProps' => [
-                'course_offering_info_id' => $sched['course_offering_info_id']
-            ]
-        ];
     }
 }
-
-$get_schedule = json_encode($event_array);
-
-$designation_query = "SELECT * FROM faculty WHERE user_id = '$instructor'";
-$designation_result = mysqli_query($conn, $designation_query);
-$designation = mysqli_fetch_assoc($designation_result);
 ?>
 
-<div class="card shadow mb-4 px-3">
-    <div class="nav-tabs-custom">
-        <ul class="nav nav-tabs d-flex">
-            <li class="mr-auto header mr-auto py-3">
-                <h4><i class="fa fa-calendar"></i>
-                    <span>Faculty Loading <b>(<?php echo $designation['designation']; ?>)</b></span><br>
-                    <span class="small m-0">Total No. of Units Loaded: <?php echo array_sum(array_column($loads, 'units')); ?></span>
-                </h4>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link active" href="#tab_1-1" data-toggle="tab">Calendar View</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#tab_2-2" data-toggle="tab">Tabular View</a>
-            </li>
-        </ul>
-        <div class="tab-content">
-            <div class="tab-pane active mb-4" id="tab_1-1">
-                <div id="calendar"></div>
+<div class="modal fade" id="modalunits">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h4 class="modal-title">Schedules</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="tab-pane mb-4" id="tab_2-2">
+            <div class="modal-body">
                 <div class="table-responsive">
                     <?php if (!empty($tabular_schedules)) : ?>
                         <table class="table table-bordered">
@@ -255,8 +161,10 @@ $designation = mysqli_fetch_assoc($designation_result);
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                        <div class="col-sm-12">
-                            <a href="../index.php?page=generate_schedule&instructor=<?php echo $instructor; ?>" target="_blank" class="btn btn-primary btn-block">Generate Schedule</a>
+                        <p>Do you want to override the units given by the Admin? <b>{{$units}}</b></p>
+                        <div class="form-group">
+                            <label>Maximun no. of Units Loaded</label>
+                            <input id="overrideval" type="text" class="form-control" value="{{$units}}">
                         </div>
                     <?php else : ?>
                         <div class="callout callout-warning">
@@ -267,59 +175,38 @@ $designation = mysqli_fetch_assoc($designation_result);
                     <?php endif; ?>
                 </div>
             </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" onclick="overridebtn(overrideval.value)" class="btn btn-primary">Override</button>
+            </div>
         </div>
+        <!-- /.modal-content -->
     </div>
+    <!-- /.modal-dialog -->
 </div>
 
 <script>
-       
-        var calendarEl = document.getElementById('calendar');
-        var events = <?php echo $get_schedule; ?>;
-        console.log(events)
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            height: "auto",
-
-            dayHeaderFormat: {
-                weekday: 'short'
-            },
-            initialView: 'timeGridWeek',
-            hiddenDays: [0],
-            slotMinTime: '07:00:00',
-            slotMaxTime: '22:00:00',
-            allDaySlot: false,
-            headerToolbar: false,
-            eventOverlap: false,
-            events: events,
-            eventDidMount: function(info) {
-                console.log('Event mounted:', info.event);
-                var titleElement = info.el.querySelector('.fc-event-title');
-                if (titleElement) {
-                    titleElement.innerHTML = info.event.title;
-                }
-                info.el.classList.add('custom-event');
-            }
-        });
-        calendar.render();
-
-
-    function remove_faculty_load(offering_id) {
+    function overridebtn(override) {
         var array = {};
-        array['offering_id'] = offering_id;
         array['instructor'] = "<?php echo $instructor; ?>";
+        array['offering_id'] = "<?php echo $offering_id; ?>";
+        array['override'] = override;
         $.ajax({
             type: "GET",
-            url: "ajax.php?action=remove_faculty_load",
+            url: "/ajax/admin/faculty_loading/override_add",
             data: array,
             success: function(data) {
-                var response = JSON.parse(data);
-                if (response.success) {
-                    displayCourses('<?php echo $level; ?>', "<?php echo $instructor; ?>");
-                    getCurrentLoad("<?php echo $instructor; ?>", '<?php echo $level; ?>');
-                    alert_toast(response.message, 'success');
+                displaycourses('<?php echo $level; ?>', "<?php echo $instructor; ?>");
+                getCurrentLoad("<?php echo $instructor; ?>", '<?php echo $level; ?>');
+                $('#modalunits').modal('toggle');
+            },
+            error: function(xhr) {
+                if (xhr.status == 500) {
+                    toastr.error('Conflict in Schedule Found!!', 'Message!');
                 } else {
-                    alert_toast(response.message, 'danger');
+                    toastr.error('Something Went Wrong!', 'Message!');
                 }
             }
-        });
+        })
     }
 </script>

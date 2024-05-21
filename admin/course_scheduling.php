@@ -75,7 +75,6 @@
             data: array,
             success: function(data) {
                 $('#displaysection').html(data).fadeIn();
-                // Clear the displayed courses
                 $('#displayoffered').html('').hide();
             },
             error: function() {
@@ -83,14 +82,6 @@
             }
         });
     }
-
-    // $('#level').on('change', function() {
-    //     var level = $(this).val();
-    //     if (level !== '') {
-    //         var program_code = $('#program_code').val();
-    //         getsection(program_code, level);
-    //     }
-    // });
 
 
     function getcoursesoffered(program_code, level, section_id) {
@@ -100,27 +91,13 @@
         array['section_id'] = section_id;
         $.ajax({
             type: "GET",
-            // url: "index.php?page=get_course_offered",
             url: "SchedAjax/CS_get_course_offered.php",
             data: array,
             success: function(data) {
                 console.log(data);
                 $('#displayoffered').html(data).fadeIn();
-                // $('#displayoffered').empty().html(data).fadeIn();
             }
         });
     }
 
-    // // Call getcoursesoffered only when a section is selected
-    // $(document).on('change', '#section_id', function() {
-    //     var section_id = $(this).val();
-    //     if (section_id !== '') {
-    //         var program_code = $('#program_code').val();
-    //         var level = $('#level').val();
-    //         getcoursesoffered(program_code, level, section_id);
-    //     } else {
-    //         // If no section is selected, hide the displayed courses
-    //         $('#displayoffered').html('').hide();
-    //     }
-    // });
 </script>

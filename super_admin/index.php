@@ -72,7 +72,7 @@
 
 <body>
 
-  <?php include '../includes/navbar1.php' ?>
+  <?php include '../includes/navbar2.php' ?>
 
 
   <!-- <div id="preloader"></div> -->

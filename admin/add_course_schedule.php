@@ -30,10 +30,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
     $is_comlab = $stmt->get_result()->fetch_assoc()['is_comlab'];
 }
 ?>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.11/index.global.min.js"></script>
+
+<style>
+    .card-footer {
+        border-top: none;
+    }
+
+    .custom-event {
+        white-space: normal !important;
+        overflow: visible !important;
+        height: auto !important;
+        padding: 2px !important;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    .custom-event .fc-event-title {
+        display: block;
+        white-space: normal;
+        font-size: 12px;
+    }
+</style>
 
 <div class="container-fluid">
     <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
@@ -130,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                     </div>
                     <div class="card-footer no-padding bg-transparent mb-3 p-2">
                         <div class="col-sm-12">
-                            <div id="calendar"></div>
+                            <div id="calendar1"></div>
                         </div>
                     </div>
                 </div>
@@ -146,11 +163,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
 <script>
     var courseOfferingInfoId = <?php echo json_encode($course_offering_info_id); ?>;
     var sectionId = <?php echo json_encode($section_id); ?>;
+
     document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
+        var calendarEl = document.getElementById('calendar1');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             height: "auto",
-            firstDay: 1,
+
             dayHeaderFormat: {
                 weekday: 'short'
             },
@@ -162,32 +180,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
             headerToolbar: false,
             eventOverlap: false,
             eventClick: function(info) {
-                var boolean = confirm('Clicking the OK button button will change the status of the schedule. Do you wish to continue?');
+                var boolean = confirm('Clicking the OK button will change the status of the schedule. Do you wish to continue?');
                 if (boolean == true) {
-                    window.open('/admin/course_scheduling/remove_schedule/' + info.event.id + '/' + info.event.extendedProps.offering_id, '_self');
+                    window.open('/admin/course_scheduling/remove_schedule/' + info.event.id + '/' + info.event.extendedProps.course_offering_info_id, '_self');
                 }
             },
             eventDidMount: function(info) {
-                info.el.querySelector('.fc-title').innerHTML = info.el.querySelector('.fc-title').textContent;
-            },
-            events: function(fetchInfo, successCallback, failureCallback) {
-                fetch('ajax.php?action=get_schedule&course_offering_info_id=<?php echo $course_offering_info_id; ?>')
-                    .then(function(response) {
-                        return response.json();
-                    })
-                    .then(function(data) {
-                        successCallback(data);
-                    })
-                    .catch(function(error) {
-                        console.error('There was an error while fetching schedule data:', error);
-                        failureCallback(error);
-                    });
+                var titleElement = info.el.querySelector('.fc-event-title');
+                if (titleElement) {
+                    titleElement.innerHTML = info.event.title;
+                }
+                info.el.classList.add('custom-event');
             }
-        });
 
+        });
+        fetchEvents();
+
+        function fetchEvents() {
+            fetch('ajax.php?action=get_schedule&course_offering_info_id=<?= $course_offering_info_id ?>')
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function(data) {
+
+                    if (data.error) {
+                        console.error('Error fetching schedule data:', data.error);
+                    } else {
+                        calendar.removeAllEvents();
+                        calendar.addEventSource(data);
+                    }
+                })
+                .catch(function(error) {
+                    console.error('There was an error while fetching schedule data:', error);
+                });
+        }
         calendar.render();
     });
-
 
     function addSchedule(day, time_start, time_end) {
         var isValid = true;
@@ -207,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
         }
 
         if (isValid) {
-            // Ensure values are defined and not null
+
             if (courseOfferingInfoId && sectionId && day && time_start && time_end) {
                 $.ajax({
                     type: "GET",
@@ -222,6 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                     success: function(data) {
                         $('#displayroom').html(data).fadeIn();
                         $('#myModal').modal('show');
+
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
                         alert('Error: ' + textStatus + ' - ' + errorThrown);
@@ -250,9 +279,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
         }
     });
 </script>
-
-<style>
-    .card-footer {
-        border-top: none;
-    }
-</style>

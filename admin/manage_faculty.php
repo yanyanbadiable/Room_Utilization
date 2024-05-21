@@ -216,7 +216,28 @@ if ($result) {
         // Send AJAX requests only if form is valid
         addUser();
         addInstructor();
+        addLoad();
     });
+
+    function addLoad() {
+        $.ajax({
+            type: "POST",
+            url: "ajax.php?action=add_load", // Specify the action to call add_load function
+            success: function(data) {
+                if (data.trim() === 'Load added successfully!') {
+                    // Handle success
+                    alert_toast('Load added successfully!', 'success');
+                } else {
+                    alert_toast('Failed to add load', 'danger');
+                    $('input[type="submit"]').prop('disabled', false); // Re-enable submit button on failure
+                }
+            },
+            error: function() {
+                alert_toast('Something Went Wrong!', 'danger');
+                $('input[type="submit"]').prop('disabled', false); // Re-enable submit button on error
+            }
+        });
+    }
 
     function addUser() {
         var array = {};
@@ -248,6 +269,7 @@ if ($result) {
         });
     }
 
+
     function addInstructor() {
         var array = {};
         array['program_id'] = $("select[name='program']").val();
@@ -259,7 +281,7 @@ if ($result) {
         array['province'] = $("input[name='province']").val();
         array['contact'] = $("input[name='contact']").val();
         array['email'] = $("input[name='email']").val();
-        
+
         $.ajax({
             type: "POST",
             url: "ajax.php?action=save_faculty",

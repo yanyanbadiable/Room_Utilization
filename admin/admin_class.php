@@ -371,8 +371,9 @@ class Action
 	{
 		$res = 1;
 		extract($_POST);
-		$stmt = $this->db->prepare("INSERT INTO courses (year, period, level, program_id, course_code, course_name, lec, lab, units, is_comlab) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		$stmt->bind_param("ssssssdddd", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val);
+
+		$stmt = $this->db->prepare("INSERT INTO courses (year, period, level, program_id, course_code, course_name, lec, lab, units, is_comlab, hours) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		$stmt->bind_param("ssssssddddd", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val, $hours_val);
 
 		foreach ($year as $key => $value) {
 			if (array_key_exists($key, $year)) {
@@ -388,7 +389,17 @@ class Action
 				$units_val = $units[$key];
 				$is_comlab_val = $is_comlab[$key];
 
-				// Check if the course already exists in the database
+				if ($is_comlab_val && $lec_val) {
+					// Lab and lecture course: 1 unit = 4 hours (3 for lab, 1 for lecture)
+					$hours_val = $units_val * 4;
+				} elseif ($is_comlab_val || $lec_val) {
+					// Lab or lecture course: 1 unit = 3 hours (lab only) or 2 hours (lecture only)
+					$hours_val = $units_val * 3;
+				} else {
+					// Non-lab and non-lecture course: 1 unit = 1 hour
+					$hours_val = $units_val;
+				}
+
 				$check_stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_code = ? AND course_name = ?");
 				$check_stmt->bind_param("ss", $course_code_val, $course_name_val);
 				$check_stmt->execute();
@@ -396,25 +407,18 @@ class Action
 				$check_stmt->fetch();
 				$check_stmt->close();
 
-				// var_dump($count);
-
-				// If course already exists, set $res to 0 and skip insertion
 				if ($count > 0) {
 					$res = 0;
-					continue; // Skip insertion
+					continue;
 				}
 
-				// Execute the insert query
 				$save = $stmt->execute();
 
-				// If insertion fails, set $res to 0
 				if (!$save) {
 					$res = 0;
 				}
 			}
 		}
-
-		$stmt->close();
 
 		return $res;
 	}
@@ -572,13 +576,14 @@ class Action
 
 			// Query to get the latest ID from the users table
 			$latestUserIdQuery = "SELECT id FROM users ORDER BY id DESC LIMIT 1";
-
 			// Execute the query to get the latest user ID
 			$latestUserIdResult = mysqli_query($this->db, $latestUserIdQuery);
 
 			if ($latestUserIdResult && mysqli_num_rows($latestUserIdResult) > 0) {
 				$row = mysqli_fetch_assoc($latestUserIdResult);
 				$latestUserId = $row['id'];
+
+				// var_dump($latestUserId);
 			} else {
 				echo "No users found";
 				return; // Exit the function if no user found
@@ -614,7 +619,6 @@ class Action
 		$latest_user_row = mysqli_fetch_assoc($latest_user_result);
 		$user_id = $latest_user_row['id'];
 
-		// Retrieve the designation for the latest user
 		$faculty_info_query = "SELECT designation FROM faculty WHERE user_id = ?";
 		$faculty_info_stmt = mysqli_prepare($this->db, $faculty_info_query);
 		mysqli_stmt_bind_param($faculty_info_stmt, "i", $user_id);
@@ -623,25 +627,23 @@ class Action
 		$faculty_info_row = mysqli_fetch_assoc($faculty_info_result);
 		$designation = $faculty_info_row['designation'];
 
-		// Calculate units based on designation
 		if ($designation == 'Full Time') {
 			$units = 36;
 		} else {
 			$units = 15;
 		}
 
-		// Insert load record into the database
-		$insert_load_query = "INSERT INTO units_loads (faculty_id, designation, units) VALUES (?, ?, ?)";
+		$insert_load_query = "INSERT INTO unit_loads (users_id, units, designation) VALUES (?, ?, ?)";
 		$insert_load_stmt = mysqli_prepare($this->db, $insert_load_query);
-		mysqli_stmt_bind_param($insert_load_stmt, "iss", $user_id, $designation, $units);
+		mysqli_stmt_bind_param($insert_load_stmt, "iis", $user_id, $units, $designation);
 
-		// Check if the query executed successfully
 		if (mysqli_stmt_execute($insert_load_stmt)) {
 			echo 'Load added successfully!';
 		} else {
 			echo 'Failed to add load!';
 		}
 	}
+
 
 
 	function edit_faculty()
@@ -708,8 +710,6 @@ class Action
 	}
 
 
-
-
 	function delete_faculty()
 	{
 		extract($_POST);
@@ -718,72 +718,50 @@ class Action
 			return 1;
 		}
 	}
-	function save_schedule()
-	{
-		extract($_POST);
-		$data = " faculty_id = '$faculty_id' ";
-		$data .= ", subject_id = '$subject_id' ";
-		$data .= ", schedule_type = '$schedule_type' ";
-		$data .= ", room_id = '$room_id' ";
-		if (isset($is_repeating)) {
-			$data .= ", is_repeating = '$is_repeating' ";
-			$rdata = array('dow' => implode(',', $dow), 'start' => $month_from . '-01', 'end' => (date('Y-m-d', strtotime($month_to . '-01 +1 month - 1 day '))));
-			$data .= ", repeating_data = '" . json_encode($rdata) . "' ";
-		} else {
-			$data .= ", is_repeating = 0 ";
-			$data .= ", schedule_date = '$schedule_date' ";
-		}
-		$data .= ", time_from = '$time_from' ";
-		$data .= ", time_to = '$time_to' ";
 
-		if (empty($id)) {
-			$save = $this->db->query("INSERT INTO schedules set " . $data);
-		} else {
-			$save = $this->db->query("UPDATE schedules set " . $data . " where id=" . $id);
-		}
-		if ($save)
-			return 1;
-	}
-	function delete_schedule()
-	{
-		extract($_POST);
-		$delete = $this->db->query("DELETE FROM schedules where id = " . $id);
-		if ($delete) {
-			return 1;
-		}
-	}
 	function get_schedule()
 	{
 		if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['course_offering_info_id'])) {
 			$course_offering_info_id = $_GET['course_offering_info_id'];
+	
 			$event_array = [];
-
+	
 			$stmt = $this->db->prepare("SELECT * FROM schedules WHERE course_offering_info_id = ?");
+			if (!$stmt) {
+				throw new Exception("Error preparing statement: " . $this->db->error);
+			}
 			$stmt->bind_param("i", $course_offering_info_id);
 			$stmt->execute();
 			$schedules_result = $stmt->get_result();
-
+	
+			// Fetch each schedule and its related course details
 			while ($sched = $schedules_result->fetch_assoc()) {
 				$course_detail_stmt = $this->db->prepare("
-                SELECT 
-                    courses.course_code, 
-                    rooms.room AS room, 
-                    sections.section_name
-                FROM courses 
-                JOIN course_offering_info ON course_offering_info.courses_id = courses.id
-                JOIN rooms ON rooms.id = ?
-                JOIN sections ON sections.id = course_offering_info.section_id
-                WHERE course_offering_info.id = ?
-            ");
+					SELECT 
+						courses.course_code, 
+						rooms.room, 
+						program.program_code, 
+						sections.level,
+						sections.section_name
+					FROM courses 
+					JOIN course_offering_info ON course_offering_info.courses_id = courses.id
+					JOIN rooms ON rooms.id = ?
+					JOIN sections ON sections.id = course_offering_info.section_id
+					JOIN program ON program.id = sections.program_id
+					WHERE course_offering_info.id = ?
+				");
+				if (!$course_detail_stmt) {
+					throw new Exception("Error preparing course detail statement: " . $this->db->error);
+				}
 				$course_detail_stmt->bind_param("ii", $sched['room_id'], $course_offering_info_id);
 				$course_detail_stmt->execute();
 				$course_detail_result = $course_detail_stmt->get_result();
-
+	
 				if (!$course_detail_result) {
 					throw new Exception("Error fetching course detail information: " . $this->db->error);
 				}
 				$course_detail = $course_detail_result->fetch_assoc();
-
+	
 				$day_map = [
 					'M' => 'Monday',
 					'T' => 'Tuesday',
@@ -804,61 +782,62 @@ class Action
 				];
 				$day = $day_map[$sched['day']] ?? '';
 				$color = $color_map[$sched['day']] ?? '';
-
+	
+				$section_name_concatenated = $course_detail['program_code'] . '-' . substr($course_detail['level'], 0, 1) . $course_detail['section_name'];
+	
 				$event_array[] = [
 					'id' => $sched['id'],
-					'title' => $course_detail['course_code'] . '<br>' . $course_detail['room'] . '<br>' . $course_detail['section_name'],
+					'title' => $course_detail['course_code'] . '<br>' . $course_detail['room'] . '<br>' . $section_name_concatenated,
 					'start' => date('Y-m-d', strtotime('next ' . $day)) . 'T' . $sched['time_start'],
 					'end' => date('Y-m-d', strtotime('next ' . $day)) . 'T' . $sched['time_end'],
 					'color' => $color,
 					'textColor' => 'black',
-					'course_offering_info_id' => $course_offering_info_id,
 					'extendedProps' => [
-						'offering_id' => $course_offering_info_id
+						'course_offering_info_id' => $course_offering_info_id
 					]
 				];
 			}
+			
 			return json_encode($event_array);
 		}
 	}
+	
 
 
+	// function getFullCalendar()
+	// {
+	// 	if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['section_id']) && isset($_GET['course_id'])) {
+	// 		$section_id = $_GET['section_id'];
+	// 		$course_id = $_GET['course_id'];
 
+	// 		// Query to fetch schedules for the given course offering
+	// 		$query = "SELECT * FROM schedules WHERE section_id = ? AND course_id = ?";
+	// 		$stmt = $this->db->prepare($query);
+	// 		$stmt->bind_param("ii", $section_id, $course_id);
+	// 		$stmt->execute();
+	// 		$result = $stmt->get_result();
 
-	function getFullCalendar()
-	{
-		if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['section_id']) && isset($_GET['course_id'])) {
-			$section_id = $_GET['section_id'];
-			$course_id = $_GET['course_id'];
+	// 		// Array to store the events
+	// 		$events = [];
 
-			// Query to fetch schedules for the given course offering
-			$query = "SELECT * FROM schedules WHERE section_id = ? AND course_id = ?";
-			$stmt = $this->db->prepare($query);
-			$stmt->bind_param("ii", $section_id, $course_id);
-			$stmt->execute();
-			$result = $stmt->get_result();
+	// 		// Loop through the result set and create events
+	// 		while ($row = $result->fetch_assoc()) {
+	// 			// Construct the event data
+	// 			$event = [
+	// 				'id' => $row['id'],
+	// 				'title' => $row['title'],
+	// 				'start' => $row['start_date'] . 'T' . $row['start_time'],
+	// 				'end' => $row['end_date'] . 'T' . $row['end_time'],
+	// 			];
 
-			// Array to store the events
-			$events = [];
+	// 			// Push the event to the events array
+	// 			$events[] = $event;
+	// 		}
 
-			// Loop through the result set and create events
-			while ($row = $result->fetch_assoc()) {
-				// Construct the event data
-				$event = [
-					'id' => $row['id'],
-					'title' => $row['title'],
-					'start' => $row['start_date'] . 'T' . $row['start_time'],
-					'end' => $row['end_date'] . 'T' . $row['end_time'],
-				];
-
-				// Push the event to the events array
-				$events[] = $event;
-			}
-
-			// Return the events as JSON
-			echo json_encode($events);
-		}
-	}
+	// 		// Return the events as JSON
+	// 		echo json_encode($events);
+	// 	}
+	// }
 
 	function add_course_offer()
 	{
@@ -872,7 +851,7 @@ class Action
 			$check_query->execute();
 			$check_result = $check_query->get_result();
 
-			// Fetch the curriculum details
+			// Fetch the courses details
 			$course_query = $this->db->prepare("SELECT level FROM courses WHERE id = ?");
 			$course_query->bind_param("s", $course_id);
 			$course_query->execute();
@@ -982,63 +961,110 @@ class Action
 		}
 	}
 
+	function remove_schedule()
+	{
+	}
+
 	function add_faculty_load()
 	{
 		if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['course_offering_info_id'])) {
+
 			$instructor = $_GET['instructor'];
 			$course_offering_info_id = $_GET['course_offering_info_id'];
+
+			// Get instructor info
+			$info_query = "SELECT * FROM faculty WHERE user_id = ?";
+			$info_stmt = $this->db->prepare($info_query);
+			$info_stmt->bind_param('i', $instructor);
+			$info_stmt->execute();
+			$info_result = $info_stmt->get_result();
+			$info = $info_result->fetch_assoc();
+
+			$loads_query = "SELECT SUM(units) AS total_units FROM courses
+                        INNER JOIN course_offering_info ON courses.id = course_offering_info.courses_id
+                        INNER JOIN schedules ON schedules.course_offering_info_id = course_offering_info.id
+                        WHERE schedules.users_id = ?";
+
+			$loads_stmt = $this->db->prepare($loads_query);
+			$loads_stmt->bind_param('i', $instructor);
+			$loads_stmt->execute();
+			$loads_result = $loads_stmt->get_result();
+
+			// var_dump($loads_query);
+			// var_dump($instructor);
+			// var_dump($loads_stmt->error);
+
+			$loads_row = $loads_result->fetch_assoc();
+			$total_units = $loads_row['total_units'];
+
+			// Get load units
+			$load_units_query = "SELECT SUM(units) AS total_units FROM unit_loads WHERE users_id = ?";
+			$load_units_stmt = $this->db->prepare($load_units_query);
+			$load_units_stmt->bind_param('i', $instructor);
+			$load_units_stmt->execute();
+			$load_units_result = $load_units_stmt->get_result();
+			$load_units_row = $load_units_result->fetch_assoc();
+			$total_load_units = $load_units_row['total_units'];
+
+			if ($total_units >= $total_load_units) {
+				http_response_code(404);
+				return;
+			}
 
 			// Get schedules
 			$schedules_query = "SELECT * FROM schedules WHERE course_offering_info_id = ?";
 			$schedules_stmt = $this->db->prepare($schedules_query);
 			$schedules_stmt->bind_param('i', $course_offering_info_id);
 			$schedules_stmt->execute();
-			$schedules = $schedules_stmt->get_result();
+			$schedules_result = $schedules_stmt->get_result();
 
-			if ($schedules->num_rows > 0) {
-				$conflict_found = false;
-				while ($schedule = $schedules->fetch_assoc()) {
-					// Check for conflict
-					$conflict_query = "
-						SELECT DISTINCT course_offering_info_id
-						FROM schedules
-						WHERE users_id = ?
-						AND day = ?
-						AND (
-							(time_start BETWEEN ? AND ?)
-							OR
-							(time_end BETWEEN ? AND ?)
-						)";
+			if ($schedules_result->num_rows > 0) {
+				while ($schedule = $schedules_result->fetch_assoc()) {
+					$conflict_query = "SELECT DISTINCT course_offering_info_id, day, time_start, time_end 
+									   FROM schedules
+									   WHERE users_id = ? AND day = ? AND
+									   ((time_start < ? AND time_end > ?) OR
+										(time_start < ? AND time_end > ?) OR
+										(time_start >= ? AND time_end <= ?))";
 					$conflict_stmt = $this->db->prepare($conflict_query);
-					$conflict_stmt->bind_param('isssss', $instructor, $schedule['day'], $schedule['time_start'], $schedule['time_end'], $schedule['time_start'], $schedule['time_end']);
+					$conflict_stmt->bind_param(
+						'isssssss',
+						$instructor,
+						$schedule['day'],
+						$schedule['time_end'],
+						$schedule['time_start'],
+						$schedule['time_start'],
+						$schedule['time_end'],
+						$schedule['time_start'],
+						$schedule['time_end']
+					);
 					$conflict_stmt->execute();
-					$conflicts = $conflict_stmt->get_result();
+					$conflict_result = $conflict_stmt->get_result();
 
-					if ($conflicts->num_rows > 0) {
-						$conflict_found = true;
-						break;
+					if ($conflict_result->num_rows == 0) {
+						// No conflict, update schedule
+						$update_query = "UPDATE schedules SET users_id = ? WHERE id = ?";
+						$update_stmt = $this->db->prepare($update_query);
+						$update_stmt->bind_param('ii', $instructor, $schedule['id']);
+						$update_stmt->execute();
+						echo 'Successfully Added Faculty Load!';
+					} else {
+						// Schedule conflict occurred
+						http_response_code(409);
+						echo 'Schedule conflict occurred! Conflicting schedules: ';
+
+						// Fetch and display conflicting schedules
+						while ($conflicting_schedule = $conflict_result->fetch_assoc()) {
+							var_dump($conflicting_schedule);
+						}
+
+						return;
 					}
 				}
-
-				if (!$conflict_found) {
-					// No conflict, update schedules
-					foreach ($schedules as $schedule) {
-						$update_schedule_query = "UPDATE schedules SET users_id = ? WHERE id = ?";
-						$update_schedule_stmt = $this->db->prepare($update_schedule_query);
-						$update_schedule_stmt->bind_param('ii', $instructor, $schedule['id']);
-						$update_schedule_stmt->execute();
-					}
-					echo 'Successfully Added Faculty Load!';
-				} else {
-					echo 'Schedule conflict occurred!';
-				}
-			} else {
-				echo 'No schedules found for the given offering ID.';
 			}
-		} else {
-			echo 'Invalid request.';
 		}
 	}
+
 
 	function remove_faculty_load()
 	{
