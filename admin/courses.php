@@ -1,12 +1,14 @@
 <?php
 include 'db_connect.php'; // Assuming this file contains database connection logic
 
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$program_id = $_SESSION['login_program_id'];
 
-$query = "SELECT DISTINCT program_code, program_name FROM program";
-$result = $conn->query($query);
+$query = "SELECT DISTINCT program_code, program_name FROM program WHERE id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $program_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
-// Fetch the results into an array
 $programs = [];
 while ($row = $result->fetch_assoc()) {
     $programs[] = $row;

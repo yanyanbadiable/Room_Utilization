@@ -23,7 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
 
     $loads = [];
     while ($row = mysqli_fetch_assoc($loads_result)) {
-        $loads[] = $row;
+        if (!array_key_exists($row['course_offering_info_id'], $loads)) {
+            $loads[$row['course_offering_info_id']] = $row;
+        }
     }
 
     $tabular_schedules_query = "
@@ -256,8 +258,10 @@ $designation = mysqli_fetch_assoc($designation_result);
                             </tbody>
                         </table>
                         <div class="col-sm-12">
-                            <a href="../index.php?page=generate_schedule&instructor=<?php echo $instructor; ?>" target="_blank" class="btn btn-primary btn-block">Generate Schedule</a>
+                            <a href="index.php?page=generate_schedule&instructor=<?php echo $instructor; ?>" class="btn btn-primary btn-block">Generate Schedule</a>
                         </div>
+
+
                     <?php else : ?>
                         <div class="callout callout-warning">
                             <div class="text-center">
@@ -272,34 +276,33 @@ $designation = mysqli_fetch_assoc($designation_result);
 </div>
 
 <script>
-       
-        var calendarEl = document.getElementById('calendar');
-        var events = <?php echo $get_schedule; ?>;
-        console.log(events)
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            height: "auto",
+    var calendarEl = document.getElementById('calendar');
+    var events = <?php echo $get_schedule; ?>;
+    console.log(events)
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        height: "auto",
 
-            dayHeaderFormat: {
-                weekday: 'short'
-            },
-            initialView: 'timeGridWeek',
-            hiddenDays: [0],
-            slotMinTime: '07:00:00',
-            slotMaxTime: '22:00:00',
-            allDaySlot: false,
-            headerToolbar: false,
-            eventOverlap: false,
-            events: events,
-            eventDidMount: function(info) {
-                console.log('Event mounted:', info.event);
-                var titleElement = info.el.querySelector('.fc-event-title');
-                if (titleElement) {
-                    titleElement.innerHTML = info.event.title;
-                }
-                info.el.classList.add('custom-event');
+        dayHeaderFormat: {
+            weekday: 'short'
+        },
+        initialView: 'timeGridWeek',
+        hiddenDays: [0],
+        slotMinTime: '07:00:00',
+        slotMaxTime: '22:00:00',
+        allDaySlot: false,
+        headerToolbar: false,
+        eventOverlap: false,
+        events: events,
+        eventDidMount: function(info) {
+            console.log('Event mounted:', info.event);
+            var titleElement = info.el.querySelector('.fc-event-title');
+            if (titleElement) {
+                titleElement.innerHTML = info.event.title;
             }
-        });
-        calendar.render();
+            info.el.classList.add('custom-event');
+        }
+    });
+    calendar.render();
 
 
     function remove_faculty_load(offering_id) {

@@ -29,11 +29,16 @@
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $program = $conn->query("SELECT * FROM program");
-                                        if (!$program) {
+                                        $program_id = $_SESSION['login_program_id'];
+
+                                        $stmt = $conn->prepare("SELECT * FROM program WHERE id = ?");
+                                        $stmt->bind_param("i", $program_id);
+                                        $stmt->execute();
+                                        $result = $stmt->get_result();
+                                        if (!$result) {
                                             die('Invalid query: ' . $conn->error);
                                         }
-                                        while ($row = $program->fetch_assoc()) :
+                                        while ($row = $result->fetch_assoc()) :
                                         ?>
                                             <tr>
                                                 <td><?php echo $row['program_code'] ?></td>

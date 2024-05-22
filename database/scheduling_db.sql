@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 19, 2024 at 04:56 AM
+-- Generation Time: May 22, 2024 at 08:43 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -56,7 +56,7 @@ CREATE TABLE `courses` (
   `year` varchar(100) NOT NULL,
   `level` varchar(255) NOT NULL,
   `period` varchar(255) NOT NULL,
-  `hours` float NOT NULL,
+  `hours` float DEFAULT NULL,
   `units` float DEFAULT NULL,
   `lec` float DEFAULT NULL,
   `lab` float DEFAULT NULL,
@@ -73,8 +73,9 @@ INSERT INTO `courses` (`id`, `course_code`, `course_name`, `program_id`, `year`,
 (71, 'SE1', 'Software Engineering', 2, '2024', '1st Year', '1st Semester', 0, 3, 3, 3, 1, '2024-05-11 20:25:50', '2024-05-11 16:11:16'),
 (75, 'CCNA', 'Packet Tracer', 3, '2024', '1st Year', '1st Semester', 0, 2, 3, 2, 0, '2024-05-11 19:24:22', '2024-05-11 19:24:22'),
 (76, 'SA', 'System Architecture', 3, '2024', '1st Year', '1st Semester', 0, 2, 2, 2, 0, '2024-05-11 19:35:18', '2024-05-11 19:35:18'),
-(77, 'IE1', 'IT Electives2', 2, '2024', '1st Year', '1st Semester', 0, 2, 2, 2, 0, '2024-05-11 20:25:04', '2024-05-11 19:41:07'),
-(78, 'IA', 'Information Assurance', 3, '2024', '1st Year', '1st Semester', 0, 3, 2, 2, 0, '2024-05-13 00:51:14', '2024-05-11 19:43:26');
+(77, 'IE1', 'IT Electives2', 2, '2024', '1st Year', '1st Semester', 0, 2, 2, 2, 0, '2024-05-19 08:12:30', '2024-05-11 19:41:07'),
+(78, 'IA', 'Information Assurance', 3, '2024', '1st Year', '1st Semester', 0, 3, 2, 2, 0, '2024-05-13 00:51:14', '2024-05-11 19:43:26'),
+(79, 'SI', 'System Integration', 2, '2024', '1st Year', '1st Semester', 6, 2, 2, 2, 0, '2024-05-22 05:32:45', '2024-05-22 05:32:45');
 
 -- --------------------------------------------------------
 
@@ -90,17 +91,6 @@ CREATE TABLE `course_offering_info` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `course_offering_info`
---
-
-INSERT INTO `course_offering_info` (`id`, `courses_id`, `section_id`, `created_at`, `updated_at`) VALUES
-(15, 71, 14, '2024-05-12 03:14:16', '2024-05-12 03:14:16'),
-(16, 75, 16, '2024-05-12 05:58:42', '2024-05-12 05:58:42'),
-(17, 76, 16, '2024-05-12 05:58:52', '2024-05-12 05:58:52'),
-(20, 71, 12, '2024-05-12 12:22:53', '2024-05-12 12:22:53'),
-(21, 77, 14, '2024-05-13 07:52:47', '2024-05-13 07:52:47');
-
 -- --------------------------------------------------------
 
 --
@@ -109,7 +99,7 @@ INSERT INTO `course_offering_info` (`id`, `courses_id`, `section_id`, `created_a
 
 CREATE TABLE `faculty` (
   `id` int(30) NOT NULL,
-  `user_id` int(11) NOT NULL,
+  `user_id` int(30) NOT NULL,
   `program_id` int(11) NOT NULL,
   `designation` varchar(255) DEFAULT NULL,
   `contact` varchar(100) NOT NULL,
@@ -128,10 +118,7 @@ CREATE TABLE `faculty` (
 --
 
 INSERT INTO `faculty` (`id`, `user_id`, `program_id`, `designation`, `contact`, `gender`, `street`, `barangay`, `municipality`, `province`, `email`, `created_at`, `updated_at`) VALUES
-(8, 17, 2, 'Full Time', '+639272950588', 'Male', '', 'Baruguhay Norte ', 'Carigara', 'Ponong', 'yanyanbadiable123@gmail.com', '2024-05-14 03:25:04', '2024-05-15 05:56:33'),
-(9, 18, 2, 'Full Time', '+639272950589', 'Male', '', 'Ponong', 'Carigara', 'Leyte', 'jomarberdejo@gmail.com', '2024-05-14 03:27:13', '2024-05-14 09:02:02'),
-(10, 19, 2, 'Part Time', '+639272950589', 'Male', '', 'Macopa', 'Jaro', 'Leyte', 'jersonaballa@gmail.com', '2024-05-14 09:06:03', '2024-05-14 09:06:03'),
-(11, 19, 2, 'Part Time', '', 'Male', '', 'test', 'test', 'test', 'dadad@gmail.com', '2024-05-18 10:48:58', '2024-05-18 10:48:58');
+(29, 42, 2, 'Part Time', '+639272950588', 'Male', '', 'Ponong', 'Carigara', 'Leyte', 'matosolar@gmail.com', '2024-05-19 15:18:29', '2024-05-19 15:18:29');
 
 -- --------------------------------------------------------
 
@@ -143,6 +130,7 @@ CREATE TABLE `program` (
   `id` int(30) NOT NULL,
   `program_name` varchar(250) NOT NULL,
   `program_code` varchar(100) NOT NULL,
+  `department` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -151,10 +139,10 @@ CREATE TABLE `program` (
 -- Dumping data for table `program`
 --
 
-INSERT INTO `program` (`id`, `program_name`, `program_code`, `created_at`, `updated_at`) VALUES
-(2, 'Information Technology Department', 'IT Dept', '2024-04-21 11:53:59', '2024-04-21 11:53:59'),
-(3, 'Entrepreneurship Department', 'ENTREP Dept', '2024-04-21 11:53:59', '2024-04-21 11:53:59'),
-(5, 'Fishery Department', 'FI Dept', '2024-04-21 11:53:59', '2024-04-21 11:53:59');
+INSERT INTO `program` (`id`, `program_name`, `program_code`, `department`, `created_at`, `updated_at`) VALUES
+(2, 'Bachelor of Science in Information Technology', 'BSIT', 'Information Technology Department', '2024-04-21 11:53:59', '2024-05-22 02:15:51'),
+(3, 'Bachelor of Science in Entrepreneurship', 'BSEntrep', 'Entrep Departmment', '2024-04-21 11:53:59', '2024-05-22 02:19:10'),
+(5, 'Bachelor of Science in Fisheries', 'BSFi', 'Fishery Department', '2024-04-21 11:53:59', '2024-05-22 02:20:36');
 
 -- --------------------------------------------------------
 
@@ -200,15 +188,6 @@ CREATE TABLE `schedules` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `schedules`
---
-
-INSERT INTO `schedules` (`id`, `users_id`, `course_offering_info_id`, `room_id`, `is_loaded`, `is_active`, `day`, `time_start`, `time_end`, `created_at`, `updated_at`) VALUES
-(41, 17, 15, 16, 0, 1, 'M', '07:00:00', '08:00:00', '2024-05-15 07:08:31', '2024-05-19 01:59:24'),
-(42, NULL, 21, 16, 0, 1, 'M', '08:00:00', '09:00:00', '2024-05-15 12:09:42', '2024-05-15 12:09:42'),
-(44, NULL, 16, 16, 0, 1, 'M', '10:00:00', '11:00:00', '2024-05-15 13:07:22', '2024-05-15 13:07:22');
-
 -- --------------------------------------------------------
 
 --
@@ -245,12 +224,19 @@ INSERT INTO `sections` (`id`, `program_id`, `level`, `section_name`, `is_active`
 
 CREATE TABLE `unit_loads` (
   `id` int(30) NOT NULL,
-  `faculty_id` int(30) NOT NULL,
+  `users_id` int(30) NOT NULL,
   `units` int(30) NOT NULL,
-  `desgnation` varchar(255) NOT NULL,
+  `designation` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `unit_loads`
+--
+
+INSERT INTO `unit_loads` (`id`, `users_id`, `units`, `designation`, `created_at`, `updated_at`) VALUES
+(1, 42, 15, 'Part Time', '2024-05-19 15:18:31', '2024-05-19 15:18:31');
 
 -- --------------------------------------------------------
 
@@ -277,10 +263,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `fname`, `mname`, `lname`, `extname`, `username`, `password`, `type`, `program_id`, `created_at`, `updated_at`) VALUES
-(10, 'Admin', NULL, 'Admin', NULL, 'admin', '$2y$10$yQkIoB0cHw3gpN9vigfbPelz2y4qUDN9VQGvX52Kw7IX9uxb.7um2', 0, 2, '2024-04-21 11:52:16', '2024-05-14 23:02:11'),
-(17, 'yanyan', 'Bacunawa', 'Badiable', '', '2021-1485', '$2y$10$ltMm2BmRLXj90409RyFZV.jv3CH7pBZfBpmDeKD.h4YANbUPfExs6', 1, 2, '2024-05-14 03:25:02', '2024-05-15 05:56:31'),
-(18, 'Jomar', 'Macalinao', 'Berdejo', '', '2021-1486', '$2y$10$wA4uwK/HSqujYvWLx3btaOeO0vIRokLkAHVFb7O/oIfR8WU02IUe.', 1, 2, '2024-05-14 03:27:15', '2024-05-14 03:27:15'),
-(19, 'Jerson', 'Aure', 'Aballa', '', '2021-25019', '$2y$10$9Lx7JuLYny1rXKj215QFjuFLWgv.6J0unULR0.xWGzEOnTA/joN0O', 1, 2, '2024-05-14 09:06:01', '2024-05-14 09:06:01');
+(10, 'Admin', NULL, 'Admin', NULL, 'admin', '$2y$10$FhH3MIIaa1sRtjtJeNKmOe2Jhm5c.sxCLHF6UPESNov6AFZ4Iniji', 0, 2, '2024-04-21 11:52:16', '2024-05-22 06:20:50'),
+(42, 'Matthew', '', 'Solar', '', '2021-212212', '$2y$10$0IjMsLPJZCC.0ia4VrC4HuvKgndyRorVkbzW5/FjB/QrH2UkYdiGm', 1, 2, '2024-05-19 15:18:27', '2024-05-19 15:18:27');
 
 --
 -- Indexes for dumped tables
@@ -351,7 +335,7 @@ ALTER TABLE `sections`
 --
 ALTER TABLE `unit_loads`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `faculty_id` (`faculty_id`);
+  ADD KEY `faculty_id` (`users_id`);
 
 --
 -- Indexes for table `users`
@@ -375,19 +359,19 @@ ALTER TABLE `building`
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
 
 --
 -- AUTO_INCREMENT for table `course_offering_info`
 --
 ALTER TABLE `course_offering_info`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `faculty`
 --
 ALTER TABLE `faculty`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `program`
@@ -405,7 +389,7 @@ ALTER TABLE `rooms`
 -- AUTO_INCREMENT for table `schedules`
 --
 ALTER TABLE `schedules`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT for table `sections`
@@ -417,13 +401,13 @@ ALTER TABLE `sections`
 -- AUTO_INCREMENT for table `unit_loads`
 --
 ALTER TABLE `unit_loads`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(30) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- Constraints for dumped tables
@@ -479,7 +463,7 @@ ALTER TABLE `sections`
 -- Constraints for table `unit_loads`
 --
 ALTER TABLE `unit_loads`
-  ADD CONSTRAINT `unit_loads_ibfk_1` FOREIGN KEY (`faculty_id`) REFERENCES `faculty` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `unit_loads_ibfk_1` FOREIGN KEY (`users_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `users`

@@ -75,18 +75,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                                     <thead>
                                         <tr>
                                             <th>Schedule</th>
-                                            <th>Attach</th>
-                                            <th>Delete</th>
+                                            <th class="text-center">Attach</th>
+                                            <th class="text-center">Delete</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php foreach ($inactive as $schedule) : ?>
                                             <tr>
-                                                <td><?php echo $schedule['day']; ?> <?php echo date('g:iA', strtotime($schedule['time_starts'])); ?>-<?php echo date('g:iA', strtotime($schedule['time_end'])); ?></td>
+                                                <td><?php echo $schedule['day']; ?> <?php echo date('g:iA', strtotime($schedule['time_start'])); ?>-<?php echo date('g:iA', strtotime($schedule['time_end'])); ?></td>
 
-                                                <td><a href="SchedAjax/CS_get_room_available.php?id=<?= $schedule['id']; ?>&course_offering_info_id=<?= $course_offering_info_id; ?>" class="btn btn-flat btn-block btn-success"><i class="fa fa-plus-circle"></i></a></td>
+                                                <td class="text-center" >
+                                                    <button class="btn btn-flat btn-success" onclick="attach_schedule(<?php echo $schedule['id']; ?>, <?php echo $course_offering_info_id; ?>)">
+                                                        <i class="fa fa-plus-circle"></i>
+                                                    </button>
+                                                </td>
 
-                                                <td><a href="SchedAjax/delete_schedule.php?id=<?= $schedule['id']; ?>&course_offering_info_id=<?= $course_offering_info_id; ?>" onclick="return confirm('Do you wish to continue?')" class="btn btn-flat btn-block btn-danger"><i class="fa fa-times"></i></a></td>
+                                                <td class="text-center" >
+                                                    <button class="btn btn-flat btn-danger" onclick="delete_schedule(<?php echo $schedule['id']; ?>, <?php echo $course_offering_info_id; ?>)">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </td>
+
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -182,7 +191,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
             eventClick: function(info) {
                 var boolean = confirm('Clicking the OK button will change the status of the schedule. Do you wish to continue?');
                 if (boolean == true) {
-                    window.open('/admin/course_scheduling/remove_schedule/' + info.event.id + '/' + info.event.extendedProps.course_offering_info_id, '_self');
+                    var schedule_id = info.event.id;
+                    var offering_id = info.event.extendedProps.course_offering_info_id;
+
+                    remove_schedule(schedule_id, offering_id); 
                 }
             },
             eventDidMount: function(info) {
@@ -278,4 +290,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
             $('#time_end').siblings('.invalid-feedback').text('');
         }
     });
+
+    function remove_schedule(schedule_id, offering_id) {
+        $.ajax({
+            type: "POST",
+            url: "ajax.php?action=remove_schedule",
+            data: {
+                schedule_id: schedule_id,
+                offering_id: offering_id
+            },
+            success: function(data) {
+                alert_toast(data, 'success');
+                location.reload();
+            },
+            error: function(xhr, status, error) {
+                alert_toast(xhr.responseText, 'danger');
+            }
+        });
+    }
+
+    function attach_schedule(schedule_id, offering_id) {
+        $.ajax({
+            type: "POST",
+            url: "ajax.php?action=attach_schedule",
+            data: {
+                schedule_id: schedule_id,
+                offering_id: offering_id
+            },
+            success: function(data) {
+                alert_toast(data, 'success');
+                location.reload();
+            },
+            error: function(xhr, status, error) {
+                alert_toast(xhr.responseText, 'danger');
+            }
+        });
+    }
+
+    function delete_schedule(schedule_id, offering_id) {
+        if (confirm('Do you wish to continue?')) {
+            $.ajax({
+                type: "POST",
+                url: "ajax.php?action=delete_schedule",
+                data: {
+                    schedule_id: schedule_id,
+                    offering_id: offering_id
+                },
+                success: function(data) {
+                    alert_toast(data, 'success');
+                    location.reload();
+                },
+                error: function(xhr, status, error) {
+
+                    alert_toast(xhr.responseText, 'danger');
+                }
+            });
+        }
+    }
 </script>

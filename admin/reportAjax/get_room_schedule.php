@@ -1,89 +1,58 @@
-<style>
-    #header {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 1rem;
-    }
-
-    #header img {
-        width: 100px;
-        height: 100px;
-        margin-right: 2rem;
-    }
-
-    .header-text {
-        text-align: center;
-        margin: 0;
-        font-size: 15px;
-    }
-
-    .sub-header-text {
-        text-align: center;
-        font-size: 12px;
-    }
-
-    /* Print styles */
-    @media print {
-        #calendar {
-            /* display: block !important; */
-            width: 100% !important;
-            margin: 0 auto;
-        }
-
-        .no-print {
-            display: none;
-        }
-
-        .fc-toolbar {
-            display: none;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: center;
-        }
-
-    }
-</style>
 <?php
-include 'db_connect.php';
+include '../db_connect.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor'])) {
-    $instructor = $_GET['instructor'];
+session_start();
 
-    $query = "SELECT DISTINCT * FROM schedules WHERE is_active = 1 AND users_id = ?";
+if (isset($_GET['room_id'])) {
+    $room_id = $_GET['room_id'];
+    $program_id = $_SESSION['login_program_id'];
+
+
+    // Fetch schedules for the given room
+    $query = "SELECT * FROM schedules WHERE is_active = 1 AND room_id = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $instructor);
+    $stmt->bind_param("i", $room_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
-    $schedules = array();
+    $schedules = [];
     while ($row = $result->fetch_assoc()) {
         $schedules[] = $row;
     }
 
+    $room_query = "SELECT * FROM rooms WHERE id = ?";
+    $room_stmt = $conn->prepare($room_query);
+    $room_stmt->bind_param("i", $room_id);
+    $room_stmt->execute();
+    $room_result = $room_stmt->get_result();
+    $room = $room_result->fetch_assoc();
+
+
+
     $event_array = [];
     if (!empty($schedules)) {
         foreach ($schedules as $sched) {
+            // Query to get course details
             $course_detail_query = "
-        SELECT 
-        courses.course_code, 
-        rooms.room AS room, 
-        sections.section_name
-        FROM courses 
-        JOIN course_offering_info ON course_offering_info.courses_id = courses.id
-        JOIN schedules ON schedules.course_offering_info_id = course_offering_info.id
-        JOIN rooms ON rooms.id = schedules.room_id
-        JOIN sections ON sections.id = course_offering_info.section_id
-        WHERE course_offering_info.id = ?";
+                SELECT 
+                    courses.course_code, 
+                    rooms.room AS room, 
+                    sections.section_name
+                FROM 
+                    courses 
+                JOIN 
+                    course_offering_info ON course_offering_info.courses_id = courses.id
+                JOIN 
+                    schedules ON schedules.course_offering_info_id = course_offering_info.id
+                JOIN 
+                    rooms ON rooms.id = schedules.room_id
+                JOIN 
+                    sections ON sections.id = course_offering_info.section_id
+                WHERE 
+                    course_offering_info.id = ?
+            ";
 
+            // Fetch course details
             $course_detail_stmt = $conn->prepare($course_detail_query);
             $course_detail_stmt->bind_param('i', $sched['course_offering_info_id']);
             $course_detail_stmt->execute();
@@ -92,8 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor'])) {
             if (!$course_detail_result) {
                 die('Query Error: ' . mysqli_error($conn));
             }
-            $course_detail = mysqli_fetch_assoc($course_detail_result);
+            $course_detail = $course_detail_result->fetch_assoc();
 
+            // Mapping of days to colors
             $day_map = [
                 'M' => 'Monday',
                 'T' => 'Tuesday',
@@ -133,48 +103,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor'])) {
 
     $get_schedule = json_encode($event_array);
 
-    $faculty_query = "SELECT * FROM users WHERE id = ?";
-    $faculty_stmt = $conn->prepare($faculty_query);
-    $faculty_stmt->bind_param("i", $instructor);
-    $faculty_stmt->execute();
-    $faculty_result = $faculty_stmt->get_result();
-    $faculty = $faculty_result->fetch_assoc();
+    $program_query = "SELECT * FROM program WHERE id = ?";
+    $program_stmt = $conn->prepare($program_query);
+    $program_stmt->bind_param("i", $program_id);
+    $program_stmt->execute();
+    $program_result = $program_stmt->get_result();
 
-    $info_query = "SELECT * FROM faculty WHERE user_id = ?";
-    $info_stmt = $conn->prepare($info_query);
-    $info_stmt->bind_param("i", $instructor);
-    $info_stmt->execute();
-    $info_result = $info_stmt->get_result();
-    $info = $info_result->fetch_assoc();
-} else {
-    $get_schedule = NULL;
+    if ($program_result->num_rows === 0) {
+        // If no rows found, output an error message
+        die('No program details found.');
+    }
+
+    $program = $program_result->fetch_assoc();
 }
+
 ?>
+
+<style>
+    #header {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    #header img {
+        width: 100px;
+        height: 100px;
+        margin-right: 2rem;
+    }
+
+    .header-text {
+        margin: 0;
+    }
+
+    .form {
+        margin-top: 1rem;
+    }
+
+    .header-text {
+        text-align: center;
+        font-size: 15px;
+    }
+
+    .sub-header-text {
+        text-align: center;
+        font-size: 12px;
+    }
+</style>
 
 <div class="card shadow p-4">
     <div id="printableArea">
         <div id="header" class="mb-3">
             <img src="../assets/img/1-removebg-preview.png" alt="">
-            <div class="tex-container">
+            <div class="text-container">
                 <div class="header-text">
-                    <p class="m-1">Republic of the Philippines</p>
+                    <h6 class="m-1">Republic of the Philippines</h6>
                     <h6><b>EASTERN VISAYAS STATE UNIVERSITY CARIGARA CAMPUS</b></h6>
-                    <p class="m-1">Carigara, Leyte</p>
+                    <h6 class="mb-1">Carigara, Leyte</h6>
+                    <h6><b><?php echo $program['program_name'] ?></b></h6>
                 </div>
                 <div class="header-text">
-                    <h5><b>Class/Faculty Schedule</b></h5>
+                    <h5><b>ROOM UTILIZATION</b></h5>
                 </div>
                 <div class="sub-header-text">
-                    <h6>Second SEMESTER AY: <b><?php
-                                                $currentYear = date("Y");
-                                                $nextYear = $currentYear + 1;
-                                                echo "$currentYear-$nextYear";
-                                                ?></b></h6>
+                    <h6>2nd SEMESTER AY: <b><?php
+                                            $currentYear = date("Y");
+                                            $nextYear = $currentYear + 1;
+                                            echo "$currentYear-$nextYear";
+                                            ?></b></h6>
                 </div>
             </div>
         </div>
-        <div class="form form-group">
-            <b>Instructor Name:</b> <?php echo $faculty['fname'] . ' ' . $faculty['lname']; ?>
+        <div class="form form-group mb-2">
+            <h6><b>Course:</b> <?php echo $program['department'] ?></h6>
+            <h6 class="m-0"><b>Room:</b> <?php echo $room['room']  ?></h6>
         </div>
         <div id="calendar">
             <br><br>
@@ -214,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor'])) {
             printable: 'printableArea',
             type: 'html',
             style: `
-             @page {
+            @page {
                         size: landscape;
                         margin: 10mm;
                     }

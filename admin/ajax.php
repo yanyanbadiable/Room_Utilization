@@ -43,21 +43,19 @@ if ($action == 'delete_user') {
 	if ($save)
 		echo $save;
 }
-if ($action == 'signup') {
-	$save = $crud->signup();
-	if ($save)
-		echo $save;
-}
+
 if ($action == 'update_account') {
 	$save = $crud->update_account();
 	if ($save)
 		echo $save;
 }
-if ($action == "save_settings") {
-	$save = $crud->save_settings();
+
+if ($action == "change_password") {
+	$save = $crud->change_password();
 	if ($save)
 		echo $save;
 }
+
 if ($action == "save_department") {
 	$save = $crud->save_department();
 	if ($save)
@@ -121,17 +119,6 @@ if ($action == "delete_room") {
 		echo $delete;
 }
 
-// if($action == "save_courses"){
-// 	$save = $crud->save_courses();
-// 	if($save)
-// 		echo $save;
-// }
-
-// if($action == "delete_courses"){
-// 	$delete = $crud->delete_subject();
-// 	if($delete)
-// 		echo $delete;
-// }
 
 if ($action == "save_faculty") {
 	$save = $crud->save_faculty();
@@ -156,11 +143,24 @@ if ($action == "get_schedule") {
 		echo $get;
 }
 
-if ($action == "getFullCalendar") {
-	$get = $crud->getFullCalendar();
-	if ($get)
-		echo $get;
+if ($action == "remove_schedule") {
+	$save = $crud->remove_schedule();
+	if ($save)
+		echo $save;
 }
+
+if ($action == "attach_schedule") {
+	$crud = $crud->attach_schedule();
+	if ($crud)
+		echo $crud;
+}
+
+if ($action == "delete_schedule") {
+	$save = $crud->delete_schedule();
+	if ($save)
+		echo $save;
+}
+
 
 if ($action == "add_course_offer") {
 	$save = $crud->add_course_offer();

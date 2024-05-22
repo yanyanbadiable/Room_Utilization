@@ -210,44 +210,7 @@ class Action
 		if ($delete)
 			return 1;
 	}
-	function signup()
-	{
-		extract($_POST);
-		$data = " name = '" . $firstname . ' ' . $lastname . "' ";
-		$data .= ", username = '$email' ";
-		$data .= ", password = '" . md5($password) . "' ";
-		$chk = $this->db->query("SELECT * FROM users where username = '$email' ")->num_rows;
-		if ($chk > 0) {
-			return 2;
-			exit;
-		}
-		$save = $this->db->query("INSERT INTO users set " . $data);
-		if ($save) {
-			$uid = $this->db->insert_id;
-			$data = '';
-			foreach ($_POST as $k => $v) {
-				if ($k == 'password')
-					continue;
-				if (empty($data) && !is_numeric($k))
-					$data = " $k = '$v' ";
-				else
-					$data .= ", $k = '$v' ";
-			}
-			if ($_FILES['img']['tmp_name'] != '') {
-				$fname = strtotime(date('y-m-d H:i')) . '_' . $_FILES['img']['name'];
-				$move = move_uploaded_file($_FILES['img']['tmp_name'], 'assets/uploads/' . $fname);
-				$data .= ", avatar = '$fname' ";
-			}
-			$save_alumni = $this->db->query("INSERT INTO alumnus_bio set $data ");
-			if ($data) {
-				$aid = $this->db->insert_id;
-				$this->db->query("UPDATE users set alumnus_id = $aid where id = $uid ");
-				$login = $this->login2();
-				if ($login)
-					return 1;
-			}
-		}
-	}
+
 	function update_account()
 	{
 		extract($_POST);
@@ -288,34 +251,42 @@ class Action
 		}
 	}
 
-	function save_settings()
+	function change_password()
 	{
-		extract($_POST);
-		$data = " name = '" . str_replace("'", "&#x2019;", $name) . "' ";
-		$data .= ", email = '$email' ";
-		$data .= ", contact = '$contact' ";
-		$data .= ", about_content = '" . htmlentities(str_replace("'", "&#x2019;", $about)) . "' ";
-		if ($_FILES['img']['tmp_name'] != '') {
-			$fname = strtotime(date('y-m-d H:i')) . '_' . $_FILES['img']['name'];
-			$move = move_uploaded_file($_FILES['img']['tmp_name'], 'assets/uploads/' . $fname);
-			$data .= ", cover_img = '$fname' ";
-		}
+		if (isset($_POST['password']) && isset($_POST['password_confirmation'])) {
+			$password = $_POST['password'];
+			$password_confirmation = $_POST['password_confirmation'];
 
-		// echo "INSERT INTO system_settings set ".$data;
-		$chk = $this->db->query("SELECT * FROM system_settings");
-		if ($chk->num_rows > 0) {
-			$save = $this->db->query("UPDATE system_settings set " . $data);
-		} else {
-			$save = $this->db->query("INSERT INTO system_settings set " . $data);
-		}
-		if ($save) {
-			$query = $this->db->query("SELECT * FROM system_settings limit 1")->fetch_array();
-			foreach ($query as $key => $value) {
-				if (!is_numeric($key))
-					$_SESSION['settings'][$key] = $value;
+			if (strlen($password) < 6 || $password !== $password_confirmation) {
+				echo "Password must be at least 6 characters long and match the confirmation.";
+			} else {
+
+				$user_id = $_SESSION['login_id'];
+
+				$query = "SELECT * FROM users WHERE id = ?";
+				$stmt = $this->db->prepare($query);
+				$stmt->bind_param("i", $user_id);
+				$stmt->execute();
+				$result = $stmt->get_result();
+
+				if ($result->num_rows == 1) {
+					$row = $result->fetch_assoc();
+					$hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+					$update_query = "UPDATE users SET password = ? WHERE id = ?";
+					$update_stmt = $this->db->prepare($update_query);
+					$update_stmt->bind_param("si", $hashed_password, $user_id);
+					$update_stmt->execute();
+
+					if ($update_stmt->affected_rows > 0) {
+						echo "Password updated successfully.";
+					} else {
+						echo "Failed to update password.";
+					}
+				} else {
+					echo "User not found.";
+				}
 			}
-
-			return 1;
 		}
 	}
 
@@ -723,9 +694,9 @@ class Action
 	{
 		if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['course_offering_info_id'])) {
 			$course_offering_info_id = $_GET['course_offering_info_id'];
-	
+
 			$event_array = [];
-	
+
 			$stmt = $this->db->prepare("SELECT * FROM schedules WHERE course_offering_info_id = ?");
 			if (!$stmt) {
 				throw new Exception("Error preparing statement: " . $this->db->error);
@@ -733,7 +704,7 @@ class Action
 			$stmt->bind_param("i", $course_offering_info_id);
 			$stmt->execute();
 			$schedules_result = $stmt->get_result();
-	
+
 			// Fetch each schedule and its related course details
 			while ($sched = $schedules_result->fetch_assoc()) {
 				$course_detail_stmt = $this->db->prepare("
@@ -756,12 +727,12 @@ class Action
 				$course_detail_stmt->bind_param("ii", $sched['room_id'], $course_offering_info_id);
 				$course_detail_stmt->execute();
 				$course_detail_result = $course_detail_stmt->get_result();
-	
+
 				if (!$course_detail_result) {
 					throw new Exception("Error fetching course detail information: " . $this->db->error);
 				}
 				$course_detail = $course_detail_result->fetch_assoc();
-	
+
 				$day_map = [
 					'M' => 'Monday',
 					'T' => 'Tuesday',
@@ -782,9 +753,9 @@ class Action
 				];
 				$day = $day_map[$sched['day']] ?? '';
 				$color = $color_map[$sched['day']] ?? '';
-	
+
 				$section_name_concatenated = $course_detail['program_code'] . '-' . substr($course_detail['level'], 0, 1) . $course_detail['section_name'];
-	
+
 				$event_array[] = [
 					'id' => $sched['id'],
 					'title' => $course_detail['course_code'] . '<br>' . $course_detail['room'] . '<br>' . $section_name_concatenated,
@@ -797,47 +768,111 @@ class Action
 					]
 				];
 			}
-			
+
 			return json_encode($event_array);
 		}
 	}
-	
+
+	function remove_schedule()
+	{
+		$response = array();
+
+		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['schedule_id']) && isset($_POST['offering_id'])) {
+			$schedule_id = $_POST['schedule_id'];
+			$course_offerings_info_id = $_POST['offering_id'];
+
+			$offering_query = "SELECT * FROM course_offering_info WHERE id = ?";
+			$stmt = $this->db->prepare($offering_query);
+			$stmt->bind_param("i", $course_offerings_info_id);
+			$stmt->execute();
+			$offering_result = $stmt->get_result();
+			$offering = $offering_result->fetch_assoc();
+
+			$schedule_query = "SELECT * FROM schedules WHERE id = ?";
+			$stmt = $this->db->prepare($schedule_query);
+			$stmt->bind_param("i", $schedule_id);
+			$stmt->execute();
+			$schedule_result = $stmt->get_result();
+			$schedule = $schedule_result->fetch_assoc();
+
+			$update_query = "UPDATE schedules SET is_active = 0, course_offering_info_id = NULL WHERE id = ?";
+			$stmt = $this->db->prepare($update_query);
+			$stmt->bind_param("i", $schedule_id);
+			$stmt->execute();
+			if ($stmt->affected_rows > 0) {
+				echo 'Schedule successfully removed!';
+			} else {
+				echo 'Failed to remove the schedule!';
+			}
+		}
+	}
 
 
-	// function getFullCalendar()
-	// {
-	// 	if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['section_id']) && isset($_GET['course_id'])) {
-	// 		$section_id = $_GET['section_id'];
-	// 		$course_id = $_GET['course_id'];
+	function attach_schedule()
+	{
 
-	// 		// Query to fetch schedules for the given course offering
-	// 		$query = "SELECT * FROM schedules WHERE section_id = ? AND course_id = ?";
-	// 		$stmt = $this->db->prepare($query);
-	// 		$stmt->bind_param("ii", $section_id, $course_id);
-	// 		$stmt->execute();
-	// 		$result = $stmt->get_result();
+		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['schedule_id']) && isset($_POST['offering_id'])) {
+			$schedule_id = $_POST['schedule_id'];
+			$course_offerings_info_id = $_POST['offering_id'];
 
-	// 		// Array to store the events
-	// 		$events = [];
+			$offering_query = "SELECT * FROM course_offering_info WHERE id = ?";
+			$stmt = $this->db->prepare($offering_query);
+			$stmt->bind_param("i", $course_offerings_info_id);
+			$stmt->execute();
+			$offering_result = $stmt->get_result();
+			$offering = $offering_result->fetch_assoc();
 
-	// 		// Loop through the result set and create events
-	// 		while ($row = $result->fetch_assoc()) {
-	// 			// Construct the event data
-	// 			$event = [
-	// 				'id' => $row['id'],
-	// 				'title' => $row['title'],
-	// 				'start' => $row['start_date'] . 'T' . $row['start_time'],
-	// 				'end' => $row['end_date'] . 'T' . $row['end_time'],
-	// 			];
+			if ($offering) {
+				$schedule_query = "SELECT * FROM schedules WHERE id = ?";
+				$stmt = $this->db->prepare($schedule_query);
+				$stmt->bind_param("i", $schedule_id);
+				$stmt->execute();
+				$schedule_result = $stmt->get_result();
+				$schedule = $schedule_result->fetch_assoc();
 
-	// 			// Push the event to the events array
-	// 			$events[] = $event;
-	// 		}
+				if ($schedule) {
+					$update_query = "UPDATE schedules SET is_active = 1, course_offering_info_id = ? WHERE id = ?";
+					$stmt = $this->db->prepare($update_query);
+					$stmt->bind_param("ii", $course_offerings_info_id, $schedule_id);
+					$stmt->execute();
 
-	// 		// Return the events as JSON
-	// 		echo json_encode($events);
-	// 	}
-	// }
+					if ($stmt->affected_rows > 0) {
+						echo 'Schedule successfully attached!';
+					} else {
+						echo 'Failed to attach schedule!';
+					}
+				}
+			}
+		}
+	}
+
+	function delete_schedule()
+	{
+		if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['schedule_id']) && isset($_POST['offering_id'])) {
+			$schedule_id = $_POST['schedule_id'];
+			$course_offerings_info_id = $_POST['offering_id'];
+
+			$offering_query = "SELECT * FROM course_offering_info WHERE id = $course_offerings_info_id";
+			$offering_result = $this->db->query($offering_query);
+			$offering = $offering_result->fetch_assoc();
+
+			$schedule_query = "SELECT * FROM schedules WHERE id = $schedule_id";
+			$schedule_result = $this->db->query($schedule_query);
+			$schedule = $schedule_result->fetch_assoc();
+
+			$delete_query = "DELETE FROM schedules WHERE id = ?";
+			$stmt = $this->db->prepare($delete_query);
+			$stmt->bind_param("i", $schedule_id);
+			$stmt->execute();
+
+			if ($stmt->affected_rows > 0) {
+				echo 'Schedule successfully deleted.';
+			} else {
+				echo 'Failed to delete the schedule.';
+			}
+		}
+	}
+
 
 	function add_course_offer()
 	{
@@ -961,9 +996,6 @@ class Action
 		}
 	}
 
-	function remove_schedule()
-	{
-	}
 
 	function add_faculty_load()
 	{

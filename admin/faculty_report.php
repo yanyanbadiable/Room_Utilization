@@ -3,7 +3,6 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-sm-12">
-            <!-- Section Header -->
             <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
                 <h3><i class="far fa-file-alt"></i> Faculty Reports</h3>
                 <ol class="breadcrumb bg-transparent p-0 m-0">
@@ -12,8 +11,6 @@
                     <li class="breadcrumb-item active"> Faculty Reports</li>
                 </ol>
             </section>
-            <link rel='stylesheet' href='{{asset('plugins/datatables/jquery.dataTables.css')}}'>
-            <link rel='stylesheet' href='{{asset('plugins/datatables/dataTables.bootstrap.css')}}'>
             <section class="content">
                 <div class="container-fluid">
                     <div class="card shadow mb-4">

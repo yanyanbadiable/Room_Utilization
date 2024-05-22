@@ -21,20 +21,22 @@
                         <div class='row'>
                             <div class='col-sm-4'>
                                 <div class='form-group'>
-                                    <label>Academic Program</label>
-                                    <select class='form-control' id='program_code'>
-                                        <option>Please Select</option>
-                                        <?php
-                                        $program = $conn->query("SELECT id, program_code FROM program");
-                                        while ($row = $program->fetch_assoc()) :
-                                        ?>
-                                            <option value="<?php echo $row['program_code'] ?>"><?php echo $row['program_code'] ?></option>
-                                        <?php endwhile; ?>
-                                    </select>
+                                    <label for="program_code">Academic Program</label>
+                                    <?php
+                                    $program_id = $_SESSION['login_program_id'];
+
+                                    $query = "SELECT program_code FROM program WHERE id = ?";
+                                    $stmt = $conn->prepare($query);
+                                    $stmt->bind_param("i", $program_id);
+                                    $stmt->execute();
+                                    $result = $stmt->get_result();
+                                    $program = $result->fetch_assoc();
+                                    ?>
+                                     <input type="text" class='form-control' id='program_code' value="<?php echo $program['program_code']; ?>" disabled>
                                 </div>
                             </div>
                             <div class='col-sm-4'>
-                                <div class='form-group' id='displaylevel'>
+                                <div class='form-group'>
                                     <label>Level</label>
                                     <select class=' form-control' id='level' onchange='getsection(program_code.value,this.value)'>
                                         <option>Please Select</option>
@@ -57,14 +59,6 @@
     </div>
 </div>
 <script>
-    $(document).ready(function() {
-        $('#displaylevel').hide();
-
-        $('#program_code').on('change', function() {
-            $('#displaylevel').fadeIn();
-        })
-    })
-
     function getsection(program_code, level) {
         var array = {};
         array['program_code'] = program_code;
@@ -99,5 +93,4 @@
             }
         });
     }
-
 </script>

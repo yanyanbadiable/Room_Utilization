@@ -63,7 +63,7 @@ $user_program_id = $_SESSION['login_program_id'];
                 <div class="card-footer bg-transparent">
                     <div class="row">
                         <div class="col-md-12">
-                            <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
+                            <button type="submit" form="manage-section" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
                             <button class="btn btn-sm btn-light col-sm-3" type="button" onclick="_reset()">Cancel</button>
                         </div>
                     </div>
@@ -131,8 +131,7 @@ $user_program_id = $_SESSION['login_program_id'];
 
 <script>
     function _reset() {
-        $('#manage-section').get(0).reset();
-        $('#manage-section input, #manage-section textarea, #manage-section select').val('');
+        $('#manage-section').find('[name="section_name"]').val('');
     }
     $('#manage-section').submit(function(e) {
         e.preventDefault();
@@ -178,7 +177,7 @@ $user_program_id = $_SESSION['login_program_id'];
         cat.find("[name='section_name']").val($(this).attr('data-section_name'));
         end_load();
     });
-    
+
     $('.delete_section').click(function() {
         _conf("Are you sure to delete this section?", "delete_section", [$(this).attr('data-id')]);
     });

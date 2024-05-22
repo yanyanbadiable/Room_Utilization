@@ -29,7 +29,7 @@
                 <div class="sidebar-brand-icon">
                     <img src="../assets/img/1-removebg-preview.png" alt="logo">
                 </div>
-                <div class="sidebar-brand-text mx-3">FSMS Admin</div>
+                <div class="sidebar-brand-text mx-3">RU - Admin</div>
             </a>
 
             <!-- Divider -->
@@ -133,9 +133,9 @@
                 </a>
                 <div id="collapseReport" class="collapse" aria-labelledby="headingReport" data-parent="#accordionSidebar">
                     <div class="bg-danger py-2 collapse-inner rounded ">
-                        <a class="_hover collapse-item text-white" href="index.php?page=faculty_report">
+                        <!-- <a class="_hover collapse-item text-white" href="index.php?page=faculty_report">
                             <i class="far fa-file-alt"></i> <span class="ps-1">Faculty Reports</span>
-                        </a>
+                        </a> -->
                         <a class="_hover collapse-item text-white" href="index.php?page=room_report">
                             <i class="far fa-file-alt"></i> <span class="ps-1">Room Utilization</span>
                         </a>
@@ -178,11 +178,11 @@
                                 <img class="img-profile rounded-circle" src="../assets/img/undraw_profile.svg">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#">
+                                <!-- <a class="dropdown-item" href="#">
                                     <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Profile
-                                </a>
-                                <a class="dropdown-item" href="#">
+                                </a> -->
+                                <a class="dropdown-item" href="index.php?page=change_password">
                                     <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Settings
                                 </a>
@@ -229,12 +229,12 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                    <h5 class="modal-title" id="exampleModalLabel"><?php echo $_SESSION['login_fname'] ?></h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+                <div class="modal-body">Are you sure you want to logout?</div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
                     <a class="btn btn-primary" href="ajax.php?action=logout">Logout</a>

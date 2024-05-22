@@ -1,4 +1,17 @@
-<?php include('db_connect.php'); ?>
+<?php
+include('db_connect.php');
+
+// Fetch all rooms from the database
+$query = "SELECT * FROM rooms";
+$result = $conn->query($query);
+
+$rooms = [];
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $rooms[] = $row;
+    }
+}
+?>
 
 <div class="container-fluid">
     <div class="row">
@@ -25,7 +38,7 @@
                                     <select class="form-control select2" id="room">
                                         <option>Please Select</option>
                                         <?php foreach ($rooms as $room) : ?>
-                                            <option value="<?php echo $room->room; ?>"><?php echo $room->room; ?></option>
+                                            <option value="<?php echo $room['id']; ?>"><?php echo $room['room']; ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -39,27 +52,28 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="displaydata"></div>
             </div>
 
-            <!-- <script src="<?php echo asset('plugins/datatables/jquery.dataTables.js'); ?>"></script>
-            <script src="<?php echo asset('plugins/datatables/dataTables.bootstrap.js'); ?>"></script> -->
             <script>
                 function searchdata(room) {
-                    var array = {};
-                    array['room'] = room;
+                    if (room === 'Please Select') {
+                        return;
+                    }
+                    var array = {
+                        room_id: room
+                    };
                     $.ajax({
                         type: "GET",
-                        url: "/ajax/admin/reports/get_rooms_occupied",
+                        url: "reportAjax/get_room_schedule.php",
                         data: array,
                         success: function(data) {
                             $('#displaydata').html(data).fadeIn();
                         },
                         error: function() {
-                            toast.error('Something Went Wrong!', 'Notification!');
+                            alert('Something Went Wrong!');
                         }
-                    })
+                    });
                 }
             </script>
 

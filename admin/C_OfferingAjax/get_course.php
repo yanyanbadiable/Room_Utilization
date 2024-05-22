@@ -127,11 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET[
                     searchcourse('<?php echo $year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_id; ?>', '<?php echo $program_id; ?>');
                 },
                 error: function() {
-                    alert('An error occurred while adding the course offer.');
+                    alert_toast('An error occurred while adding the course offer.', 'danger');
                 }
             });
         } else {
-            alert('Please input a section name');
+            alert_toast('Please input a section name', 'danger');
         }
     }
 </script>
