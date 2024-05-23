@@ -116,11 +116,10 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
                                             <tr>
                                                 <td></td>
                                                 <td></td>
-                                                <th>
-                                                    <div align='right'>Total</div>
+                                            
+                                                <th colspan="2">
+                                                    <div align='right'>Total Units:</div>
                                                 </th>
-                                                <th><?php echo $totalLec; ?></th>
-                                                <th><?php echo $totalLab; ?></th>
                                                 <th><?php echo $totalUnits; ?></th>
                                             </tr>
                                         </tbody>

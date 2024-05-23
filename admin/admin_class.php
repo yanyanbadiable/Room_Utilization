@@ -347,52 +347,43 @@ class Action
 		$stmt->bind_param("ssssssddddd", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val, $hours_val);
 
 		foreach ($year as $key => $value) {
-			if (array_key_exists($key, $year)) {
-				// Set values for each iteration
-				$year_val = date("Y");
-				$period_val = $period[$key];
-				$level_val = $level[$key];
-				$program_id_val = $program_id[$key];
-				$course_code_val = $course_code[$key];
-				$course_name_val = $course_name[$key];
-				$lec_val = $lec[$key];
-				$lab_val = $lab[$key];
-				$units_val = $units[$key];
-				$is_comlab_val = $is_comlab[$key];
 
-				if ($is_comlab_val && $lec_val) {
-					// Lab and lecture course: 1 unit = 4 hours (3 for lab, 1 for lecture)
-					$hours_val = $units_val * 4;
-				} elseif ($is_comlab_val || $lec_val) {
-					// Lab or lecture course: 1 unit = 3 hours (lab only) or 2 hours (lecture only)
-					$hours_val = $units_val * 3;
-				} else {
-					// Non-lab and non-lecture course: 1 unit = 1 hour
-					$hours_val = $units_val;
-				}
+			$year_val = $year[$key];
+			$period_val = $period[$key];
+			$level_val = $level[$key];
+			$program_id_val = $program_id[$key];
+			$course_code_val = $course_code[$key];
+			$course_name_val = $course_name[$key];
+			$lec_val = $lec[$key];
+			$lab_val = $lab[$key];
+			$units_val = $units[$key];
+			$is_comlab_val = $is_comlab[$key];
+			$hours_val = $hours[$key];
 
-				$check_stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_code = ? AND course_name = ?");
-				$check_stmt->bind_param("ss", $course_code_val, $course_name_val);
-				$check_stmt->execute();
-				$check_stmt->bind_result($count);
-				$check_stmt->fetch();
-				$check_stmt->close();
 
-				if ($count > 0) {
-					$res = 0;
-					continue;
-				}
+			$check_stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_code = ? AND course_name = ?");
+			$check_stmt->bind_param("ss", $course_code_val, $course_name_val);
+			$check_stmt->execute();
+			$check_stmt->bind_result($count);
+			$check_stmt->fetch();
+			$check_stmt->close();
 
-				$save = $stmt->execute();
+			if ($count > 0) {
+				$res = 0;
+				continue;
+			}
 
-				if (!$save) {
-					$res = 0;
-				}
+			// Save the course
+			$save = $stmt->execute();
+
+			if (!$save) {
+				$res = 0;
 			}
 		}
 
 		return $res;
 	}
+
 
 
 

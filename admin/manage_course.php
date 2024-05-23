@@ -16,22 +16,13 @@ if ($result) {
     .card-header {
         border-bottom: none;
     }
-
-    /* .form-control {
-        width: auto;
-        height: auto;
-    } */
-
-    /* .remove {
-        display: block !important;
-    } */
 </style>
 
 <section class="content container-fluid">
     <div class="row">
         <div class="col-sm-12">
             <!-- Section Header -->
-            <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
+            <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb3">
                 <h3><i class="fas fa-plus-circle"></i> Add Course</h3>
                 <ol class="breadcrumb bg-transparent p-0 m-0">
                     <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
@@ -67,6 +58,7 @@ if ($result) {
                                         ?>
                                         <input type="hidden" name="program_id[]" value="<?php echo $program_id; ?>">
                                         <input type="hidden" class="form-control" name="year[]" id="year" value="<?php echo date('Y'); ?>">
+                                        <input type="hidden" class="form-control" name="hours[]" id="hours1">
                                         <td><button type="button" class="add btn btn-flat btn-primary btn-block"><i class="fa fa-plus-circle"></i></button></td>
                                         <td>
                                             <select class="form-control" id="period1" name="period[]">
@@ -82,13 +74,11 @@ if ($result) {
                                                 <option value="4th Year">4th Year</option>
                                             </select>
                                         </td>
-                                        <td><input type="text" class="form-control" name="course_code[]" id="code1">
-                                        </td>
-                                        <td><input type="text" class="form-control" name="course_name[]" id="name1">
-                                        </td>
+                                        <td><input type="text" class="form-control" name="course_code[]" id="code1"></td>
+                                        <td><input type="text" class="form-control" name="course_name[]" id="name1"></td>
                                         <td><input type="number" min="0" class="form-control" name="lec[]" id="lec1" onchange="calculateUnits(1)"></td>
-                                        <td><input type="number"  min="0" class="form-control" name="lab[]" id="lab1" onchange="calculateUnits(1)"></td>
-                                        <td><input type="number"  min="0" class="form-control" name="units[]" id="units1" readonly></td>
+                                        <td><input type="number" min="0" class="form-control" name="lab[]" id="lab1" onchange="calculateUnits(1)"></td>
+                                        <td><input type="number" min="0" class="form-control" name="units[]" id="units1" readonly></td>
                                         <td align="center">
                                             <select class="form-control" id="comlab1" name="is_comlab[]">
                                                 <option value="0">No</option>
@@ -101,8 +91,7 @@ if ($result) {
                         </div>
                     </div>
                     <div class="card-footer d-flex justify-content-end bg-transparent">
-                        <button type="submit" class="btn btn-flat btn-success "><i class="fa fa-check-circle"></i> Save
-                            Changes</button>
+                        <button type="submit" class="btn btn-flat btn-success"><i class="fa fa-check-circle"></i> Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -112,26 +101,24 @@ if ($result) {
 
 <script>
     function calculateUnits(index) {
-        // Get the lecture and lab values
         var lec = document.getElementById('lec' + index).value;
         var lab = document.getElementById('lab' + index).value;
 
-        // Convert values to integers (or 0 if not a valid number)
         lec = parseInt(lec) || 0;
         lab = parseInt(lab) || 0;
 
-        // Calculate the units
         var units = lec + Math.floor(lab / 3);
 
-        // Set the units value
         document.getElementById('units' + index).value = units;
+
+        var hours = lec + lab;
+        document.getElementById('hours' + index).value = hours;
     }
 
     $(document).ready(function() {
         var no = 1;
         $('.add').on('click', function(e) {
-            if ($("#code" + no).val() == "" || $("#name" + no).val() == "" || $("#lec" + no).val() == "" || $("#lab" +
-                    no).val() == "" || $("#units" + no).val() == "") {
+            if ($("#code" + no).val() == "" || $("#name" + no).val() == "" || $("#units" + no).val() == "") {
                 alert_toast('Please Fill-up Required Fields', 'danger');
             } else {
                 no++;
@@ -140,15 +127,16 @@ if ($result) {
                 $('#dynamic_field').append(`<tr id='row${no}'>
                     <input type="hidden" class="form-control" name="year[]" id="year" value="<?php echo date('Y'); ?>">
                     <input type="hidden" class="form-control" name="program_id[]" value="${program_id}">
+                    <input type="hidden" class="form-control" name="hours[]" id="hours${no}">
                     <td><button class='btn btn-flat btn-danger remove btn-block' id='${no}'><i class='fa fa-times'></i></button></td>
                     <td><select class='form-control' name='period[]' id='period${no}'><option value='1st Semester'>1st Semester</option><option value='2nd Semester'>2nd Semester</option></select></td>
                     <td><select class='form-control' name='level[]' id='level${no}'><option value='1st Year'>1st Year</option><option value='2nd Year'>2nd Year</option><option value='3rd Year'>3rd Year</option><option value='4th Year'>4th Year</option><option value='5th Year'>5th Year</option></select></td>
                     <td><input type='text' class='form-control' name='course_code[]' id='code${no}'></td>
                     <td><input type='text' class='form-control' name='course_name[]' id='name${no}'></td>
-                    <td><input type='number'  min="0" class='form-control' name='lec[]' id='lec${no}' onchange='calculateUnits(${no})'></td>
-                    <td><input type='number'  min="0" class='form-control' name='lab[]' id='lab${no}' onchange='calculateUnits(${no})'></td>
-                    <td><input type='number'  min="0" class='form-control' name='units[]' id='units${no}' readonly></td>
-                    <td align='center'><select class='form-control' id='comlab${no}' name='comlab[]'><option value='0'>No</option><option value='1'>Yes</option></select></td>
+                    <td><input type='number' min="0" class='form-control' name='lec[]' id='lec${no}' onchange='calculateUnits(${no})'></td>
+                    <td><input type='number' min="0" class='form-control' name='lab[]' id='lab${no}' onchange='calculateUnits(${no})'></td>
+                    <td><input type='number' min="0" class='form-control' name='units[]' id='units${no}' readonly></td>
+                    <td align='center'><select class='form-control' id='comlab${no}' name='is_comlab[]'><option value='0'>No</option><option value='1'>Yes</option></select></td>
                 </tr>`);
             }
             e.preventDefault();

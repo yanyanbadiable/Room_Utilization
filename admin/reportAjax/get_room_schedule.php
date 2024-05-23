@@ -7,7 +7,6 @@ if (isset($_GET['room_id'])) {
     $room_id = $_GET['room_id'];
     $program_id = $_SESSION['login_program_id'];
 
-
     // Fetch schedules for the given room
     $query = "SELECT * FROM schedules WHERE is_active = 1 AND room_id = ?";
     $stmt = $conn->prepare($query);
@@ -27,32 +26,36 @@ if (isset($_GET['room_id'])) {
     $room_result = $room_stmt->get_result();
     $room = $room_result->fetch_assoc();
 
-
-
     $event_array = [];
     if (!empty($schedules)) {
         foreach ($schedules as $sched) {
-            // Query to get course details
+        
+
             $course_detail_query = "
                 SELECT 
-                    courses.course_code, 
-                    rooms.room AS room, 
-                    sections.section_name
-                FROM 
-                    courses 
-                JOIN 
-                    course_offering_info ON course_offering_info.courses_id = courses.id
-                JOIN 
-                    schedules ON schedules.course_offering_info_id = course_offering_info.id
-                JOIN 
-                    rooms ON rooms.id = schedules.room_id
-                JOIN 
-                    sections ON sections.id = course_offering_info.section_id
-                WHERE 
-                    course_offering_info.id = ?
+                courses.course_code, 
+                rooms.room AS room, 
+                sections.section_name,
+                users.fname,
+                users.lname
+            FROM 
+                courses 
+            JOIN 
+                course_offering_info ON course_offering_info.courses_id = courses.id
+            JOIN 
+                schedules ON schedules.course_offering_info_id = course_offering_info.id
+            JOIN 
+                rooms ON rooms.id = schedules.room_id
+            JOIN 
+                sections ON sections.id = course_offering_info.section_id
+            JOIN
+                users ON users.id = schedules.users_id
+            WHERE 
+                course_offering_info.id = ?
             ";
 
-            // Fetch course details
+
+
             $course_detail_stmt = $conn->prepare($course_detail_query);
             $course_detail_stmt->bind_param('i', $sched['course_offering_info_id']);
             $course_detail_stmt->execute();
@@ -98,6 +101,8 @@ if (isset($_GET['room_id'])) {
                     'course_offering_info_id' => $sched['course_offering_info_id']
                 ]
             ];
+
+            var_dump($event_array);
         }
     }
 
@@ -116,7 +121,6 @@ if (isset($_GET['room_id'])) {
 
     $program = $program_result->fetch_assoc();
 }
-
 ?>
 
 <style>
