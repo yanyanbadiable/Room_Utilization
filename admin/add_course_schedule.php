@@ -177,7 +177,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
         var calendarEl = document.getElementById('calendar1');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             height: "auto",
-
             dayHeaderFormat: {
                 weekday: 'short'
             },
@@ -214,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                     return response.json();
                 })
                 .then(function(data) {
-
+                        
                     if (data.error) {
                         console.error('Error fetching schedule data:', data.error);
                     } else {

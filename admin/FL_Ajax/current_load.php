@@ -3,7 +3,7 @@ include '../db_connect.php';
 
 $schedules = []; // Initialize $schedules as an empty array
 
-// Check if the request method is GET and if instructor and level are set
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['level'])) {
     $instructor = $_GET['instructor'];
     $level = $_GET['level'];
@@ -64,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
 $event_array = [];
 if (!empty($schedules)) {
     foreach ($schedules as $sched) {
-        // Prepare the statement for course details
         $course_detail_query = "
         SELECT 
         courses.course_code, 
@@ -87,7 +86,6 @@ if (!empty($schedules)) {
         }
         $course_detail = mysqli_fetch_assoc($course_detail_result);
 
-        // Determine color based on day
         $day_map = [
             'M' => 'Monday',
             'T' => 'Tuesday',
@@ -113,7 +111,9 @@ if (!empty($schedules)) {
 
         $event_array[] = [
             'id' => $sched['id'],
-            'title' => $course_detail['course_code'] . '<br>' . $course_detail['room'] . '<br>' . $course_detail['section_name'],
+            'title' => $course_detail['course_code'] . '
+            ' . $course_detail['room'] . '
+            ' . $course_detail['section_name'],
             'start' => date('Y-m-d', strtotime('next ' . $day)) . 'T' . $sched['time_start'],
             'end' => date('Y-m-d', strtotime('next ' . $day)) . 'T' . $sched['time_end'],
             'color' => $color,
@@ -126,6 +126,8 @@ if (!empty($schedules)) {
 }
 
 $get_schedule = json_encode($event_array);
+
+// var_dump($get_schedule);
 
 $designation_query = "SELECT * FROM faculty WHERE user_id = '$instructor'";
 $designation_result = mysqli_query($conn, $designation_query);
@@ -278,10 +280,11 @@ $designation = mysqli_fetch_assoc($designation_result);
 <script>
     var calendarEl = document.getElementById('calendar');
     var events = <?php echo $get_schedule; ?>;
-    console.log(events)
+
+    console.log('Events Array:', events); // Debug: Output events array
+
     var calendar = new FullCalendar.Calendar(calendarEl, {
         height: "auto",
-
         dayHeaderFormat: {
             weekday: 'short'
         },
@@ -293,15 +296,12 @@ $designation = mysqli_fetch_assoc($designation_result);
         headerToolbar: false,
         eventOverlap: false,
         events: events,
-        eventDidMount: function(info) {
-            console.log('Event mounted:', info.event);
-            var titleElement = info.el.querySelector('.fc-event-title');
-            if (titleElement) {
-                titleElement.innerHTML = info.event.title;
-            }
-            info.el.classList.add('custom-event');
+        eventContent: function(arg) {
+            console.log('Event:', arg.event); // Debug: Output event object
+            return arg.event.title; // Simplified version to check if titles are being rendered
         }
     });
+
     calendar.render();
 
 
