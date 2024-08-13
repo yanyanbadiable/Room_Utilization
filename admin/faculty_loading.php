@@ -1,7 +1,7 @@
 <?php
 include('db_connect.php');
 
-$query = "SELECT * FROM users WHERE type = 1";
+$query = "SELECT * FROM faculty";
 $result = $conn->query($query);
 
 $instructors = [];

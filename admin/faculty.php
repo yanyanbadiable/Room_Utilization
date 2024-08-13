@@ -1,19 +1,17 @@
 <?php
 include('db_connect.php');
 
-$query = "SELECT users.*, program.program_code, program.program_name FROM users INNER JOIN program ON users.program_id = program.id WHERE users.type = 1";
+$user_program_id = $_SESSION['login_program_id'];
+$query = "SELECT faculty.*, unit_loads.designation, program.program_code, program.program_name FROM faculty INNER JOIN program ON faculty.program_id = program.id INNER JOIN unit_loads ON faculty.designation = unit_loads.id WHERE program_id = $user_program_id";
+
 $result = mysqli_query($conn, $query);
 
-// Check if the query was successful
 if ($result) {
-    // Fetch all rows from the result set
+    
     $instructors = [];
     while ($row = mysqli_fetch_assoc($result)) {
         $instructors[] = $row;
     }
-} else {
-    // Handle query error
-    echo "Error: " . mysqli_error($conn);
 }
 ?>
 
@@ -47,17 +45,11 @@ if ($result) {
                             </thead>
                             <tbody>
                                 <?php foreach ($instructors as $instructor) : ?>
-                                    <?php
-                                    $infoQuery = "SELECT * FROM faculty WHERE user_id = " . $instructor['id'];
-                                    // var_dump($instructor['id']);
-                                    $infoResult = mysqli_query($conn, $infoQuery);
-                                    $info = mysqli_fetch_assoc($infoResult);
-                                    ?>
                                     <tr>
-                                        <td><?php echo $instructor['username']; ?></td>
+                                        <td><?php echo $instructor['id_number']; ?></td>
                                         <td><?php echo strtoupper($instructor['lname']) . ', ' . strtoupper($instructor['fname']); ?></td>
                                         <td><?php echo $instructor['program_name'] . ' (' . $instructor['program_code'] . ')'; ?></td>
-                                        <td><?php echo $info['designation']; ?></td>
+                                        <td><?php echo $instructor['designation']; ?></td>
                                         <td class="text-center"><a href="index.php?page=view_faculty&id=<?php echo $instructor['id'] ?>" class="btn btn-flat btn-success"><i class="fa fa-user"></i></a></td>
                                     </tr>
                                 <?php endforeach; ?>

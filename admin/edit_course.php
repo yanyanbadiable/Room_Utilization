@@ -9,11 +9,7 @@ if (isset($_GET['course_id'])) {
     $course_stmt->execute();
     $course_result = $course_stmt->get_result();
     if ($course_result->num_rows > 0) {
-        // Fetch the courses data
         $course = $course_result->fetch_assoc();
-        // Proceed with your logic here
-    } else {
-        // Handle if courses with given ID is not found
     }
 }
 ?>
@@ -93,14 +89,11 @@ if (isset($_GET['course_id'])) {
             data: formData,
             success: function(data) {
                 if (data.trim() === '1') {  
-                    // If the response is '1', indicating success, hide the modal
                     $('#editModal').modal('hide');
-                    // Adjust backdrop if needed
-                    $('.modal-backdrop').hide(); // Hide the backdrop
+                    $('.modal-backdrop').hide(); 
                     // window.location.reload()
                     alert_toast('Course Successfully Updated', 'success');
                 } else {
-                    // If the response is not '1', show the appropriate message or handle it as needed
                     $('#displayeditmodal').html(data).fadeIn();
                    
                 }

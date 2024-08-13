@@ -1,9 +1,6 @@
 <?php
 include '../db_connect.php';
 
-$schedules = []; // Initialize $schedules as an empty array
-
-
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['level'])) {
     $instructor = $_GET['instructor'];
     $level = $_GET['level'];
@@ -13,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
         FROM courses 
         INNER JOIN course_offering_info ON courses.id = course_offering_info.courses_id 
         INNER JOIN schedules ON schedules.course_offering_info_id = course_offering_info.id 
-        WHERE schedules.users_id = '$instructor'
+        WHERE schedules.faculty_id = '$instructor'
     ";
     $loads_result = mysqli_query($conn, $loads_query);
 
@@ -31,13 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     $tabular_schedules_query = "
         SELECT DISTINCT course_offering_info_id 
         FROM schedules 
-        WHERE is_active = 1 AND users_id = '$instructor'
+        WHERE is_active = 1 AND faculty_id = '$instructor'
     ";
     $tabular_schedules_result = mysqli_query($conn, $tabular_schedules_query);
-
-    if (!$tabular_schedules_result) {
-        die('Query Error: ' . mysqli_error($conn));
-    }
 
     $tabular_schedules = [];
     while ($row = mysqli_fetch_assoc($tabular_schedules_result)) {
@@ -47,92 +40,170 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     $schedules_query = "
         SELECT * 
         FROM schedules 
-        WHERE is_active = 1 AND users_id = '$instructor'
+        WHERE is_active = 1 AND faculty_id = '$instructor'
     ";
     $schedules_result = mysqli_query($conn, $schedules_query);
-
-    if (!$schedules_result) {
-        die('Query Error: ' . mysqli_error($conn));
-    }
 
     $schedules = [];
     while ($row = mysqli_fetch_assoc($schedules_result)) {
         $schedules[] = $row;
     }
-}
 
-$event_array = [];
-if (!empty($schedules)) {
-    foreach ($schedules as $sched) {
-        $course_detail_query = "
-        SELECT 
-        courses.course_code, 
-        rooms.room AS room, 
-        sections.section_name
-        FROM courses 
-        JOIN course_offering_info ON course_offering_info.courses_id = courses.id
-        JOIN schedules ON schedules.course_offering_info_id = course_offering_info.id
-        JOIN rooms ON rooms.id = schedules.room_id
-        JOIN sections ON sections.id = course_offering_info.section_id
-        WHERE course_offering_info.id = ?";
+    // Timetable
+    $weekDays = [
+        'M' => 'Mon',
+        'T' => 'Tue',
+        'W' => 'Wed',
+        'Th' => 'Thu',
+        'F' => 'Fri',
+        'S' => 'Sat'
+    ];
 
-        $course_detail_stmt = $conn->prepare($course_detail_query);
-        $course_detail_stmt->bind_param('i', $sched['course_offering_info_id']);
-        $course_detail_stmt->execute();
-        $course_detail_result = $course_detail_stmt->get_result();
+    function generateTimeRange($startTime, $endTime)
+    {
+        $times = [];
+        $start = new DateTime($startTime);
+        $end = new DateTime($endTime);
+        $interval = new DateInterval('PT30M');
 
-        if (!$course_detail_result) {
-            die('Query Error: ' . mysqli_error($conn));
+        while ($start < $end) {
+            $next = clone $start;
+            $next->add($interval);
+            $times[] = [
+                'start' => $start->format('H:i'),
+                'end'   => $next->format('H:i'),
+                'displayStart' => $start->format('h:i '),
+                'displayEnd'   => $next->format('h:i ')
+            ];
+            $start = $next;
         }
-        $course_detail = mysqli_fetch_assoc($course_detail_result);
 
-        $day_map = [
-            'M' => 'Monday',
-            'T' => 'Tuesday',
-            'W' => 'Wednesday',
-            'Th' => 'Thursday',
-            'F' => 'Friday',
-            'Sa' => 'Saturday',
-            'Su' => 'Sunday'
-        ];
-
-        $color_map = [
-            'M' => 'LightSalmon',
-            'T' => 'lightblue',
-            'W' => 'LightSalmon',
-            'Th' => 'lightblue',
-            'F' => 'LightSalmon',
-            'Sa' => 'LightSalmon',
-            'Su' => 'LightSalmon'
-        ];
-
-        $day = $day_map[$sched['day']] ?? '';
-        $color = $color_map[$sched['day']] ?? '';
-
-        $event_array[] = [
-            'id' => $sched['id'],
-            'title' => $course_detail['course_code'] . '
-            ' . $course_detail['room'] . '
-            ' . $course_detail['section_name'],
-            'start' => date('Y-m-d', strtotime('next ' . $day)) . 'T' . $sched['time_start'],
-            'end' => date('Y-m-d', strtotime('next ' . $day)) . 'T' . $sched['time_end'],
-            'color' => $color,
-            'textColor' => 'black',
-            'extendedProps' => [
-                'course_offering_info_id' => $sched['course_offering_info_id']
-            ]
-        ];
+        return $times;
     }
+
+    function fetchSchedules($instructor)
+    {
+        global $conn;
+        $sql = "
+        SELECT 
+            s.*, 
+            co.course_name, 
+            f.fname,
+            f.lname, 
+            sec.section_name, 
+            sec.level,
+            p.program_code,
+            TIMESTAMPDIFF(MINUTE, s.time_start, s.time_end) AS difference
+        FROM 
+            schedules s
+        JOIN 
+            course_offering_info coi ON s.course_offering_info_id = coi.id
+        JOIN 
+            courses co ON coi.courses_id = co.id
+        JOIN 
+            faculty f ON s.faculty_id = f.id
+        JOIN 
+            sections sec ON coi.section_id = sec.id
+        JOIN 
+            program p ON sec.program_id = p.id
+        WHERE 
+            s.is_active = 1 AND s.faculty_id = ? AND
+            s.day IN ('M', 'T', 'W', 'Th', 'F', 'S') AND
+            s.time_start BETWEEN '08:00' AND '19:00'
+    ";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $instructor);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    function generateLightColor($seed)
+    {
+        srand($seed);
+        $r = mt_rand(127, 255);
+        $g = mt_rand(127, 255);
+        $b = mt_rand(127, 255);
+        return sprintf('#%02X%02X%02X', $r, $g, $b);
+    }
+
+    function generateCalendarData($weekDays, $instructor)
+    {
+        $calendarData = [];
+        $timeRange = generateTimeRange('08:00', '19:00');
+        $schedules = fetchSchedules($instructor);
+        $skipSlots = [];
+        $facultyColors = [];
+
+        foreach ($timeRange as $timeIndex => $time) {
+            foreach ($weekDays as $dayCode => $dayName) {
+                if (isset($skipSlots[$dayCode][$timeIndex])) {
+                    continue;
+                }
+                $found = false;
+                foreach ($schedules as $schedule) {
+                    if ($schedule['day'] == $dayCode && $schedule['time_start'] <= $time['start'] && $schedule['time_end'] > $time['start']) {
+                        $scheduleStart = new DateTime($schedule['time_start']);
+                        $scheduleEnd = new DateTime($schedule['time_end']);
+                        $duration = (int) ceil(($scheduleEnd->getTimestamp() - $scheduleStart->getTimestamp()) / 1800);
+
+                        $facultyInitial = strtoupper(substr($schedule['fname'], 0, 1));
+                        $facultyName = $facultyInitial . '. ' . $schedule['lname'];
+
+                        $sectionNameConcatenated = $schedule['program_code'] . '-' . substr($schedule['level'], 0, 1) . $schedule['section_name'];
+
+                        if (!isset($facultyColors[$schedule['faculty_id']])) {
+                            $facultyColors[$schedule['faculty_id']] = generateLightColor($schedule['faculty_id']);
+                        }
+
+                        $calendarData[$time['displayStart'] . ' - ' . $time['displayEnd']][$dayCode] = [
+                            'course_name' => $schedule['course_name'],
+                            'faculty_name' => $facultyName,
+                            'section_name' => $sectionNameConcatenated,
+                            'rowspan' => $duration,
+                            'schedule_id' => $schedule['id'],
+                            'instructor_id' => $instructor,
+                            'background_color' => $facultyColors[$schedule['faculty_id']]
+                        ];
+                        for ($i = 1; $i < $duration; $i++) {
+                            $skipSlots[$dayCode][$timeIndex + $i] = true;
+                        }
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found && !isset($skipSlots[$dayCode][$timeIndex])) {
+                    $calendarData[$time['displayStart'] . ' - ' . $time['displayEnd']][$dayCode] = ['empty' => true];
+                }
+            }
+        }
+
+        return $calendarData;
+    }
+
+    $calendarData = generateCalendarData($weekDays, $instructor);
+    // End of timetable
+
+    $designation_query = "SELECT faculty.*, unit_loads.designation FROM faculty INNER JOIN unit_loads ON faculty.designation = unit_loads.id;
+    ";
+    $designation_result = mysqli_query($conn, $designation_query);
+    $designation = mysqli_fetch_assoc($designation_result);
 }
-
-$get_schedule = json_encode($event_array);
-
-// var_dump($get_schedule);
-
-$designation_query = "SELECT * FROM faculty WHERE user_id = '$instructor'";
-$designation_result = mysqli_query($conn, $designation_query);
-$designation = mysqli_fetch_assoc($designation_result);
 ?>
+
+<style>
+    .table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .table th,
+    .table td {
+        min-width: 14.28%;
+        max-width: 14.28%;
+    }
+</style>
 
 <div class="card shadow mb-4 px-3">
     <div class="nav-tabs-custom">
@@ -152,7 +223,38 @@ $designation = mysqli_fetch_assoc($designation_result);
         </ul>
         <div class="tab-content">
             <div class="tab-pane active mb-4" id="tab_1-1">
-                <div id="calendar"></div>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr class="text-center">
+                                <th width="125" class="p-2">Time</th>
+                                <?php foreach ($weekDays as $day) : ?>
+                                    <th class="p-2"><?php echo $day; ?></th>
+                                <?php endforeach; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($calendarData as $time => $days) : ?>
+                                <tr>
+                                    <td class="text-center p-2" style="font-size:0.9rem;"><?php echo $time; ?></td>
+                                    <?php foreach ($days as $dayCode => $value) : ?>
+                                        <?php if (isset($value['rowspan'])) : ?>
+                                            <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center clickable" style="background-color:<?php echo $value['background_color']; ?>; color: #000; font-size: 0.7rem;" data-schedule-id="<?php echo $value['schedule_id']; ?>">
+                                                <?php echo $value['course_name']; ?><br>
+                                                <b class="text-uppercase">
+                                                    <?php echo $value['section_name']; ?><br>
+                                                    (<?php echo $value['faculty_name']; ?>)
+                                                </b>
+                                            </td>
+                                        <?php else : ?>
+                                            <td></td>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="tab-pane mb-4" id="tab_2-2">
                 <div class="table-responsive">
@@ -195,7 +297,6 @@ $designation = mysqli_fetch_assoc($designation_result);
                                     $course_detail_result = $course_detail_stmt->get_result();
                                     $course_detail = mysqli_fetch_assoc($course_detail_result);
 
-                                    // Concatenate the section name
                                     $section_name_concatenated = $course_detail['program_code'] . '-' . substr($course_detail['level'], 0, 1) . $course_detail['section_name'];
                                     ?>
                                     <tr>
@@ -213,7 +314,7 @@ $designation = mysqli_fetch_assoc($designation_result);
                                                 $schedule_query = "SELECT DISTINCT s.room_id, r.room
                                                                     FROM schedules s
                                                                     INNER JOIN rooms r ON s.room_id = r.id
-                                                                    WHERE s.course_offering_info_id = ?";
+                                                                    WHERE s.course_offering_info_id = ? AND s.faculty_id = $instructor";
                                                 $schedule_stmt = $conn->prepare($schedule_query);
                                                 $schedule_stmt->bind_param('i', $schedule['course_offering_info_id']);
                                                 $schedule_stmt->execute();
@@ -224,7 +325,7 @@ $designation = mysqli_fetch_assoc($designation_result);
 
                                                 $schedule_time_query = "SELECT DISTINCT time_start, time_end, room_id 
                                                                         FROM schedules 
-                                                                        WHERE course_offering_info_id = ?";
+                                                                        WHERE course_offering_info_id = ? AND faculty_id = $instructor";
                                                 $schedule_time_stmt = $conn->prepare($schedule_time_query);
                                                 $schedule_time_stmt->bind_param('i', $schedule['course_offering_info_id']);
                                                 $schedule_time_stmt->execute();
@@ -266,7 +367,7 @@ $designation = mysqli_fetch_assoc($designation_result);
 
                     <?php else : ?>
                         <div class="callout callout-warning">
-                            <div class="text-center">
+                            <div class="text-center mt-3">
                                 <h5>No Faculty Loading Found!</h5>
                             </div>
                         </div>
@@ -278,33 +379,6 @@ $designation = mysqli_fetch_assoc($designation_result);
 </div>
 
 <script>
-    var calendarEl = document.getElementById('calendar');
-    var events = <?php echo $get_schedule; ?>;
-
-    console.log('Events Array:', events); // Debug: Output events array
-
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        height: "auto",
-        dayHeaderFormat: {
-            weekday: 'short'
-        },
-        initialView: 'timeGridWeek',
-        hiddenDays: [0],
-        slotMinTime: '07:00:00',
-        slotMaxTime: '22:00:00',
-        allDaySlot: false,
-        headerToolbar: false,
-        eventOverlap: false,
-        events: events,
-        eventContent: function(arg) {
-            console.log('Event:', arg.event); // Debug: Output event object
-            return arg.event.title; // Simplified version to check if titles are being rendered
-        }
-    });
-
-    calendar.render();
-
-
     function remove_faculty_load(offering_id) {
         var array = {};
         array['offering_id'] = offering_id;

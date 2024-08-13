@@ -1,128 +1,47 @@
-<?php include 'db_connect.php' ?>
+<?php include '../admin/db_connect.php' ?>
 
-<style>
-    span.float-right.summary_icon {
-        font-size: 3rem;
-        position: absolute;
-        bottom: 10;
-        left: 1rem;
-        color: #ffffff;
-    }
+<div class="container-fluid">
+    <div class="row">
+        <section class="content-header col-12 d-flex align-items-center justify-content-between mb-3">
+            <h3><i class="fas fa-fw fa-tachometer-alt"></i> Dashboard</h3>
+            <ol class="breadcrumb bg-transparent p-0 m-0">
+                <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
+                <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+        </section>
+        <section class="content col-12">
+            <div class="row">
+                <?php
+                $cards = [
+                    ['icon' => 'fas fa-users', 'title' => 'Admin List', 'link' => 'index.php?page=user', 'query' => 'SELECT count(id) as total FROM users WHERE type = 0'],
+                    ['icon' => 'fas fa-cogs', 'title' => 'Program List', 'link' => 'index.php?page=department', 'query' => 'SELECT count(id) as total FROM program'],
+                    ['icon' => 'fas fa-building', 'title' => 'Building List', 'link' => 'index.php?page=building', 'query' => 'SELECT count(id) as total FROM building'],
+                    ['icon' => 'fas fa-briefcase', 'title' => 'Designation List', 'link' => 'index.php?page=unit_loads', 'query' => 'SELECT count(id) as total FROM unit_loads'],
+                    ['icon' => 'fas fa-calendar-week', 'title' => 'Semester List', 'link' => 'index.php?page=semester', 'query' => 'SELECT count(id) as total FROM semester']
+                ];
 
-    h1 {
-        font-size: 32px;
-        font-weight: bold;
-    }
-
-    body {
-        background-color: #ffffff;
-
-    }
-
-    .card {
-        position: relative;
-        border-radius: 10px;
-        color: #ffffff;
-        background-color: #DD4B39;
-        box-shadow: rgba(0, 0, 0, 0.30) 0px 3px 8px;
-    }
-
-    .card-body {
-        font-size: 3rem;
-        flex-direction: column;
-        display: flex;
-        justify-content: end;
-        align-items: end;
-    }
-
-    .card-body .total {
-        display: flex;
-        flex-direction: column;
-        justify-content: end;
-        align-items: end;
-    }
-
-    .card-body .total h3 {
-        font-size: 20px;
-    }
-
-    .card-footer {
-        display: flex;
-        justify-content: end;
-        align-items: end;
-    }
-
-    .card-footer * {
-        color: #ffffff;
-    }
-
-    .card-footer a:hover {
-        text-decoration: none;
-        color: rgba(255, 255, 255, 0.80);
-    }
-</style>
-
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
-            <!-- <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i
-            class="fas fa-download fa-sm text-white-50"></i> Generate Report</a> -->
+                foreach ($cards as $card) {
+                    $total = $conn->query($card['query'])->fetch_assoc()['total'];
+                ?>
+                    <div class="col-xl-4 col-md-6 mb-4">
+                        <div class="card border-left-danger shadow h-100 py-3">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <a href="<?php echo $card['link']; ?>" class="text-xs font-weight-bold text-danger text-uppercase mb-1 d-block" style="font-size: 1rem;">
+                                            <?php echo $card['title']; ?>
+                                        </a>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" style="font-size: 4rem;"><?php echo $total; ?></div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="<?php echo $card['icon']; ?> fa-2x text-gray-300" style="font-size: 4rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php } ?>
+            </div>
+        </section>
     </div>
-    <div class="container-fluid">
-        <div class="grid row gap-4 row-gap-4">
-            <div class=" col-md-12 mb-4 col-lg-6 col-xl-4">
-                <div class="card">
-                    <div class="card-body">
-                        <span class="float-right summary_icon"><i class="fa fa-list"></i></span>
-                        <div class="total">
-                            <?php
-                            $total_courses = $conn->query("SELECT count(id) as total FROM courses")->fetch_assoc()['total'];
-                            echo $total_courses;
-                            ?>
-                            <h3>Course List</h3>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <a class="text-danger" href="index.php?page=courses"><i class="fa fa-eye text-danger"></i> View Course List</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class=" col-md-12 mb-4 col-lg-6 col-xl-4">
-                <div class="card">
-                    <div class="card-body">
-                        <span class="float-right summary_icon"><i class="fas fa-door-open"></i></span>
-                        <div class="total">
-                            <?php
-                            $total_rooms = $conn->query("SELECT count(id) as total FROM rooms")->fetch_assoc()['total'];
-                            echo $total_rooms;
-                            ?>
-                            <h3>Room List</h3>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <a class="text-danger" href="index.php?page=room"><i class="fa fa-eye text-danger"></i> View Room List</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class=" col-md-12 mb-4 col-lg-6 col-xl-4">
-                <div class="card">
-                    <div class="card-body">
-                        <span class="float-right summary_icon"><i class="fa fa-user-tie"></i></span>
-                        <div class="total">
-                            <?php
-                            $total_faculties = $conn->query("SELECT count(id) as total FROM faculty")->fetch_assoc()['total'];
-                            echo $total_faculties;
-                            ?>
-                            <h3>Faculty List</h3>
-                        </div>
-                    </div>
-                    <div class="card-footer">
-                        <a class="text-danger" href="index.php?page=faculty"><i class="fa fa-eye text-danger"></i> View Faculty List</a>
-                    </div>
-                </div>
-            </div>
-            
-        </div>
-    </div>
-
+</div>

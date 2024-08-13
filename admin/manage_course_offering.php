@@ -113,7 +113,7 @@ if (isset($_GET['program_id'])) {
                                         <select class="form-control" id='period'>
                                             <option>1st Semester</option>
                                             <option>2nd Semester</option>
-                                            <option>Summer</option>
+                                            <option>Mid Year</option>
                                         </select>
                                     </div>
                                 </div>

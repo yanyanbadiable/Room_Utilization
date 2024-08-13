@@ -1,6 +1,5 @@
 <?php
-include('db_connect.php');
-session_start();
+include '../admin/db_connect.php';
 if (isset($_GET['id'])) {
 	$user = $conn->query("SELECT * FROM users where id =" . $_GET['id']);
 	foreach ($user->fetch_array() as $k => $v) {
@@ -14,10 +13,6 @@ if (isset($_GET['id'])) {
 	<form action="" id="manage-user">
 		<input type="hidden" name="id" value="<?php echo isset($meta['id']) ? $meta['id'] : '' ?>">
 		<div class="form-group">
-			<label for="name">Name</label>
-			<input type="text" name="name" id="name" class="form-control" value="<?php echo isset($meta['name']) ? $meta['name'] : '' ?>" required>
-		</div>
-		<div class="form-group">
 			<label for="username">Username</label>
 			<input type="text" name="username" id="username" class="form-control" value="<?php echo isset($meta['username']) ? $meta['username'] : '' ?>" required autocomplete="off">
 		</div>
@@ -28,27 +23,15 @@ if (isset($_GET['id'])) {
 				<small><i>Leave this blank if you don't want to change the password.</i></small>
 			<?php endif; ?>
 		</div>
-		<?php if (isset($meta['type']) && $meta['type'] == 3) : ?>
-			<input type="hidden" name="type" value="3">
-		<?php else : ?>
-			<?php if (!isset($_GET['mtype'])) : ?>
-				<div class="form-group">
-					<label for="type">User Type</label>
-					<select name="type" id="type" class="custom-select">
-						<option value="2" <?php echo isset($meta['type']) && $meta['type'] == 2 ? 'selected' : '' ?>>Staff</option>
-						<option value="1" <?php echo isset($meta['type']) && $meta['type'] == 1 ? 'selected' : '' ?>>Admin</option>
-					</select>
-				</div>
-			<?php endif; ?>
-		<?php endif; ?>
 		<div class="form-group">
 			<label class="control-label">Department</label>
-			<select class="form-control" name="department_id">
+			<select class="form-control" name="program_id" id="department">
 				<?php
-				$department = $conn->query("SELECT id, department_code FROM department");
+				$department = $conn->query("SELECT id, department FROM program");
 				while ($row = $department->fetch_assoc()) :
+					$selected = isset($meta['program_id']) && $meta['program_id'] == $row['id'] ? 'selected' : '';
 				?>
-					<option value="<?php echo $row['id'] ?>"><?php echo $row['department_code'] ?></option>
+					<option value="<?php echo $row['id'] ?>" <?php echo $selected ?>><?php echo $row['department'] ?></option>
 				<?php endwhile; ?>
 			</select>
 		</div>
@@ -66,6 +49,11 @@ if (isset($_GET['id'])) {
 			success: function(resp) {
 				if (resp == 1) {
 					alert_toast("Data successfully saved", 'success')
+					setTimeout(function() {
+						location.reload()
+					}, 1500)
+				} else if (resp == 2) {
+					alert_toast("Data successfully updated", 'success')
 					setTimeout(function() {
 						location.reload()
 					}, 1500)

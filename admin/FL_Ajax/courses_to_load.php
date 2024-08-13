@@ -18,11 +18,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                       JOIN program prog ON sec.program_id = prog.id
                       JOIN courses c ON coi.courses_id = c.id
                       WHERE s.is_active = 1
-                      AND s.users_id IS NULL
+                      AND s.faculty_id IS NULL
                       AND prog.id = ?
                       AND c.level = ?";
 
     $stmt = $conn->prepare($courses_query);
+    if (!$stmt) {
+        die("Prepare failed: " . $conn->error);
+    }
     $stmt->bind_param('is', $program_id, $level);
     $stmt->execute();
     $courses_result = $stmt->get_result();
@@ -45,6 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                              AND c.level = ?";
 
             $detail_stmt = $conn->prepare($detail_query);
+            if (!$detail_stmt) {
+                die("Prepare failed: " . $conn->error);
+            }
             $detail_stmt->bind_param('is', $course['course_offering_info_id'], $level);
             $detail_stmt->execute();
             $detail_result = $detail_stmt->get_result();
@@ -56,8 +62,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                     'level' => $detail['level'],
                     'offering_id' => $detail['course_offering_id'],
                     'section_name' => $section_name_concatenated,
-                    'courses_id' => $detail['courses_id']
+                    'courses_id' => $detail['courses_id'],
+                    'schedules' => [] 
                 ];
+
+                $schedules_query = "SELECT id, room_id, time_start, time_end 
+                                    FROM schedules 
+                                    WHERE course_offering_info_id = ? AND faculty_id IS NULL";
+                $schedules_stmt = $conn->prepare($schedules_query);
+                if (!$schedules_stmt) {
+                    die("Prepare failed: " . $conn->error);
+                }
+                $schedules_stmt->bind_param('i', $course['course_offering_info_id']);
+                $schedules_stmt->execute();
+                $schedules_result = $schedules_stmt->get_result();
+
+                while ($schedule = $schedules_result->fetch_assoc()) {
+                    $collection[count($collection) - 1]->schedules[] = $schedule;
+                }
             }
         }
     }
@@ -87,11 +109,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                     <tbody>
                         <?php if (!empty($collection)) : ?>
                             <?php foreach ($collection as $data) : ?>
-                                <?php if ($data->level == $level) : ?> <!-- Check if the level matches -->
+                                <?php if ($data->level == $level) : ?>
                                     <?php
-                                    // Fetching course details
                                     $course_query = "SELECT course_code FROM courses WHERE id = ?";
                                     $course_stmt = $conn->prepare($course_query);
+                                    if (!$course_stmt) {
+                                        die("Prepare failed: " . $conn->error);
+                                    }
                                     $course_stmt->bind_param('i', $data->courses_id);
                                     $course_stmt->execute();
                                     $course_result = $course_stmt->get_result();
@@ -106,50 +130,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                                         </td>
                                         <td>
                                             <div class="text-center">
-                                                <?php
-                                                $schedule_query = "SELECT DISTINCT s.room_id, r.room
-                                                                   FROM schedules s
-                                                                   INNER JOIN rooms r ON s.room_id = r.id
-                                                                   WHERE s.course_offering_info_id = ?";
-                                                $schedule_stmt = $conn->prepare($schedule_query);
-                                                $schedule_stmt->bind_param('i', $data->offering_id);
-                                                $schedule_stmt->execute();
-                                                $schedule_result = $schedule_stmt->get_result();
-                                                while ($schedule = $schedule_result->fetch_assoc()) {
-                                                    echo $schedule['room'] . "<br>";
-                                                }
-
-                                                $schedule_time_query = "SELECT DISTINCT time_start, time_end, room_id 
-                                                                        FROM schedules 
-                                                                        WHERE course_offering_info_id = ?";
-                                                $schedule_time_stmt = $conn->prepare($schedule_time_query);
-                                                $schedule_time_stmt->bind_param('i', $data->offering_id);
-                                                $schedule_time_stmt->execute();
-                                                $schedule_time_result = $schedule_time_stmt->get_result();
-                                                while ($schedule_time = $schedule_time_result->fetch_assoc()) {
-                                                    $day_query = "SELECT day 
-                                                                  FROM schedules 
-                                                                  WHERE course_offering_info_id = ? 
-                                                                    AND time_start = ? 
-                                                                    AND time_end = ? 
-                                                                    AND room_id = ?";
-                                                    $day_stmt = $conn->prepare($day_query);
-                                                    $day_stmt->bind_param('isss', $data->offering_id, $schedule_time['time_start'], $schedule_time['time_end'], $schedule_time['room_id']);
-                                                    $day_stmt->execute();
-                                                    $day_result = $day_stmt->get_result();
-                                                    $days = [];
-                                                    while ($day = $day_result->fetch_assoc()) {
-                                                        $days[] = $day['day'];
+                                                <?php foreach ($data->schedules as $schedule) : ?>
+                                                    <?php
+                                                    $room_query = "SELECT room FROM rooms WHERE id = ?";
+                                                    $room_stmt = $conn->prepare($room_query);
+                                                    if (!$room_stmt) {
+                                                        die("Prepare failed: " . $conn->error);
                                                     }
-                                                    echo "[" . implode("", $days) . " " . date('g:iA', strtotime($schedule_time['time_start'])) . "-" . date('g:iA', strtotime($schedule_time['time_end'])) . "]<br>";
-                                                }
-                                                ?>
+                                                    $room_stmt->bind_param('i', $schedule['room_id']);
+                                                    $room_stmt->execute();
+                                                    $room_result = $room_stmt->get_result();
+                                                    $room = $room_result->fetch_assoc();
+                                                    ?>
+                                                    <?php echo $room['room'] . "<br>"; ?>
+                                                    <?php echo "[" . date('g:iA', strtotime($schedule['time_start'])) . "-" . date('g:iA', strtotime($schedule['time_end'])) . "]<br>"; ?>
+                                                <?php endforeach; ?>
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <button onclick="addFacultyLoad('<?php echo $instructor; ?>', '<?php echo $data->offering_id; ?>')" class="btn btn-success btn-flat">
-                                                <i class="fa fa-plus-circle"></i>
-                                            </button>
+                                            <?php foreach ($data->schedules as $schedule) : ?>
+                                                <button onclick="addFacultyLoad('<?php echo $instructor; ?>', '<?php echo $data->offering_id; ?>', '<?php echo $schedule['id']; ?>')" class="btn btn-success btn-flat">
+                                                    <i class="fa fa-plus-circle"></i>
+                                                </button>
+                                            <?php endforeach; ?>
                                         </td>
                                     </tr>
                                 <?php endif; ?>
@@ -166,20 +169,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     </div>
 </div>
 <script>
-    function addFacultyLoad(instructor, course_offering_info_id) {
+    function addFacultyLoad(instructor, course_offering_info_id, schedule_id) {
         var data = {
             instructor: instructor,
-            course_offering_info_id: course_offering_info_id
+            course_offering_info_id: course_offering_info_id,
+            schedule_id: schedule_id
         };
-
         $.ajax({
             type: "GET",
             url: "ajax.php?action=add_faculty_load",
             data: data,
-            success: function(data) {
+            success: function(response) {
                 displayCourses('<?php echo $level; ?>', "<?php echo $instructor; ?>");
                 getCurrentLoad("<?php echo $instructor; ?>", '<?php echo $level; ?>');
-                alert_toast(data, 'success');
+                alert_toast('Successfully Added Faculty Load!', 'success');
+                // location.reload();
             },
             error: function(xhr, status, error) {
                 if (xhr.status == 409) {
@@ -188,24 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                 if (xhr.status == 404) {
                     var boolean = confirm('The no. of units loaded exceeds. Do you want to override?');
                     if (boolean == true) {
-                        function getUnitsLoaded(offering_id) {
-                            var array = {};
-                            array['offering_id'] = offering_id;
-                            array['instructor'] = "<?php echo $instructor; ?>";
-                            array['level'] = "<?php echo $level; ?>";
-                            $.ajax({
-                                type: "GET",
-                                url: "FL_Ajax/get_units_loaded.php",
-                                data: array,
-                                success: function(data) {
-                                    $('#displayGetUnitsLoaded').html(data).fadeIn();
-                                    $('#modalunits').modal('toggle');
-                                },
-                                error: function() {
-                                    alert_toast('Something Went Wrong!', 'Notification!');
-                                }
-                            })
-                        }
+                        getUnitsLoaded(course_offering_info_id);
                     }
                 }
             }

@@ -3,12 +3,10 @@ include 'db_connect.php';
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Check if program code is set in the URL
 if (isset($_GET['program_code']) && isset($_GET['year'])) {
     $program_code = $_GET['program_code'];
     $year = $_GET['year'];
 
-    // Fetching program name and id from the program table
     $program_query = "SELECT id, program_name FROM program WHERE program_code = ?";
     $program_stmt = $conn->prepare($program_query);
     $program_stmt->bind_param("s", $program_code);
@@ -18,7 +16,6 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
     $program_id = $program['id'];
     $program_name = $program['program_name'];
 
-    // Fetching levels from the courses table using program_id
     $level_query = "SELECT DISTINCT level, period FROM courses WHERE program_id = ? AND year = ? ORDER BY level ASC, period ASC";
     $level_stmt = $conn->prepare($level_query);
     $level_stmt->bind_param("is", $program_id, $year);
@@ -35,7 +32,7 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
             <ol class="breadcrumb bg-transparent p-0 m-0">
                 <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
                 <li class="breadcrumb-item active"> Course Management</li>
-                <li class="breadcrumb-item active"> View Course</li>
+                <li class="breadcrumb-item active"><a href="index.php?page=courses"> View Course</a></li>
                 <li class="breadcrumb-item active">List of Course</li>
             </ol>
         </section>
@@ -89,15 +86,11 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
                                                     </td>
                                                     <td><?php echo $courses['course_name']; ?></td>
                                                     <td>
-                                                        <?php if ($courses['lec'] != 0) : ?>
-                                                            <?php echo $courses['lec']; ?>
-                                                        <?php endif; ?>
+                                                        <?php echo $courses['lec']; ?>
                                                         <?php $totalLec += $courses['lec']; ?>
                                                     </td>
                                                     <td>
-                                                        <?php if ($courses['lab'] != 0) : ?>
-                                                            <?php echo $courses['lab']; ?>
-                                                        <?php endif; ?>
+                                                        <?php echo $courses['lab']; ?>          
                                                         <?php $totalLab += $courses['lab']; ?>
                                                     </td>
                                                     <td>
@@ -116,11 +109,12 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
                                             <tr>
                                                 <td></td>
                                                 <td></td>
-                                            
+
                                                 <th colspan="2">
                                                     <div align='right'>Total Units:</div>
                                                 </th>
                                                 <th><?php echo $totalUnits; ?></th>
+                                                <td></td>
                                             </tr>
                                         </tbody>
                                     </table>

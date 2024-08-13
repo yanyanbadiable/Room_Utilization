@@ -1,5 +1,5 @@
 <section class="content-header mb-4">
-    <h1><i class="fa fa-key"></i> Account</h1>
+    <h1><i class="fa fa-key"></i> Account Setting</h1>
 </section>
 
 <section class="content ">

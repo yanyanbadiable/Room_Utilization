@@ -1,28 +1,39 @@
 <?php
+session_start();
 include('../db_connect.php');
 
-// Initialize $rooms to an empty array
 $rooms = [];
+$user_program_id = $_SESSION['login_program_id'];
 
-// Check if it's an AJAX request and all required GET parameters are set
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['time_start']) && isset($_GET['time_end']) && isset($_GET['course_offering_info_id']) && isset($_GET['section_id'])) {
     $day = $_GET['day'];
-    $time_start = date('H:i:s', strtotime($_GET['time_start']));
-    $time_end = date('H:i:s', strtotime($_GET['time_end']));
+    $time_start = date('H:i', strtotime($_GET['time_start']));
+    $time_end = date('H:i', strtotime($_GET['time_end']));
     $course_offering_info_id = $_GET['course_offering_info_id'];
     $section_id = $_GET['section_id'];
 
-    // Fetch conflict schedules
+    $course_query = "SELECT c.is_comlab FROM courses c
+                     JOIN course_offering_info coi ON c.id = coi.courses_id
+                     WHERE coi.id = '$course_offering_info_id'";
+    $course_result = mysqli_query($conn, $course_query);
+
+    $is_comlab = 0;
+    if ($course_result && $course_row = mysqli_fetch_assoc($course_result)) {
+        $is_comlab = $course_row['is_comlab'];
+    } else {
+        echo "Error fetching course information: " . mysqli_error($conn);
+    }
+
     $conflict_schedules = [];
     $conflict_query = "SELECT DISTINCT room_id FROM schedules
-    WHERE room_id IS NOT NULL
-    AND day = '$day'
-    AND (
-        (time_start < '$time_end' AND time_end > '$time_start')
-        OR (time_start >= '$time_start' AND time_end <= '$time_end')
-        OR (time_start <= '$time_start' AND time_end >= '$time_end')
-    )
-    AND course_offering_info_id != '$course_offering_info_id'";
+                       WHERE room_id IS NOT NULL
+                       AND day = '$day'
+                       AND (
+                           (TIME_FORMAT(time_start, '%H:%i') < '$time_end' AND TIME_FORMAT(time_end, '%H:%i') > '$time_start')
+                           OR (TIME_FORMAT(time_start, '%H:%i') >= '$time_start' AND TIME_FORMAT(time_end, '%H:%i') <= '$time_end')
+                           OR (TIME_FORMAT(time_start, '%H:%i') <= '$time_start' AND TIME_FORMAT(time_end, '%H:%i') >= '$time_end')
+                       )
+                       AND course_offering_info_id != '$course_offering_info_id'";
 
     $conflict_result = mysqli_query($conn, $conflict_query);
     if ($conflict_result) {
@@ -33,16 +44,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
         echo "Error fetching conflict schedules: " . mysqli_error($conn);
     }
 
-    // Fetch available rooms
+    if ($is_comlab == 1) {
+        $lab_condition = "AND rooms.is_lab = 1";
+    } else {
+        $lab_condition = "AND rooms.is_lab = 0";
+    }
+
     if (!empty($conflict_schedules)) {
         $room_conditions = implode(',', array_map('intval', $conflict_schedules));
         $query = "SELECT rooms.*, building.building FROM rooms
-              JOIN building ON rooms.building_id = building.id
-              WHERE rooms.is_available = 1 AND rooms.id NOT IN ($room_conditions)";
+                  JOIN building ON rooms.building_id = building.id
+                  WHERE rooms.is_available = 1 AND rooms.id NOT IN ($room_conditions) $lab_condition ORDER BY program_id";
     } else {
         $query = "SELECT rooms.*, building.building FROM rooms
-              JOIN building ON rooms.building_id = building.id
-              WHERE rooms.is_available = 1";
+                  JOIN building ON rooms.building_id = building.id
+                  WHERE rooms.is_available = 1 $lab_condition  ORDER BY program_id";
     }
 
     $rooms_result = mysqli_query($conn, $query);
@@ -92,14 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
 </div>
 <script>
     $('#submitBtn').click(function() {
-        // Close the modal
-        $('#myModal').modal('hide'); // Replace 'myModal' with the ID of your modal
+        $('#myModal').modal('hide');
     });
 
     function submitScheduleForm(event) {
-        event.preventDefault(); // Prevent default form submission
+        event.preventDefault();
 
-        var formData = $('#add_schedule').serialize(); // Serialize form data
+        var formData = $('#add_schedule').serialize();
         $.ajax({
             url: 'ajax.php?action=add_schedule',
             method: 'POST',
@@ -107,30 +122,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
             success: function(resp) {
                 console.log(resp);
                 if (resp.status === 'success') {
-                    // If the response status is 'success', display a success message
                     alert_toast('Schedule successfully saved', 'success');
-                    $.ajax({
-                        type: "GET",
-                        url: "ajax.php?action=get_schedule",
-                        data: {
-                            course_offering_info_id: <?= $course_offering_info_id ?>
-                        },
-                        success: function(data) {
-                            $('#calendar').fullCalendar('removeEvents');
-                            $('#calendar').fullCalendar('addEventSource', JSON.parse(data));
-                            $('#calendar').fullCalendar('rerenderEvents');
-                        }
-                    });
+                    location.reload();
                 } else if (resp.status === 'error' && resp.message === 'Same schedule already exists.') {
-                    // If the response status is 'error' and the message indicates that the schedule already exists, show appropriate message
-                    alert_toast('Schedule already exists', 'warning');
+                    alert_toast('Schedule already exists', 'danger');
                 } else {
-                    // If the response status is not 'success' or there's no specific message, show a generic error message
                     alert_toast(resp.message || 'Error occurred while saving schedule', 'danger');
                 }
             },
             error: function() {
-                // Handle error
                 alert_toast('Something went wrong!', 'danger');
             }
         });

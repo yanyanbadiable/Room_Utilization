@@ -1,8 +1,9 @@
 <?php
 include('db_connect.php');
 
-// Fetch all rooms from the database
-$query = "SELECT * FROM rooms";
+$user_program_id = $_SESSION['login_program_id'];
+
+$query = "SELECT * FROM rooms WHERE program_id = $user_program_id";
 $result = $conn->query($query);
 
 $rooms = [];
@@ -28,7 +29,7 @@ if ($result) {
             <div class="container-fluid" style="margin-top: 15px;">
                 <div class="card shadow mb-4">
                     <div class="card-header">
-                        <h5>Search Filters</h5>
+                        <h5>Search Room</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">

@@ -4,36 +4,51 @@ include 'db_connect.php';
 if (isset($_GET['id'])) {
 	$id = $_GET['id'];
 
-	// Fetch user
-	$userQuery = "SELECT * FROM users WHERE id = ?";
-	$stmt = $conn->prepare($userQuery);
-	$stmt->bind_param("i", $id);
-	$stmt->execute();
-	$userResult = $stmt->get_result();
-	$user = $userResult->fetch_assoc();
-	$stmt->close();
+	$facultyQuery = "
+    SELECT faculty.*, 
+           program.program_code, 
+           unit_loads.designation 
+    FROM faculty 
+    INNER JOIN program ON faculty.program_id = program.id 
+    INNER JOIN unit_loads ON faculty.designation = unit_loads.id 
+    WHERE faculty.id = ?";
 
-	// Fetch instructor info along with program code
-	$infoQuery = "SELECT faculty.*, program.program_code 
-	              FROM faculty 
-	              LEFT JOIN program ON faculty.program_id = program.id 
-	              WHERE faculty.user_id = ?";
-	$stmt = $conn->prepare($infoQuery);
-	$stmt->bind_param("i", $id);
-	$stmt->execute();
-	$infoResult = $stmt->get_result();
-	$info = $infoResult->fetch_assoc();
-	$stmt->close();
+	if ($stmt = $conn->prepare($facultyQuery)) {
+		$stmt->bind_param("i", $id);
+		$stmt->execute();
+		$facultyResult = $stmt->get_result();
+		$faculty = $facultyResult->fetch_assoc();
+		$stmt->close();
+	} else {
+		echo "Error preparing statement: (" . $conn->errno . ") " . $conn->error;
+	}
 
-	// Fetch programs
-	$programsQuery = "SELECT DISTINCT id, program_name, program_code FROM program";
-	$programsResult = $conn->query($programsQuery);
-	$programs = [];
-	while ($row = $programsResult->fetch_assoc()) {
-		$programs[] = $row;
+	$programsQuery = "SELECT DISTINCT id, program_code FROM program";
+	$programResult = mysqli_query($conn, $programsQuery);
+
+	if ($programResult) {
+		$programs = [];
+		while ($row = mysqli_fetch_assoc($programResult)) {
+			$programs[] = $row;
+		}
+	} else {
+		echo "Error fetching programs: " . mysqli_error($conn);
+	}
+
+	$designationsQuery = "SELECT DISTINCT id, designation FROM unit_loads";
+	$designationResult = mysqli_query($conn, $designationsQuery);
+
+	if ($designationResult) {
+		$designations = [];
+		while ($row = mysqli_fetch_assoc($designationResult)) {
+			$designations[] = $row;
+		}
+	} else {
+		echo "Error fetching designations: " . mysqli_error($conn);
 	}
 }
 ?>
+
 
 <div class="container-fluid">
 	<section class="content-header row align-items-center justify-content-between mb-3">
@@ -55,71 +70,71 @@ if (isset($_GET['id'])) {
 						<div class="form-group row">
 							<div class="col-md-3">
 								<label><b>ID Number</b></label>
-								<input class="form-control" value="<?php echo $user['username']; ?>" name="username" placeholder="ID Number*" type="text" required>
+								<input class="form-control" value="<?php echo $faculty['id_number']; ?>" name="id_number" placeholder="ID Number*" type="text" required>
 								<div class="invalid-feedback">ID Number is required.</div>
 							</div>
 							<div class="col-md-9">
 								<label><b>Email</b></label>
-								<input class="form-control" name='email' value="<?php echo $info['email']; ?>" placeholder='Email Address' type="email" required>
+								<input class="form-control" name='email' value="<?php echo $faculty['email']; ?>" placeholder='Email Address' type="email" required>
 								<div class="invalid-feedback">Valid Email Address is required.</div>
 							</div>
 						</div>
 						<div class="form-group row">
 							<div class="col-md-3">
 								<label><b>First Name</b></label>
-								<input class="form-control" value="<?php echo $user['fname']; ?>" name='firstname' placeholder='First Name*' type="text" required>
+								<input class="form-control" value="<?php echo $faculty['fname']; ?>" name='firstname' placeholder='First Name*' type="text" required>
 								<div class="invalid-feedback">First Name is required.</div>
 							</div>
 							<div class="col-md-3">
 								<label><b>Middle Name</b></label>
-								<input class="form-control" value="<?php echo $user['mname']; ?>" name='middlename' placeholder='Middle Name' type="text">
+								<input class="form-control" value="<?php echo $faculty['mname']; ?>" name='middlename' placeholder='Middle Name' type="text">
 							</div>
 							<div class="col-md-3">
 								<label><b>Last Name</b></label>
-								<input class="form-control" value="<?php echo $user['lname']; ?>" name='lastname' placeholder='Last Name*' type="text" required>
+								<input class="form-control" value="<?php echo $faculty['lname']; ?>" name='lastname' placeholder='Last Name*' type="text" required>
 								<div class="invalid-feedback">Last Name is required.</div>
 							</div>
 							<div class="col-md-3">
 								<label><b>Extension Name</b></label>
-								<input class="form-control" value="<?php echo $user['extname']; ?>" name='extensionname' placeholder='Extension Name' type="text">
+								<input class="form-control" value="<?php echo $faculty['extname']; ?>" name='extensionname' placeholder='Extension Name' type="text">
 							</div>
 						</div>
 						<div class="form-group row">
 							<div class="col-md-6">
 								<label><b>Address</b></label>
-								<input class="form-control" value="<?php echo $info['street']; ?>" name='street' placeholder='Street Address' type="text">
+								<input class="form-control" value="<?php echo $faculty['street']; ?>" name='street' placeholder='Street Address' type="text">
 							</div>
 							<div class="col-md-6">
 								<label><b>Barangay</b></label>
-								<input class="form-control" value="<?php echo $info['barangay']; ?>" name='barangay' placeholder='Barangay*' type="text" required>
+								<input class="form-control" value="<?php echo $faculty['barangay']; ?>" name='barangay' placeholder='Barangay*' type="text" required>
 								<div class="invalid-feedback">Barangay is required.</div>
 							</div>
 						</div>
 						<div class="form-group row">
 							<div class="col-md-6">
 								<label><b>Municipality/City</b></label>
-								<input class="form-control" value="<?php echo $info['municipality']; ?>" name='municipality' placeholder='Municipality/City*' type="text" required>
+								<input class="form-control" value="<?php echo $faculty['municipality']; ?>" name='municipality' placeholder='Municipality/City*' type="text" required>
 								<div class="invalid-feedback">Municipality/City is required.</div>
 							</div>
 							<div class="col-md-6">
 								<label><b>Province</b></label>
-								<input class="form-control" value="<?php echo $info['province']; ?>" name='province' placeholder='Province*' type="text" required>
+								<input class="form-control" value="<?php echo $faculty['province']; ?>" name='province' placeholder='Province*' type="text" required>
 								<div class="invalid-feedback">Province is required.</div>
 							</div>
 						</div>
 						<div class="form-group row">
 							<div class="col-md-6">
-								<label><b>Gender</b></label>
+								<label><b>Sex</b></label>
 								<select class="form-control" name='gender' required>
-									<option value=''>Select Gender</option>
-									<option value='Male' <?php if ($info['gender'] == 'Male') echo "selected='selected'"; ?>>Male</option>
-									<option value='Female' <?php if ($info['gender'] == 'Female') echo "selected='selected'"; ?>>Female</option>
+									<option value=''>Select Sex</option>
+									<option value='Male' <?php if ($faculty['gender'] == 'Male') echo "selected='selected'"; ?>>Male</option>
+									<option value='Female' <?php if ($faculty['gender'] == 'Female') echo "selected='selected'"; ?>>Female</option>
 								</select>
 								<div class="invalid-feedback">Gender is required.</div>
 							</div>
 							<div class="col-md-6">
 								<label><b>Contact Number</b></label>
-								<input class="form-control" value="<?php echo $info['contact']; ?>" name='contact' placeholder='Contact Number' type="text" required pattern="^\+639\d{9}$">
+								<input class="form-control" value="<?php echo $faculty['contact']; ?>" name='contact' placeholder='Contact Number' type="text" required pattern="^\+639\d{9}$">
 								<div class="invalid-feedback">Valid Contact Number is required (12 digits starting with +639).</div>
 							</div>
 						</div>
@@ -134,9 +149,11 @@ if (isset($_GET['id'])) {
 							<div class="col-md-6">
 								<label><b>Department</b></label>
 								<select name="program" class="form-control" required>
-									<option value="">Select Department</option>
+									<option value="" disabled selected hidden>Select Department</option>
 									<?php foreach ($programs as $program) : ?>
-										<option value="<?php echo $program['id']; ?>" <?php if ($info['program_code'] == $program['program_code']) echo "selected='selected'"; ?>><?php echo $program['program_code']; ?></option>
+										<option value="<?php echo $program['id']; ?>" <?php if ($faculty['program_code'] == $program['program_code']) echo "selected='selected'"; ?>>
+											<?php echo $program['program_code']; ?>
+										</option>
 									<?php endforeach; ?>
 								</select>
 								<div class="invalid-feedback">Department is required.</div>
@@ -144,82 +161,56 @@ if (isset($_GET['id'])) {
 							<div class="col-md-6">
 								<label><b>Employee Status</b></label>
 								<select name="designation" class="form-control" required>
-									<option value="">Select Employee Type</option>
-									<option value="Full Time" <?php if ($info['designation'] == 'Full Time') echo "selected='selected'"; ?>>Full Time</option>
-									<option value="Part Time" <?php if ($info['designation'] == 'Part Time') echo "selected='selected'"; ?>>Part Time</option>
+									<option value="" disabled selected hidden>Select Employee Type</option>
+									<?php foreach ($designations as $designation) : ?>
+										<option value="<?php echo $designation['id']; ?>" <?php if ($faculty['designation'] == $designation['designation']) echo "selected='selected'"; ?>>
+											<?php echo $designation['designation']; ?>
+										</option>
+									<?php endforeach; ?>
 								</select>
 								<div class="invalid-feedback">Employee Status is required.</div>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="form-group row">
-					<div class="col-md-12">
-						<input type='submit' class='btn btn-primary col-md-12' value='Update'>
-					</div>
-				</div>
-			</form>
 		</div>
-	</section>
+		<div class="form-group row">
+			<div class="col-md-12">
+				<input type='submit' class='btn btn-primary col-md-12' value='Update'>
+			</div>
+		</div>
+		</form>
+</div>
+</section>
 </div>
 
 <script>
-	var formIsValid = true;
+	$(document).ready(function() {
 
-	$('#instructorForm').submit(function(event) {
-		event.preventDefault();
+		$('#instructorForm').submit(function(event) {
+			event.preventDefault();
 
-		if (!formIsValid) {
-			return;
-		}
 
-		$('input[type="submit"]').prop('disabled', true);
+			if (this.checkValidity() === false) {
+				$(this).addClass('was-validated');
+				return;
+			}
 
-		editUser();
-		editInstructor();
+			$('input[type="submit"]').prop('disabled', true);
+			editInstructor();
+		});
 	});
 
-	function editUser() {
-		if (!formIsValid) {
-			return;
-		}
+
+
+	function editInstructor() {
 		var array = {};
 		array['id'] = $("input[name='id']").val();
-		array['username'] = $("input[name='username']").val();
+		array['id_number'] = $("input[name='id_number']").val();
 		array['firstname'] = $("input[name='firstname']").val();
 		array['middlename'] = $("input[name='middlename']").val();
 		array['lastname'] = $("input[name='lastname']").val();
 		array['extensionname'] = $("input[name='extensionname']").val();
-		array['program_id'] = $("select[name='program']").val();
-		$.ajax({
-			type: "POST",
-			url: "ajax.php?action=edit_user",
-			data: array,
-			success: function(data) {
-				if (data.trim() === '1') {
-					alert_toast('User Successfully Updated', 'success');
-					resetForm();
-					reloadPage();
-				} else {
-					alert_toast('Failed to update user', 'danger');
-					resetForm();
-					reloadPage();
-				}
-			},
-			error: function() {
-				alert_toast('Something Went Wrong!', 'danger');
-				resetForm();
-				reloadPage();
-			}
-		});
-	}
-
-	function editInstructor() {
-		if (!formIsValid) {
-			return; // Do not proceed if form is not valid
-		}
-		var array = {};
-		array['id'] = $("input[name='id']").val();
 		array['program_id'] = $("select[name='program']").val();
 		array['gender'] = $("select[name='gender']").val();
 		array['designation'] = $("select[name='designation']").val();
@@ -237,24 +228,23 @@ if (isset($_GET['id'])) {
 			success: function(data) {
 				if (data.trim() === '1') {
 					alert_toast('Instructor Successfully Updated', 'success');
-					resetForm(); // Reset the form
-					reloadPage(); // Call reloadPage() instead of location.reload()
+					// resetForm();
+					location.reload();
 				} else {
 					alert_toast('Failed to update instructor', 'danger');
-					resetForm(); // Reset the form
-					reloadPage(); // Call reloadPage() instead of location.reload()
+					$('input[type="submit"]').prop('disabled', false);
 				}
 			},
 			error: function() {
 				alert_toast('Something Went Wrong!', 'danger');
-				resetForm(); // Reset the form
-				reloadPage(); // Call reloadPage() instead of location.reload()
+				$('input[type="submit"]').prop('disabled', false);
 			}
 		});
 	}
 
 	function resetForm() {
-		document.getElementById("instructorForm").reset(); // Reset the form
-		$('input[type="submit"]').prop('disabled', false); // Enable the submit button
+		$('#instructorForm')[0].reset();
+		$('#instructorForm').removeClass('was-validated');
+		$('input[type="submit"]').prop('disabled', false);
 	}
 </script>

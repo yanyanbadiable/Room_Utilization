@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>Faculty Scheduling Management System</title>
+  <title>Room Utilization Management System</title>
 
 
   <?php
@@ -169,7 +169,7 @@
       url: $url,
       error: err => {
         console.log()
-        alert("An error occured")
+        alert("An error occurred")
       },
       success: function(resp) {
         if (resp) {
@@ -220,14 +220,7 @@
       $(this).remove();
     })
   })
-  // $('.datetimepicker').datetimepicker({
-  //   format: 'Y/m/d H:i',
-  //   startDate: '+3d'
-  // })
-  // $('.select2').select2({
-  //   placeholder: "Please select here",
-  //   width: "100%"
-  // })
+
 </script>
 
 </html>

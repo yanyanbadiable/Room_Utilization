@@ -46,10 +46,12 @@ ob_end_flush();
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		gap: 20px;
+		/* gap: 20px; */
 		position: relative;
 	}
 	form{
+		width: 350px;
+		padding: 50px 30px;
 		background-color: #ffffff;
 		/* border: 1px solid green; */
 		box-shadow: rgba(255, 255, 255, 0.30) 0px 3px 8px;
@@ -77,9 +79,9 @@ ob_end_flush();
 	<main>
 		<div id="container" class="container-lg">
 			
-			<form id="login-form" class="p-5">
+			<form id="login-form" class="">
 				<div class="logo" id="logo">
-					<h1>ADMIN LOGIN</h1>
+					<h1>LOGIN</h1>
 				</div>
 				<div class="form-group">
 					<label for="username" class="control-label">Username</label>
@@ -89,7 +91,7 @@ ob_end_flush();
 					<label for="password" class="control-label">Password</label>
 					<input type="password" id="password" name="password" class="form-control">
 				</div>
-				<center><button >Login</button></center>
+				<button class="align-center">Login</button>
 				<!-- class="btn-md btn-block btn-wave col-md-4 btn-primary" -->
 			</form>
 		</div>
@@ -117,8 +119,11 @@ ob_end_flush();
 			success: function(resp) {
 				if (resp == 1) {
 					location.href = 'index.php?page=home';
-				} else {
-					$('#login-form').prepend('<div class="alert alert-danger">Username or password is incorrect.</div>')
+				} else if (resp == 2){
+					location.href = '../super_admin/index.php?page=home';
+				}
+				else {
+					$('#login-form').prepend('<div class="alert alert-danger text-center">Username or password is incorrect.</div>')
 					$('#login-form button[type="button"]').removeAttr('disabled').html('Login');
 				}
 			}

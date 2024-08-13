@@ -1,3 +1,11 @@
+<?php
+    include '../admin/db_connect.php'; 
+
+    $user_program_id = $_SESSION['login_program_id'];
+    $program = $conn->query("SELECT id, program_code FROM program WHERE id = $user_program_id");
+    $row = $program->fetch_assoc();
+
+?>
 
 <style>
     img {
@@ -75,7 +83,7 @@
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseRoom" aria-expanded="true" aria-controls="collapseRoom">
                     <i class="fas fa-cogs"></i>
-                    <span>Space Management</span>
+                    <span>Room Management</span>
                 </a>
                 <div id="collapseRoom" class="collapse" aria-labelledby="headingRoom" data-parent="#accordionSidebar">
                     <div class="bg-danger py-2 collapse-inner rounded ">
@@ -98,8 +106,11 @@
                 <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
                     <div class="bg-danger py-2 collapse-inner rounded ">
                         <a class="_hover collapse-item text-white" href="index.php?page=courses">
-                            <i class="fa fa-edit"></i> <span>Course</span>
+                            <i class="fa fa-edit"></i> <span>Manage Course</span>
                         </a>
+                        <!-- <a class="_hover collapse-item text-white" href="index.php?page=room_schedules">
+                            <i class="fa fa-edit"></i> <span>Course</span>
+                        </a> -->
                         <a class="_hover collapse-item text-white" href="index.php?page=course_offering">
                             <i class="fa fa-edit"></i> <span>Course Offering</span>
                         </a>
@@ -174,7 +185,7 @@
                         <!-- Nav Item - User Information -->
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $_SESSION['login_fname'] ?></span>
+                                <span class="mr-3 d-none d-lg-inline text-gray-600 small"><?php echo $row['program_code'] ?> - ADMIN</span>
                                 <img class="img-profile rounded-circle" src="../assets/img/undraw_profile.svg">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
@@ -229,7 +240,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel"><?php echo $_SESSION['login_fname'] ?></h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Confirmation</h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>

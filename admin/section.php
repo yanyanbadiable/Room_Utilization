@@ -46,7 +46,7 @@ $user_program_id = $_SESSION['login_program_id'];
                         </div>
                         <div class="form-group">
                             <label for="" class="control-label">Level</label>
-                            <select class=" form-control" name="level" required>
+                            <select class="form-control" name="level" required>
                                 <option>Please Select here</option>
                                 <option value="1st Year" <?php echo isset($level) && $level == '1st Year' ? 'selected' : ''; ?>>1st Year</option>
                                 <option value="2nd Year" <?php echo isset($level) && $level == '2nd Year' ? 'selected' : ''; ?>>2nd Year</option>
@@ -94,7 +94,7 @@ $user_program_id = $_SESSION['login_program_id'];
                             <tbody>
                                 <?php
                                 $i = 1;
-                                $section = $conn->query("SELECT sections.*, program.program_code FROM sections INNER JOIN program ON sections.program_id = program.id WHERE sections.program_id = $user_program_id");
+                                $section = $conn->query("SELECT sections.*, program.program_code FROM sections INNER JOIN program ON sections.program_id = program.id WHERE sections.program_id = $user_program_id ORDER BY level ASC, section_name ASC");
                                 if (!$section) {
                                     die('Invalid query: ' . $conn->error);
                                 }
@@ -131,10 +131,23 @@ $user_program_id = $_SESSION['login_program_id'];
 
 <script>
     function _reset() {
+        $('#manage-section').find('[name="id"]').val('');
+        // $('#manage-section').find('[name="level"]').val('');
         $('#manage-section').find('[name="section_name"]').val('');
     }
+
     $('#manage-section').submit(function(e) {
         e.preventDefault();
+
+        // Validate input fields
+        var level = $('[name="level"]').val();
+        var section_name = $('[name="section_name"]').val();
+
+        if (!level || level == "Please Select here" || !section_name) {
+            alert_toast("Please fill in all fields", 'danger');
+            return; // Exit function if any field is empty
+        }
+
         start_load();
         $.ajax({
             url: 'ajax.php?action=save_section',
@@ -162,12 +175,8 @@ $user_program_id = $_SESSION['login_program_id'];
 
         });
     });
+
     $('.edit_section').click(function() {
-        console.log("Edit button clicked");
-        console.log("Data ID: ", $(this).attr('data-id'));
-        console.log("Program ID: ", $(this).attr('data-program_id'));
-        console.log("Level: ", $(this).attr('data-level'));
-        console.log("Section Name: ", $(this).attr('data-section_name'));
         start_load();
         var cat = $('#manage-section');
         cat.get(0).reset();
@@ -196,12 +205,8 @@ $user_program_id = $_SESSION['login_program_id'];
                     setTimeout(function() {
                         location.reload();
                     }, 1000);
-
                 }
             }
         });
     }
-    // $(document).ready(function() {
-    //     $('#dataTable').DataTable();
-    // });
 </script>

@@ -64,6 +64,7 @@ if ($result) {
                                             <select class="form-control" id="period1" name="period[]">
                                                 <option value="1st Semester">1st Semester</option>
                                                 <option value="2nd Semester">2nd Semester</option>
+                                                <option value="Mid Year">Mid Year</option>
                                             </select>
                                         </td>
                                         <td>
@@ -76,9 +77,9 @@ if ($result) {
                                         </td>
                                         <td><input type="text" class="form-control" name="course_code[]" id="code1"></td>
                                         <td><input type="text" class="form-control" name="course_name[]" id="name1"></td>
-                                        <td><input type="number" min="0" class="form-control" name="lec[]" id="lec1" onchange="calculateUnits(1)"></td>
-                                        <td><input type="number" min="0" class="form-control" name="lab[]" id="lab1" onchange="calculateUnits(1)"></td>
-                                        <td><input type="number" min="0" class="form-control" name="units[]" id="units1" readonly></td>
+                                        <td><input type="number" value="0" min="0" class="form-control" name="lec[]" id="lec1" onchange="calculateUnits(1)"></td>
+                                        <td><input type="number" value="0" min="0" class="form-control" name="lab[]" id="lab1" onchange="calculateUnits(1)"></td>
+                                        <td><input type="number" value="0" min="0" class="form-control" name="units[]" id="units1" readonly></td>
                                         <td align="center">
                                             <select class="form-control" id="comlab1" name="is_comlab[]">
                                                 <option value="0">No</option>
@@ -100,6 +101,13 @@ if ($result) {
 </section>
 
 <script>
+    function formatHours(hours) {
+        var hoursInt = Math.floor(hours);
+        var minutes = (hours - hoursInt) * 60;
+        minutes = Math.round(minutes);
+        return hoursInt + ':' + (minutes < 10 ? '0' : '') + minutes;
+    }
+
     function calculateUnits(index) {
         var lec = document.getElementById('lec' + index).value;
         var lab = document.getElementById('lab' + index).value;
@@ -112,33 +120,30 @@ if ($result) {
         document.getElementById('units' + index).value = units;
 
         var hours = lec + lab;
-        document.getElementById('hours' + index).value = hours;
+        document.getElementById('hours' + index).value = formatHours(hours);
+
     }
 
     $(document).ready(function() {
         var no = 1;
         $('.add').on('click', function(e) {
-            if ($("#code" + no).val() == "" || $("#name" + no).val() == "" || $("#units" + no).val() == "") {
-                alert_toast('Please Fill-up Required Fields', 'danger');
-            } else {
-                no++;
-                var program_id = <?php echo $_SESSION['login_program_id']; ?>;
+            no++;
+            var program_id = <?php echo $_SESSION['login_program_id']; ?>;
 
-                $('#dynamic_field').append(`<tr id='row${no}'>
+            $('#dynamic_field').append(`<tr id='row${no}'>
                     <input type="hidden" class="form-control" name="year[]" id="year" value="<?php echo date('Y'); ?>">
                     <input type="hidden" class="form-control" name="program_id[]" value="${program_id}">
                     <input type="hidden" class="form-control" name="hours[]" id="hours${no}">
                     <td><button class='btn btn-flat btn-danger remove btn-block' id='${no}'><i class='fa fa-times'></i></button></td>
-                    <td><select class='form-control' name='period[]' id='period${no}'><option value='1st Semester'>1st Semester</option><option value='2nd Semester'>2nd Semester</option></select></td>
-                    <td><select class='form-control' name='level[]' id='level${no}'><option value='1st Year'>1st Year</option><option value='2nd Year'>2nd Year</option><option value='3rd Year'>3rd Year</option><option value='4th Year'>4th Year</option><option value='5th Year'>5th Year</option></select></td>
+                    <td><select class='form-control' name='period[]' id='period${no}'><option value='1st Semester'>1st Semester</option><option value='2nd Semester'>2nd Semester</option><option value='Mid Year'>Mid Year</option></select></td>
+                    <td><select class='form-control' name='level[]' id='level${no}'><option value='1st Year'>1st Year</option><option value='2nd Year'>2nd Year</option><option value='3rd Year'>3rd Year</option><option value='4th Year'>4th Year</option></select></td>
                     <td><input type='text' class='form-control' name='course_code[]' id='code${no}'></td>
                     <td><input type='text' class='form-control' name='course_name[]' id='name${no}'></td>
-                    <td><input type='number' min="0" class='form-control' name='lec[]' id='lec${no}' onchange='calculateUnits(${no})'></td>
-                    <td><input type='number' min="0" class='form-control' name='lab[]' id='lab${no}' onchange='calculateUnits(${no})'></td>
-                    <td><input type='number' min="0" class='form-control' name='units[]' id='units${no}' readonly></td>
+                    <td><input type='number' value="0" min="0" class='form-control' name='lec[]' id='lec${no}' onchange='calculateUnits(${no})'></td>
+                    <td><input type='number' value="0" min="0" class='form-control' name='lab[]' id='lab${no}' onchange='calculateUnits(${no})'></td>
+                    <td><input type='number' value="0" min="0" class='form-control' name='units[]' id='units${no}' readonly></td>
                     <td align='center'><select class='form-control' id='comlab${no}' name='is_comlab[]'><option value='0'>No</option><option value='1'>Yes</option></select></td>
                 </tr>`);
-            }
             e.preventDefault();
             return false;
         });
@@ -156,6 +161,8 @@ if ($result) {
 
             start_load();
             var form = this;
+
+            console.log($(form).serialize())
             $.ajax({
                 url: 'ajax.php?action=save_course',
                 method: 'POST',

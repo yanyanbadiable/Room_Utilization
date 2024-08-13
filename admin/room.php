@@ -6,6 +6,9 @@ if (isset($_GET['id'])) {
         $$k = $v;
     }
 }
+$user_program_id = $_SESSION['login_program_id'];
+$program = $conn->query("SELECT id, program_code FROM program WHERE id = $user_program_id");
+$row = $program->fetch_assoc();
 ?>
 
 <div class="container-fluid">
@@ -30,6 +33,7 @@ if (isset($_GET['id'])) {
                 <div class="card-body">
                     <form id="manage-room">
                         <input type="hidden" name="id">
+                        <input type="hidden" name="program_id" value="<?php echo $row['id'] ?>">
                         <div class="form-group">
                             <label class="control-label">Room</label>
                             <input type="text" class="form-control" name="room">
@@ -37,6 +41,13 @@ if (isset($_GET['id'])) {
                         <div class="form-group">
                             <label class="control-label">Description</label>
                             <input type="text" class="form-control" name="description">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Is Laboratory?</label>
+                            <select class="form-control" name="is_lab">
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label class="control-label">Building</label>
@@ -49,22 +60,21 @@ if (isset($_GET['id'])) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                        <div class="card-footer">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
-                                    <button class="btn btn-sm btn-light col-sm-3" type="button" onclick="_reset()">Cancel</button>
-                                </div>
-                            </div>
-                        </div>
                     </form>
+                </div>
+                <div class="card-footer">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
+                            <button class="btn btn-sm btn-light col-sm-3" type="button" onclick="_reset()">Cancel</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
         <!-- End Room Form Panel -->
 
         <style>
-            /* Custom CSS for better visibility */
             th,
             td {
                 vertical-align: middle !important;
@@ -79,7 +89,6 @@ if (isset($_GET['id'])) {
                 -webkit-overflow-scrolling: touch;
             }
 
-            /* Add a max-height to the card-body to avoid excessive height */
             .card-body {
                 max-height: 60vh;
                 overflow-y: auto;
@@ -100,14 +109,14 @@ if (isset($_GET['id'])) {
                                     <th class="text-center">Room</th>
                                     <th class="text-center">Description</th>
                                     <th class="text-center">Building</th>
-                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Lab</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
                                 $i = 1;
-                                $room = $conn->query("SELECT rooms.*, building.building FROM rooms INNER JOIN building ON rooms.building_id = building.id;");
+                                $room = $conn->query("SELECT rooms.*, building.building FROM rooms INNER JOIN building ON rooms.building_id = building.id AND rooms.program_id = $user_program_id");
                                 if (!$room) {
                                     die('Invalid query: ' . $conn->error);
                                 }
@@ -116,17 +125,19 @@ if (isset($_GET['id'])) {
                                     <tr>
                                         <td class="text-center"><?php echo $i++ ?></td>
                                         <td class=""><?php echo $row['room'] ?></td>
-                                        <td class=""><?php echo $row['description'] ?></td>
+                                        <td class="">
+                                            <?php echo !empty($row['description']) ? $row['description'] : 'No Description'; ?>
+                                        </td>
                                         <td class=""><?php echo $row['building'] ?></td>
                                         <td class="text-center">
-                                            <?php if ($row['is_available'] == 1) : ?>
-                                                <span class="badge badge-success" style="font-size: 16px;">Active</span>
+                                            <?php if ($row['is_lab'] == 1) : ?>
+                                                <span class="badge badge-success" style="font-size: 16px;">Yes</span>
                                             <?php else : ?>
-                                                <span class="badge badge-danger" style="font-size: 16px;">Inactive</span>
+                                                <span class="badge badge-danger" style="font-size: 16px;">No</span>
                                             <?php endif; ?>
 
                                         <td class="text-center">
-                                            <button class="btn btn-sm btn-primary edit_room" type="button" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-room="<?php echo $row['room'] ?>" data-description="<?php echo $row['description'] ?>" data-building="<?php echo $row['building_id'] ?>">Edit</button>
+                                            <button class="btn btn-sm btn-primary edit_room" type="button" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-room="<?php echo $row['room'] ?>" data-description="<?php echo $row['description'] ?>" data-is_lab="<?php echo $row['is_lab'] ?>" data-building="<?php echo $row['building_id'] ?>">Edit</button>
                                             <button class="btn btn-sm btn-danger delete_room" type="button" data-id="<?php echo $row['id'] ?>">Delete</button>
                                         </td>
                                     </tr>
@@ -149,19 +160,23 @@ if (isset($_GET['id'])) {
 <script>
     function _reset() {
         $('#manage-room').get(0).reset();
-        // Validate input fields
         var room = $('[name="room"]').val();
         var description = $('[name="description"]').val();
-        var building_id = $('[name="building_id"]').val();
-
-        if (!room || !description || !building_id) {
-            alert_toast("Please fill in all fields", 'error');
-            return; // Exit function if any field is empty
-        }
-        $('#manage-room input, #manage-room textarea, #manage-room select').val('');
+        $('#manage-room input, #manage-room textarea').val('');
     }
+
     $('#manage-room').submit(function(e) {
         e.preventDefault();
+
+        var room = $('[name="room"]').val();
+        var is_lab = $('[name="is_lab"]').val();
+        var building_id = $('[name="building_id"]').val();
+
+        if (!room || !building_id) {
+            alert_toast("Please fill in all fields", 'danger');
+            return; 
+        }
+
         start_load();
         $.ajax({
             url: 'ajax.php?action=save_room',
@@ -189,6 +204,7 @@ if (isset($_GET['id'])) {
             }
         });
     });
+
     $('.edit_room').click(function() {
         start_load();
         var cat = $('#manage-room');
@@ -196,9 +212,11 @@ if (isset($_GET['id'])) {
         cat.find("[name='id']").val($(this).attr('data-id'));
         cat.find("[name='room']").val($(this).attr('data-room'));
         cat.find("[name='description']").val($(this).attr('data-description'));
+        cat.find("[name='is_lab']").val($(this).attr('data-is_lab'));
         cat.find("[name='building_id']").val($(this).attr('data-building'));
         end_load();
     });
+
     $('.delete_room').click(function() {
         _conf("Are you sure to delete this room?", "delete_room", [$(this).attr('data-id')]);
     });
@@ -217,11 +235,11 @@ if (isset($_GET['id'])) {
                     setTimeout(function() {
                         location.reload();
                     }, 100);
-
                 }
             }
         });
     }
+
     $(document).ready(function() {
         $('#dataTable').DataTable();
     });

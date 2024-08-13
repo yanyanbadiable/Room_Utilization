@@ -13,7 +13,7 @@
   <?php
   if (!isset($_SESSION['login_id']))
     header('location:login.php');
-  include('../includes/header.php');
+  include '../includes/header.php';
   // include('./auth.php'); 
   ?>
 
@@ -220,14 +220,14 @@
       $(this).remove();
     })
   })
-  $('.datetimepicker').datetimepicker({
-    format: 'Y/m/d H:i',
-    startDate: '+3d'
-  })
-  $('.select2').select2({
-    placeholder: "Please select here",
-    width: "100%"
-  })
+  // $('.datetimepicker').datetimepicker({
+  //   format: 'Y/m/d H:i',
+  //   startDate: '+3d'
+  // })
+  // $('.select2').select2({
+  //   placeholder: "Please select here",
+  //   width: "100%"
+  // })
 </script>
 
 </html>
