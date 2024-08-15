@@ -93,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
             sec.section_name, 
             sec.level,
             p.program_code,
+            coi.section_id,
             TIMESTAMPDIFF(MINUTE, s.time_start, s.time_end) AS difference
         FROM 
             schedules s
@@ -134,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
         $timeRange = generateTimeRange('08:00', '19:00');
         $schedules = fetchSchedules($instructor);
         $skipSlots = [];
-        $facultyColors = [];
+        $sectionColors = [];
 
         foreach ($timeRange as $timeIndex => $time) {
             foreach ($weekDays as $dayCode => $dayName) {
@@ -153,8 +154,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
 
                         $sectionNameConcatenated = $schedule['program_code'] . '-' . substr($schedule['level'], 0, 1) . $schedule['section_name'];
 
-                        if (!isset($facultyColors[$schedule['faculty_id']])) {
-                            $facultyColors[$schedule['faculty_id']] = generateLightColor($schedule['faculty_id']);
+                        if (!isset($sectionColors[$schedule['section_id']])) {
+                            $sectionColors[$schedule['section_id']] = generateLightColor($schedule['section_id']);
                         }
 
                         $calendarData[$time['displayStart'] . ' - ' . $time['displayEnd']][$dayCode] = [
@@ -164,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                             'rowspan' => $duration,
                             'schedule_id' => $schedule['id'],
                             'instructor_id' => $instructor,
-                            'background_color' => $facultyColors[$schedule['faculty_id']]
+                            'background_color' => $sectionColors[$schedule['section_id']]
                         ];
                         for ($i = 1; $i < $duration; $i++) {
                             $skipSlots[$dayCode][$timeIndex + $i] = true;

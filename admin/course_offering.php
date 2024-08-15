@@ -1,5 +1,5 @@
 <?php include('db_connect.php'); ?>
-<div class="container-fluid">
+<div class="container-fluid p-3">
     <div class="row">
         <!-- Section Header -->
         <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">

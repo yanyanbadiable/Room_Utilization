@@ -18,7 +18,7 @@ if ($result) {
     }
 </style>
 
-<section class="content container-fluid">
+<section class="content container-fluid p-3">
     <div class="row">
         <div class="col-sm-12">
             <!-- Section Header -->

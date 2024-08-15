@@ -264,12 +264,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
 </style>
 
 
-<div class="container-fluid">
+<div class="container-fluid p-2">
     <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
         <h3><i class="fa fa-calendar-check"></i> Course Scheduling</h3>
         <ol class="breadcrumb bg-transparent p-0 m-0">
             <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
-            <li class="breadcrumb-item active"> Course Management</li>
+            <li class="breadcrumb-item"><a href="index.php?page=course_scheduling">Academic Program</a></li>
             <li class="breadcrumb-item active">Course Scheduling</li>
         </ol>
     </section>
@@ -393,7 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                                                 <td class="text-center p-2" style="font-size:0.9rem;"><?php echo $time; ?></td>
                                                 <?php foreach ($days as $dayCode => $value) : ?>
                                                     <?php if (isset($value['rowspan'])) : ?>
-                                                        <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center clickable" style="background-color:<?php echo $value['background_color']; ?>; color: #000; font-size: 14px;" data-schedule-id="<?php echo $value['schedule_id']; ?>" data-offering-id="<?php echo $value['course_offering_info_id']; ?>">
+                                                        <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center clickable" style="background-color:<?php echo $value['background_color']; ?>; color: #000; font-size: 0.7rem;" data-schedule-id="<?php echo $value['schedule_id']; ?>" data-offering-id="<?php echo $value['course_offering_info_id']; ?>">
                                                             <?php echo $value['course_name']; ?><br>
                                                             <b class="text-uppercase">
                                                                 <?php echo $value['room_name']; ?><br>

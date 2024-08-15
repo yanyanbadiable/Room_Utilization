@@ -24,11 +24,11 @@
         <ul class="navbar-nav bg-gradient-danger sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php?page=home">
+            <a class="sidebar-brand d-flex align-items-center justify-content-start" href="index.php?page=home">
                 <div class="sidebar-brand-icon">
                     <img src="../assets/img/1-removebg-preview.png" alt="logo">
                 </div>
-                <div class="sidebar-brand-text ml-3">Super Admin</div>
+                <div class="sidebar-brand-text ml-3">A D R U M S</div>
             </a>
 
             <!-- Divider -->

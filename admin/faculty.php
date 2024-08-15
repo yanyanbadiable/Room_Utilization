@@ -15,7 +15,7 @@ if ($result) {
 }
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid p-3">
     <div class="row">
         <div class="col-md-12 d-flex align-items-center justify-content-between mb-3">
             <h3><i class="fas fa-users"></i> List of Instructors</h3>

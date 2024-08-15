@@ -2,7 +2,7 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12">
+        <div class="col-sm-12 p-0">
             <!-- Section Header -->
             <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
                 <h3><i class="fa fa-spinner"></i> Course Scheduling</h3>
@@ -12,7 +12,7 @@
                     <li class="breadcrumb-item active"> Academic Program</li>
                 </ol>
             </section>
-            <div class="container-fluid" style="margin-top: 15px;">
+            <div class="container-fluid p-2" style="margin-top: 15px;">
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h5 class="card-title m-0">Academic Programs</h5>

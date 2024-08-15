@@ -13,8 +13,7 @@ if ($result) {
     }
 }
 ?>
-
-<div class="container-fluid">
+<div class="container-fluid p-0">
     <div class="row">
         <div class="col-sm-12">
             <!-- Section Header -->
@@ -26,7 +25,7 @@ if ($result) {
                     <li class="breadcrumb-item active"> Room Reports</li>
                 </ol>
             </section>
-            <div class="container-fluid" style="margin-top: 15px;">
+            <div class="container-fluid m-0 p-2" style="margin-top: 15px;">
                 <div class="card shadow mb-4">
                     <div class="card-header">
                         <h5>Search Room</h5>

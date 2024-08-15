@@ -6,7 +6,7 @@ if (isset($_GET['id'])) {
 
 	$facultyQuery = "
     SELECT faculty.*, 
-           program.program_code, 
+           program.department, 
            unit_loads.designation 
     FROM faculty 
     INNER JOIN program ON faculty.program_id = program.id 
@@ -23,16 +23,20 @@ if (isset($_GET['id'])) {
 		echo "Error preparing statement: (" . $conn->errno . ") " . $conn->error;
 	}
 
-	$programsQuery = "SELECT DISTINCT id, program_code FROM program";
-	$programResult = mysqli_query($conn, $programsQuery);
+	$program_id = $_SESSION['login_program_id'];
+	$programsQuery = "SELECT id, department FROM program WHERE id = ?";
+	$stmt = $conn->prepare($programsQuery);
+	if ($stmt) {
+		$stmt->bind_param("i", $program_id);
+		$stmt->execute();
+		$result = $stmt->get_result();
 
-	if ($programResult) {
+		$program = $result->fetch_assoc();
+
 		$programs = [];
-		while ($row = mysqli_fetch_assoc($programResult)) {
-			$programs[] = $row;
+		if ($program) {
+			$programs[] = $program;
 		}
-	} else {
-		echo "Error fetching programs: " . mysqli_error($conn);
 	}
 
 	$designationsQuery = "SELECT DISTINCT id, designation FROM unit_loads";
@@ -50,8 +54,8 @@ if (isset($_GET['id'])) {
 ?>
 
 
-<div class="container-fluid">
-	<section class="content-header row align-items-center justify-content-between mb-3">
+<div class="container-fluid p-3">
+	<section class="content-header row align-items-center justify-content-between mb-3 px-3">
 		<h3><i class="fa fa-user-edit"></i> Update Instructor</h3>
 		<ol class="breadcrumb bg-transparent p-0 m-0">
 			<li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
@@ -148,15 +152,8 @@ if (isset($_GET['id'])) {
 						<div class="form-group row">
 							<div class="col-md-6">
 								<label><b>Department</b></label>
-								<select name="program" class="form-control" required>
-									<option value="" disabled selected hidden>Select Department</option>
-									<?php foreach ($programs as $program) : ?>
-										<option value="<?php echo $program['id']; ?>" <?php if ($faculty['program_code'] == $program['program_code']) echo "selected='selected'"; ?>>
-											<?php echo $program['program_code']; ?>
-										</option>
-									<?php endforeach; ?>
-								</select>
-								<div class="invalid-feedback">Department is required.</div>
+								<input type="text" class='form-control' name="program" value="<?php echo $program['department']; ?>" disabled>
+								<input type="hidden" name="program_id" value="<?php echo $program['id']; ?>">
 							</div>
 							<div class="col-md-6">
 								<label><b>Employee Status</b></label>

@@ -11,7 +11,7 @@ $program = $conn->query("SELECT id, program_code FROM program WHERE id = $user_p
 $row = $program->fetch_assoc();
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid p-3">
     <div class="row">
         <!-- Section Header -->
         <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
@@ -32,9 +32,8 @@ $row = $program->fetch_assoc();
                 </div>
                 <div class="card-body">
                     <form id="manage-room">
-                        <input type="hidden" name="id">
-                        <input type="hidden" name="program_id" value="<?php echo $row['id'] ?>">
                         <div class="form-group">
+                            <input type="hidden" name="program_id" value="<?php echo $row['id'] ?>">
                             <label class="control-label">Room</label>
                             <input type="text" class="form-control" name="room">
                         </div>
@@ -65,7 +64,7 @@ $row = $program->fetch_assoc();
                 <div class="card-footer">
                     <div class="row">
                         <div class="col-md-12">
-                            <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
+                            <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3" id="submitBtn">Save</button>
                             <button class="btn btn-sm btn-light col-sm-3" type="button" onclick="_reset()">Cancel</button>
                         </div>
                     </div>
@@ -167,17 +166,19 @@ $row = $program->fetch_assoc();
 
     $('#manage-room').submit(function(e) {
         e.preventDefault();
-
+        console.log('Submit button clicked');
         var room = $('[name="room"]').val();
         var is_lab = $('[name="is_lab"]').val();
+        var description = $('[name="description"]').val();
         var building_id = $('[name="building_id"]').val();
 
         if (!room || !building_id) {
             alert_toast("Please fill in all fields", 'danger');
-            return; 
+            return;
         }
 
         start_load();
+
         $.ajax({
             url: 'ajax.php?action=save_room',
             data: new FormData($(this)[0]),

@@ -8,7 +8,12 @@
 ?>
 
 <style>
-    img {
+    @media print{
+       #accordionSidebar {
+            display: none;
+        }
+    }
+    .sidebar-brand-icon img {
         width: 40px;
         height: 40px;
         background-color: #ffffff;
@@ -33,11 +38,11 @@
         <ul class="navbar-nav bg-gradient-danger sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php?page=home">
+            <a class="sidebar-brand d-flex align-items-center justify-content-start" href="index.php?page=home">
                 <div class="sidebar-brand-icon">
                     <img src="../assets/img/1-removebg-preview.png" alt="logo">
                 </div>
-                <div class="sidebar-brand-text mx-3">RU - Admin</div>
+                <div class="sidebar-brand-text ml-3">A D R U M S</div>
             </a>
 
             <!-- Divider -->

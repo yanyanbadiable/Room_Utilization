@@ -12,7 +12,7 @@ if ($result->num_rows > 0) {
 }
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid p-2">
     <div class="row">
         <div class="col-sm-12">
             <!-- Section Header -->
@@ -77,8 +77,7 @@ if ($result->num_rows > 0) {
 </div>
 <script>
     $(document).ready(function() {
-        // $('.draggable').data('duration', '03:00');
-
+        
         $('#displayInstructor').hide();
         $('#displaySearch').hide();
 

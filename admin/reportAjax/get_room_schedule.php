@@ -81,7 +81,7 @@ if (isset($_GET['room_id'])) {
         WHERE 
             room_id = ? AND
             s.day IN ('M', 'T', 'W', 'Th', 'F', 'S') AND
-            s.time_start BETWEEN '08:00' AND '19    :00'
+            s.time_start BETWEEN '08:00' AND '19:00'
     ";
 
         $stmt = $conn->prepare($sql);
@@ -104,10 +104,10 @@ if (isset($_GET['room_id'])) {
     function generateCalendarData($weekDays, $room_id)
     {
         $calendarData = [];
-        $timeRange = generateTimeRange('08:00', '19 :00');
+        $timeRange = generateTimeRange('08:00', '19:00');
         $schedules = fetchSchedules($room_id);
         $skipSlots = [];
-        $coursesColors = [];
+        $facultyColors = [];
 
         foreach ($timeRange as $timeIndex => $time) {
             foreach ($weekDays as $dayCode => $dayName) {
@@ -163,6 +163,21 @@ if (isset($_GET['room_id'])) {
         @page {
             size: landscape;
         }
+
+        #card-container {
+            max-width: unset;
+            box-shadow: none;
+            border: 0px;
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin: 0;
+            padding: 15px;
+            font-size: 15px;
+        }
+
         #header {
             display: flex;
             justify-content: center;
@@ -194,12 +209,14 @@ if (isset($_GET['room_id'])) {
         }
 
         .table {
+            font-size: 12px;
             width: 100%;
             border-collapse: collapse;
         }
 
         .table th,
         .table td {
+            font-size: 12px;
             border: 1px solid #000;
             padding: 8px;
             text-align: center;
@@ -213,9 +230,10 @@ if (isset($_GET['room_id'])) {
     }
 
     #header img {
-        width: 100px;
+        /* width: 100px; */
         height: 100px;
-        margin-right: 2rem;
+        /* object-fit: cover;
+        object-position: center; */
     }
 
     .header-text {
@@ -248,82 +266,86 @@ if (isset($_GET['room_id'])) {
     }
 </style>
 
-<div class="card shadow p-4">
-    <div class="printable">
-        <div id="header" class="mb-3">
-            <img src="../assets/img/1-removebg-preview.png" alt="">
-            <div class="text-container">
-                <div class="header-text">
-                    <h6 class="m-1">Republic of the Philippines</h6>
-                    <h6><b>EASTERN VISAYAS STATE UNIVERSITY CARIGARA CAMPUS</b></h6>
-                    <h6 class="mb-1">Carigara, Leyte</h6>
-                    <h6><b class="text-uppercase"><?php echo $program['department'] ?></b></h6>
-                </div>
-                <div class="header-text">
-                    <h5><b>ROOM UTILIZATION</b></h5>
-                </div>
-                <div class="sub-header-text">
-                    <?php
-                    $currentDate = date('Y-m-d');
-                    $query = "SELECT * FROM semester WHERE start_date <= '$currentDate' AND end_date >= '$currentDate' LIMIT 1";
-                    $result = mysqli_query($conn, $query);
+<div class="card shadow p-4 mb-4" id="card-container">
+    <div id="header" class="mb-3">
+        <img src="../assets/img/1-removebg-preview.png" alt="" class="mr-4">
+        <div class="text-container">
+            <div class="header-text">
+                <h6 class="m-1">Republic of the Philippines</h6>
+                <h6><b>EASTERN VISAYAS STATE UNIVERSITY CARIGARA CAMPUS</b></h6>
+                <h6 class="mb-1">Carigara, Leyte</h6>
+                <h6><b class="text-uppercase"><?php echo $program['department'] ?></b></h6>
+            </div>
+            <div class="header-text">
+                <h5><b>ROOM UTILIZATION</b></h5>
+            </div>
+            <div class="sub-header-text">
+                <?php
+                $currentDate = date('Y-m-d');
+                $query = "SELECT * FROM semester WHERE start_date <= '$currentDate' AND end_date >= '$currentDate' LIMIT 1";
+                $result = mysqli_query($conn, $query);
 
-                    if (!$result) {
-                        echo "No Active Semester";
-                    } else {
-                        while ($row = $result->fetch_assoc()) :
-                    ?>
-                            <h6 style="text-transform: uppercase;"><?php echo $row['sem_name'] ?>, AY: <b>
-                                    <?php
-                                    $currentYear = date("Y");
-                                    $nextYear = $currentYear + 1;
-                                    echo "$currentYear-$nextYear";
-                                    ?>
-                                </b></h6>
-                    <?php
-                        endwhile;
-                    }
-                    ?>
-                </div>
-
+                if (!$result) {
+                    echo "No Active Semester";
+                } else {
+                    while ($row = $result->fetch_assoc()) :
+                ?>
+                        <h6 style="text-transform: uppercase;"><?php echo $row['sem_name'] ?>, AY: <b>
+                                <?php
+                                $currentYear = date("Y");
+                                $nextYear = $currentYear + 1;
+                                echo "$currentYear-$nextYear";
+                                ?>
+                            </b></h6>
+                <?php
+                    endwhile;
+                }
+                ?>
             </div>
         </div>
-        <div class="form form-group mb-2">
-            <h6><b>Course:</b> <?php echo $program['department'] ?></h6>
-            <h6 class="m-0"><b>Room:</b> <?php echo $room['room']  ?></h6>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr class="text-center">
-                        <th width="125" class="p-2">Time</th>
-                        <?php foreach ($weekDays as $day) : ?>
-                            <th class="p-2"><?php echo $day; ?></th>
-                        <?php endforeach; ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($calendarData as $time => $days) : ?>
-                        <tr>
-                            <td class="text-center p-2" style="font-size:0.9rem;"><?php echo $time; ?></td>
-                            <?php foreach ($days as $dayCode => $value) : ?>
-                                <?php if (isset($value['rowspan'])) : ?>
-                                    <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center clickable" style="background-color:<?php echo $value['background_color']; ?>; color: #000; " data-schedule-id="<?php echo $value['schedule_id']; ?>">
-                                        <?php echo $value['course_name']; ?><br>
-                                        <b class="text-uppercase">
-                                            <small><?php echo $value['section_name']; ?></small><br>
-                                            (<?php echo $value['faculty_name']; ?>)
-                                        </b>
-                                    </td>
-                                <?php else : ?>
-                                    <td></td>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+        <img src="../assets/img/Bagong_Pilipinas_logo.png" alt="" class="ml-4">
     </div>
-    <button class="btn btn-block btn-success" onclick="window.print()">Print Schedule</button>
+    <div class="form form-group mb-2">
+        <h6><b>Course:</b> <?php echo $program['department'] ?></h6>
+        <h6 class="m-0"><b>Room:</b> <?php echo $room['room']  ?></h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr class="text-center">
+                    <th width="125" class="p-2">Time</th>
+                    <?php foreach ($weekDays as $day) : ?>
+                        <th class="p-2"><?php echo $day; ?></th>
+                    <?php endforeach; ?>
+                    <th width="125" class="p-2">Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($calendarData as $time => $days) : ?>
+                    <tr>
+                        <td class="text-center p-2" style="font-size:0.9rem;"><?php echo $time; ?></td>
+                        <?php foreach ($days as $dayCode => $value) : ?>
+                            <?php if (isset($value['rowspan'])) : ?>
+                                <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center clickable" style="background-color:<?php echo $value['background_color']; ?>; color: #000; " data-schedule-id="<?php echo $value['schedule_id']; ?>">
+                                    <?php echo $value['course_name']; ?><br>
+                                    <b class="text-uppercase">
+                                        <small><?php echo $value['section_name']; ?></small><br>
+                                        (<?php echo $value['faculty_name']; ?>)
+                                    </b>
+                                </td>
+                            <?php else : ?>
+                                <td></td>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <td class="text-center p-2" style="font-size:0.9rem;"><?php echo $time; ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <br>
+    <br>
+    <h6>Prepared by:</h6>
+    <h5 class="font-weight-bold">____________________________</h5>
 </div>
+<button class="btn btn-block btn-success shadow mb-4" onclick="window.location.href='index.php?page=room_utilization_report&room_id=<?php echo $room_id; ?>'">Generate PDF</button>

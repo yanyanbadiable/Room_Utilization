@@ -1,16 +1,19 @@
 <?php
 include 'db_connect.php';
 
-$query = "SELECT DISTINCT id, program_name, program_code FROM program";
-$result = mysqli_query($conn, $query);
+$program_id = $_SESSION['login_program_id'];
 
-if ($result) {
-    $programs = [];
-    while ($row = mysqli_fetch_assoc($result)) {
-        $programs[] = $row;
-    }
-} else {
-    echo "Error: " . mysqli_error($conn);
+$query = "SELECT id, program_name, department FROM program WHERE id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $program_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$program = $result->fetch_assoc();
+
+$programs = [];
+if ($program) {
+    $programs[] = $program;
 }
 
 $query = "SELECT DISTINCT id, designation FROM unit_loads";
@@ -27,7 +30,7 @@ if ($result) {
 
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid p-3">
     <section class="content-header row d-flex align-items-center justify-content-between mb-3">
         <div class="col">
             <h3><i class="fa fa-user-plus"></i> Add New Instructor</h3>
@@ -134,13 +137,8 @@ if ($result) {
                         <div class="form-group row">
                             <div class="col-md-6">
                                 <label><b>Department</b></label>
-                                <select name="program" class="form-control" required>
-                                    <option value="" disabled selected hidden>Select Department</option>
-                                    <?php foreach ($programs as $program) : ?>
-                                        <option value="<?php echo $program['id']; ?>"><?php echo $program['program_code']; ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <div class="invalid-feedback">Department is required.</div>
+                                <input type="text" class='form-control' name="program" value="<?php echo $program['department']; ?>" disabled>
+                                <input type="hidden" name="program_id" value="<?php echo $program['id']; ?>">
                             </div>
                             <div class="col-md-6">
                                 <label><b>Employee Status</b></label>
@@ -170,15 +168,15 @@ if ($result) {
     $(document).ready(function() {
 
         $('#instructorForm').submit(function(event) {
-            event.preventDefault(); 
+            event.preventDefault();
 
             if (this.checkValidity() === false) {
                 $(this).addClass('was-validated');
-                return; 
+                return;
             }
 
-            $('input[type="submit"]').prop('disabled', true); 
-            addInstructor(); 
+            $('input[type="submit"]').prop('disabled', true);
+            addInstructor();
         });
     });
 
@@ -189,7 +187,7 @@ if ($result) {
             middlename: $("input[name='middlename']").val(),
             lastname: $("input[name='lastname']").val(),
             extensionname: $("input[name='extensionname']").val(),
-            program_id: $("select[name='program']").val(),
+            program_id: $("input[name='program_id']").val(),
             gender: $("select[name='gender']").val(),
             designation: $("select[name='designation']").val(),
             street: $("input[name='street']").val(),
@@ -221,8 +219,8 @@ if ($result) {
     }
 
     function resetForm() {
-        $('#instructorForm')[0].reset(); 
+        $('#instructorForm')[0].reset();
         $('#instructorForm').removeClass('was-validated');
-        $('input[type="submit"]').prop('disabled', false); 
+        $('input[type="submit"]').prop('disabled', false);
     }
 </script>

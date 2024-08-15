@@ -40,7 +40,7 @@ if (isset($_GET['program_code'])) {
     }
 }
 ?>
-<div class="container-fluid">
+<div class="container-fluid p-3">
     <div class="row">
         <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
             <h3><i class="far fa-folder"></i> View Course</h3>
