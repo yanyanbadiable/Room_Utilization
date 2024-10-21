@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET[
                 <h5>Courses to Offer</h5>
             </div>
             <div class="card-body">
-                <div class="alert alert-danger" role="alert">
+                <div class="alert alert-warning text-center" role="alert">
                     <h5><strong>No Courses to Offer Found!</strong></h5>
                 </div>
             </div>
@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET[
                 data: array,
                 success: function(data) {
                     alert_toast(data, 'success');
-                    searchcourse('<?php echo $year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_id; ?>', '<?php echo $program_id; ?>');
+                    searchCourse('<?php echo $year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_id; ?>', '<?php echo $program_id; ?>');
                 },
                 error: function() {
                     alert_toast('An error occurred while adding the course offer.', 'danger');

@@ -14,12 +14,16 @@ if (isset($_GET['room_id'])) {
     $program_result = $program_stmt->get_result();
     $program = $program_result->fetch_assoc();
 
-    $room_query = "SELECT * FROM rooms WHERE id = ?";
+    $room_query = "SELECT rooms.*, program.department FROM rooms INNER JOIN program ON rooms.program_id = program.id WHERE rooms.id = ?";
     $room_stmt = $conn->prepare($room_query);
     $room_stmt->bind_param("i", $room_id);
     $room_stmt->execute();
     $room_result = $room_stmt->get_result();
     $room = $room_result->fetch_assoc();
+
+    $head_query = "SELECT * FROM faculty WHERE designation = 1";
+    $head_result = mysqli_query($conn, $head_query);
+    $head = $head_result->fetch_assoc();
 
     // Timetable
 
@@ -29,7 +33,8 @@ if (isset($_GET['room_id'])) {
         'W' => 'Wednesday',
         'Th' => 'Thursday',
         'F' => 'Friday',
-        'S' => 'Saturday'
+        'S' => 'Saturday',
+        'Su' => 'Sunday'
     ];
     function generateTimeRange($startTime, $endTime)
     {
@@ -81,7 +86,7 @@ if (isset($_GET['room_id'])) {
         WHERE 
             room_id = ? AND
             s.day IN ('M', 'T', 'W', 'Th', 'F', 'S') AND
-            s.time_start BETWEEN '08:00' AND '19:00'
+            s.time_start BETWEEN '07:00' AND '19:00'
     ";
 
         $stmt = $conn->prepare($sql);
@@ -104,7 +109,7 @@ if (isset($_GET['room_id'])) {
     function generateCalendarData($weekDays, $room_id)
     {
         $calendarData = [];
-        $timeRange = generateTimeRange('08:00', '19:00');
+        $timeRange = generateTimeRange('07:00', '19:00');
         $schedules = fetchSchedules($room_id);
         $skipSlots = [];
         $facultyColors = [];
@@ -159,70 +164,6 @@ if (isset($_GET['room_id'])) {
 ?>
 
 <style>
-    @media print {
-        @page {
-            size: landscape;
-        }
-
-        #card-container {
-            max-width: unset;
-            box-shadow: none;
-            border: 0px;
-            height: 100%;
-            width: 100%;
-            position: fixed;
-            top: 0;
-            left: 0;
-            margin: 0;
-            padding: 15px;
-            font-size: 15px;
-        }
-
-        #header {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-        #header img {
-            width: 100px;
-            height: 100px;
-            margin-right: 2rem;
-        }
-
-        .header-text {
-            margin: 0;
-        }
-
-        .form {
-            margin-top: 1rem;
-        }
-
-        .header-text {
-            text-align: center;
-            font-size: 15px;
-        }
-
-        .sub-header-text {
-            text-align: center;
-            font-size: 12px;
-        }
-
-        .table {
-            font-size: 12px;
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .table th,
-        .table td {
-            font-size: 12px;
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: center;
-        }
-    }
-
     #header {
         display: flex;
         justify-content: center;
@@ -232,8 +173,6 @@ if (isset($_GET['room_id'])) {
     #header img {
         /* width: 100px; */
         height: 100px;
-        /* object-fit: cover;
-        object-position: center; */
     }
 
     .header-text {
@@ -242,6 +181,17 @@ if (isset($_GET['room_id'])) {
 
     .form {
         margin-top: 1rem;
+    }
+
+    .underline-text {
+        text-decoration: underline;
+    }
+
+    .underlined {
+        border: none;
+        border-bottom: 1px solid black;
+        width: auto;
+        text-align: center;
     }
 
     .header-text {
@@ -268,21 +218,26 @@ if (isset($_GET['room_id'])) {
 
 <div class="card shadow p-4 mb-4" id="card-container">
     <div id="header" class="mb-3">
-        <img src="../assets/img/1-removebg-preview.png" alt="" class="mr-4">
+        <img src="../assets/img/1-removebg-preview.jpeg" alt="" class="mr-4">
         <div class="text-container">
             <div class="header-text">
                 <h6 class="m-1">Republic of the Philippines</h6>
                 <h6><b>EASTERN VISAYAS STATE UNIVERSITY CARIGARA CAMPUS</b></h6>
                 <h6 class="mb-1">Carigara, Leyte</h6>
-                <h6><b class="text-uppercase"><?php echo $program['department'] ?></b></h6>
+                <h6><b class="text-uppercase"><?php echo $room['department'] ?></b></h6>
             </div>
             <div class="header-text">
                 <h5><b>ROOM UTILIZATION</b></h5>
             </div>
             <div class="sub-header-text">
                 <?php
-                $currentDate = date('Y-m-d');
-                $query = "SELECT * FROM semester WHERE start_date <= '$currentDate' AND end_date >= '$currentDate' LIMIT 1";
+                $currentMonthDay = date('m-d');
+                $query = " 
+                    SELECT * FROM semester 
+                    WHERE 
+                        DATE_FORMAT(start_date, '%m-%d') <= '$currentMonthDay' 
+                        AND DATE_FORMAT(end_date, '%m-%d') >= '$currentMonthDay'
+                    LIMIT 1";
                 $result = mysqli_query($conn, $query);
 
                 if (!$result) {
@@ -290,20 +245,22 @@ if (isset($_GET['room_id'])) {
                 } else {
                     while ($row = $result->fetch_assoc()) :
                 ?>
-                        <h6 style="text-transform: uppercase;"><?php echo $row['sem_name'] ?>, AY: <b>
+                        <h6 style="text-transform: uppercase;">
+                            <?php echo $row['sem_name'] ?>, AY: <b>
                                 <?php
                                 $currentYear = date("Y");
                                 $nextYear = $currentYear + 1;
                                 echo "$currentYear-$nextYear";
                                 ?>
-                            </b></h6>
+                            </b>
+                        </h6>
                 <?php
                     endwhile;
                 }
                 ?>
             </div>
         </div>
-        <img src="../assets/img/Bagong_Pilipinas_logo.png" alt="" class="ml-4">
+        <img src="../assets/img/Bagong_Pilipinas_logo.jpeg" alt="" class="ml-4">
     </div>
     <div class="form form-group mb-2">
         <h6><b>Course:</b> <?php echo $program['department'] ?></h6>
@@ -313,20 +270,20 @@ if (isset($_GET['room_id'])) {
         <table class="table table-bordered">
             <thead>
                 <tr class="text-center">
-                    <th width="125" class="p-2">Time</th>
+                    <th width="125" class="p-1">Time</th>
                     <?php foreach ($weekDays as $day) : ?>
-                        <th class="p-2"><?php echo $day; ?></th>
+                        <th class="p-1"><?php echo $day; ?></th>
                     <?php endforeach; ?>
-                    <th width="125" class="p-2">Time</th>
+                    <th width="125" class="p-1">Time</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($calendarData as $time => $days) : ?>
                     <tr>
-                        <td class="text-center p-2" style="font-size:0.9rem;"><?php echo $time; ?></td>
+                        <td class="text-center p-1 align-middle" style="font-size:0.8rem;"><?php echo $time; ?></td>
                         <?php foreach ($days as $dayCode => $value) : ?>
                             <?php if (isset($value['rowspan'])) : ?>
-                                <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center clickable" style="background-color:<?php echo $value['background_color']; ?>; color: #000; " data-schedule-id="<?php echo $value['schedule_id']; ?>">
+                                <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center" style="font-size:0.8rem; background-color:<?php echo $value['background_color']; ?>; color: #000; " data-schedule-id="<?php echo $value['schedule_id']; ?>">
                                     <?php echo $value['course_name']; ?><br>
                                     <b class="text-uppercase">
                                         <small><?php echo $value['section_name']; ?></small><br>
@@ -337,7 +294,7 @@ if (isset($_GET['room_id'])) {
                                 <td></td>
                             <?php endif; ?>
                         <?php endforeach; ?>
-                        <td class="text-center p-2" style="font-size:0.9rem;"><?php echo $time; ?></td>
+                        <td class="text-center p-1 align-middle" style="font-size:0.8rem;"><?php echo $time; ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -345,7 +302,61 @@ if (isset($_GET['room_id'])) {
     </div>
     <br>
     <br>
-    <h6>Prepared by:</h6>
-    <h5 class="font-weight-bold">____________________________</h5>
+    <?php if ($room['program_id'] == $program_id): ?>
+        <div class="row">
+            <div class="col-md-4">
+                <h6 style="font-style:italic;" class="text-left mb-3">Prepared by:</h6>
+                <div class="text-center">
+                    <strong class="underlined">
+                        <?php echo strtoupper($head['fname']) . " " .
+                            (!empty($head['mname']) ? strtoupper(substr($head['mname'], 0, 1)) . ". " : "") .
+                            strtoupper($head['lname']) . ", " . strtoupper($head['post_graduate_studies']); ?>
+                    </strong><br>
+                    <small>Head, <?php echo $program['department']; ?></small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h6 style="font-style:italic;" class="text-left mb-3">Noted:</h6>
+                <div class="text-center">
+                    <strong>
+                        <input type="text" name="hpdu" id="hpdu" value="" size="30" class="underlined">
+                    </strong><br>
+                    <small>Head, Planning and Development Unit</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <h6 style="font-style:italic;" class="text-left mb-3">Approved by:</h6>
+                <div class="text-center">
+                    <strong>
+                        <input type="text" name="cd_signature" id="cd_signature" value="" size="30" class="underlined">
+                    </strong><br>
+                    <small>Campus Director</small>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
-<button class="btn btn-block btn-success shadow mb-4" onclick="window.location.href='index.php?page=room_utilization_report&room_id=<?php echo $room_id; ?>'">Generate PDF</button>
+<?php if ($room['program_id'] == $program_id): ?>
+    <button class="btn btn-block btn-success shadow mb-4" onclick="generatePDF()">Generate PDF</button>
+<?php endif; ?>
+<script>
+    function generatePDF() {
+        var head_planning = document.getElementById('hpdu').value;
+        var cd_signature = document.getElementById('cd_signature').value;
+
+        if (!cd_signature || !head_planning) {
+            window.location.href = "#page-top";
+            alert_toast("Please fill in all fields.", 'danger');
+            return;
+        }
+
+        var program_dept = "<?php echo $program['department']; ?>";
+
+        var url = 'reportAjax/generate_schedule.php?room_id=<?php echo $room_id; ?>' +
+            '&program_dept=' + encodeURIComponent(program_dept) +
+            '&head_planning=' + encodeURIComponent(head_planning) +
+            '&cd_signature=' + encodeURIComponent(cd_signature);
+
+        window.location.href = url;
+    }
+</script>

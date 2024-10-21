@@ -32,45 +32,41 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
             <ol class="breadcrumb bg-transparent p-0 m-0">
                 <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
                 <li class="breadcrumb-item active"> Course Management</li>
-                <li class="breadcrumb-item active"><a href="index.php?page=courses"> View Course</a></li>
+                <li class="breadcrumb-item active"><a href="index.php?page=view_course&program_code=<?php echo $program_code ?>"> View Course</a></li>
                 <li class="breadcrumb-item active">List of Course</li>
             </ol>
         </section>
         <section class="content col-md-12">
-            <?php while ($level = $level_result->fetch_assoc()) : ?>
-                <?php
-                $totalLec = 0;
-                $totalLab = 0;
-                $totalUnits = 0;
-                ?>
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="card card-default shadow mb-4">
-                            <div class="card-header bg-transparent">
-                                <h3 class="card-title"><?php echo $program['program_name'] . ' - ' . $year . ' - ' . ($year + 1); ?></h3>
-                                <div class="card-tools pull-right">
-                                    <!--<a  target="_blank" href="{{url('/registrar_college/print_course',array($program_code,$course_year))}}" class='btn btn-flat btn-primary'><i class='fa fa-print'></i> Print course</a>-->
-                                </div>
-                            </div>
-                            <div class="card-body">
+
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card card-default shadow mb-4">
+                        <div class="card-header bg-transparent">
+                            <h3 class="card-title mb-0"><?php echo $program['program_name'] . ' - ' . $year . ' - ' . ($year + 1); ?></h3>
+                        </div>
+                        <?php while ($level = $level_result->fetch_assoc()) : ?>
+                            <?php
+                            $totalLec = 0;
+                            $totalLab = 0;
+                            $totalUnits = 0;
+                            ?>
+                            <div class="card-body pt-0">
                                 <div class='table-responsive'>
-                                    <table class="table table-condensed">
+                                    <table class="table table-bordered">
                                         <thead>
-                                            <th><?php echo $level['period']; ?></th>
-                                            <th><?php echo $level['level']; ?></th>
-                                            <th></th>
-                                            <th></th>
-                                            <th></th>
-                                            <th></th>
+                                            <th class="pl-0" colspan="6" style="border: none;"><?php echo $level['level'] . ' ( ' . $level['period'] . ' )'; ?></th>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <th class='col-sm-2'>Course Code</th>
-                                                <th class='col-sm-6'>Course Description</th>
-                                                <th class='col-sm-1'>LEC</th>
-                                                <th class='col-sm-1'>LAB</th>
-                                                <th class='col-sm-1'>UNITS</th>
-                                                <th class='col-sm-1 '>COMPLAB</th>
+                                                <th rowspan="2" class="col-sm-2 align-middle text-center p-2">Course No.</th>
+                                                <th rowspan="2" class="col-sm-6 align-middle text-center p-2">Descriptive Title</th>
+                                                <th colspan="2" class="col-sm-2 align-middle text-center p-2">No. of Hrs/Week</th>
+                                                <th rowspan="2" class='col-sm-1 align-middle text-center p-2'>UNITS</th>
+                                                <th rowspan="2" class='col-sm-1 align-middle text-center p-2'>COMPLAB</th>
+                                            </tr>
+                                            <tr>
+                                                <th class="col-sm-1 align-middle text-center p-1">Lec</th>
+                                                <th class="col-sm-1 align-middle text-center p-1">Lab</th>
                                             </tr>
                                             <?php
                                             $courses_query = "SELECT * FROM courses WHERE program_id = (SELECT id FROM program WHERE program_code = ?) AND year = ? AND level = ? AND period = ?";
@@ -85,15 +81,15 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
                                                         <a onclick="editmodal('<?php echo $courses['id']; ?>')" href="#" title="Click to Edit"><?php echo $courses['course_code']; ?></a>
                                                     </td>
                                                     <td><?php echo $courses['course_name']; ?></td>
-                                                    <td>
+                                                    <td class="align-middle text-center">
                                                         <?php echo $courses['lec']; ?>
                                                         <?php $totalLec += $courses['lec']; ?>
                                                     </td>
-                                                    <td>
-                                                        <?php echo $courses['lab']; ?>          
+                                                    <td class="align-middle text-center">
+                                                        <?php echo $courses['lab']; ?>
                                                         <?php $totalLab += $courses['lab']; ?>
                                                     </td>
-                                                    <td>
+                                                    <td class="align-middle text-center">
                                                         <?php if ($courses['units'] != 0) : ?>
                                                             <?php echo $courses['units']; ?>
                                                         <?php endif; ?>
@@ -102,28 +98,31 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
                                                     <td class="text-center">
                                                         <?php if (isset($courses['is_comlab']) && $courses['is_comlab'] == 1) : ?>
                                                             <span class='text-info'><i class='fas fa-check-circle'></i></span>
+                                                        <?php else : ?>
+                                                            <span class='text-danger'><i class='fas fa-times-circle'></i></span>
                                                         <?php endif; ?>
                                                     </td>
                                                 </tr>
                                             <?php endwhile; ?>
                                             <tr>
                                                 <td></td>
-                                                <td></td>
-
-                                                <th colspan="2">
-                                                    <div align='right'>Total Units:</div>
-                                                </th>
-                                                <th><?php echo $totalUnits; ?></th>
+                                                <td>
+                                                    <div align='right'>Total:</div>
+                                                </td>
+                                                <td class="align-middle text-center"><?php echo $totalLec; ?></td>
+                                                <td class="align-middle text-center"><?php echo $totalLab; ?></td>
+                                                <td class="align-middle text-center"><?php echo $totalUnits; ?></td>
                                                 <td></td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
-                        </div>
+                            <hr>
+                        <?php endwhile; ?>
                     </div>
                 </div>
-            <?php endwhile; ?>
+            </div>
         </section>
         <div id="displayeditmodal">
 

@@ -3,15 +3,11 @@ include('db_connect.php');
 
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Initialize variables
 $courses = [];
-// var_dump($_GET['program_code']);
-// Check if program code is set in the URL
+
 if (isset($_GET['program_code'])) {
-    // Get the program code from the URL parameter
     $program_code = $_GET['program_code'];
 
-    // Fetch the program id corresponding to the program code
     $program_query = "SELECT id, program_name FROM program WHERE program_code = ?";
     $stmt = $conn->prepare($program_query);
     $stmt->bind_param("s", $program_code);
@@ -20,22 +16,19 @@ if (isset($_GET['program_code'])) {
     $program = $result->fetch_assoc();
 
     if ($program) {
-        // Program found, fetch curriculum years
+
         $program_id = $program['id'];
 
-        // Prepare and execute the SQL query
-        $query = "SELECT DISTINCT year FROM courses WHERE program_id = ?";
+        $query = "SELECT DISTINCT year FROM courses WHERE program_id = ? ORDER BY year DESC";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("s", $program_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        // Fetch the results into an array
         while ($row = $result->fetch_assoc()) {
             $courses[] = $row['year'];
         }
     } else {
-        // Program not found, handle error if needed
         echo "Program not found!";
     }
 }
@@ -47,7 +40,7 @@ if (isset($_GET['program_code'])) {
             <ol class="breadcrumb bg-transparent p-0 m-0">
                 <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
                 <li class="breadcrumb-item active"> Course Management</li>
-                <li class="breadcrumb-item active">View Course</li>
+                <li class="breadcrumb-item active"><a href="index.php?page=courses">View Course</a></li>
             </ol>
         </section>
 
@@ -56,9 +49,9 @@ if (isset($_GET['program_code'])) {
                 <div class="col-sm-12" id="displaycurriculum">
                     <div class="card card-default shadow mb-4">
                         <div class="card-header bg-transparent">
-                            <h3 class="card-title"><?php echo $program['program_name']; ?></h3>
+                            <h3 class="card-title m-0"><?php echo $program['program_name']; ?></h3>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body py-0 mb-4">
                             <div class="table-responsive">
                                 <table class="table table-bordered">
                                     <thead>
@@ -72,7 +65,8 @@ if (isset($_GET['program_code'])) {
                                             <tr>
                                                 <td><?php echo $year . ' - ' . ($year + 1); ?></td>
                                                 <td class="text-center">
-                                                    <a href="index.php?page=list_course&program_code=<?php echo $program_code; ?>&year=<?php echo $year; ?>" class="btn btn-success"><i class="fa fa-eye"></i></a>
+                                                    <a href="index.php?page=list_course&program_code=<?php echo $program_code; ?>&year=<?php echo $year; ?>" class="btn btn-success btn-sm"><i class="fa fa-eye"></i></a>
+                                                    <a onclick="editModal('<?php echo $year; ?>')" class="btn btn-info btn-sm"><i class="fa fa-edit"></i></a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -84,6 +78,9 @@ if (isset($_GET['program_code'])) {
                 </div>
             </div>
         </section>
+        <div id="displayEditModal">
+
+        </div>
     </div>
 </div>
 
@@ -92,3 +89,22 @@ if (isset($_GET['program_code'])) {
         border-bottom: none;
     }
 </style>
+
+<script>
+    function editModal(year) {
+        var array = {};
+        array['year'] = year;
+        $.ajax({
+            type: "GET",
+            url: "edit_year.php",
+            data: array,
+            success: function(data) {
+                $('#displayEditModal').html(data).fadeIn();
+                $('#editModal').modal('toggle');
+            },
+            error: function() {
+                alert_toast('Something Went Wrong!', 'danger');
+            }
+        })
+    }
+</script>

@@ -58,6 +58,10 @@ $user_program_id = $_SESSION['login_program_id'];
                             <label class="control-label">Section Name</label>
                             <input type="text" class="form-control" name="section_name">
                         </div>
+                        <div class="form-group">
+                            <label class="control-label">Number of Students</label>
+                            <input type="text" class="form-control" name="no_of_students">
+                        </div>
                     </form>
                 </div>
                 <div class="card-footer bg-transparent">
@@ -87,7 +91,7 @@ $user_program_id = $_SESSION['login_program_id'];
                                     <th class="text-center">Program Code</th>
                                     <th class="text-center">Level</th>
                                     <th class="text-center">Section Name</th>
-                                    <th class="text-center">Status</th>
+                                    <th class="text-center">No. of Students</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
@@ -106,15 +110,9 @@ $user_program_id = $_SESSION['login_program_id'];
                                         <td class=""><?php echo $row['program_code'] ?></td>
                                         <td class=""><?php echo $row['level'] ?></td>
                                         <td class=""><?php echo $section_name_concatenated ?></td>
+                                        <td class="text-center"><?php echo $row['no_of_students'] ?></td>
                                         <td class="text-center">
-                                            <?php if ($row['is_active'] == 1) : ?>
-                                                <span class="badge badge-success" style="font-size: 16px;">Active</span>
-                                            <?php else : ?>
-                                                <span class="badge badge-danger" style="font-size: 16px;">Inactive</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-primary edit_section" type="button" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-program_id="<?php echo $row['program_id'] ?>" data-level="<?php echo $row['level'] ?>" data-section_name="<?php echo $row['section_name'] ?>">Edit</button>
+                                            <button class="btn btn-sm btn-primary edit_section" type="button" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-program_id="<?php echo $row['program_id'] ?>" data-level="<?php echo $row['level'] ?>" data-section_name="<?php echo $row['section_name'] ?>" data-no_of_students="<?php echo $row['no_of_students'] ?>">Edit</button>
                                             <button class="btn btn-sm btn-danger delete_section" type="button" data-id="<?php echo $row['id'] ?>">Delete</button>
                                         </td>
                                     </tr>
@@ -132,7 +130,7 @@ $user_program_id = $_SESSION['login_program_id'];
 <script>
     function _reset() {
         $('#manage-section').find('[name="id"]').val('');
-        // $('#manage-section').find('[name="level"]').val('');
+        $('#manage-section').find('[name="no_of_students"]').val('');
         $('#manage-section').find('[name="section_name"]').val('');
     }
 
@@ -142,10 +140,11 @@ $user_program_id = $_SESSION['login_program_id'];
         // Validate input fields
         var level = $('[name="level"]').val();
         var section_name = $('[name="section_name"]').val();
+        var no_of_students = $('[name="no_of_students"]').val();
 
-        if (!level || level == "Please Select here" || !section_name) {
-            alert_toast("Please fill in all fields", 'danger');
-            return; // Exit function if any field is empty
+        if (!level || level == "Please Select here" || !section_name || !no_of_students) {
+            alert_toast("Please fill in all fields", 'warning');
+            return; 
         }
 
         start_load();
@@ -184,6 +183,7 @@ $user_program_id = $_SESSION['login_program_id'];
         cat.find("[name='program_id']").val($(this).attr('data-program_id'));
         cat.find("[name='level']").val($(this).attr('data-level'));
         cat.find("[name='section_name']").val($(this).attr('data-section_name'));
+        cat.find("[name='no_of_students']").val($(this).attr('data-no_of_students'));
         end_load();
     });
 

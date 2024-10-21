@@ -76,10 +76,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET[
             <h5 class="card-title">Courses Offered</h5>
         </div>
         <div class="card-body">
-            <div class="alert alert-danger" role="alert">
+            <div class="alert alert-warning text-center" role="alert">
                 <h5><strong>No Course Offered Found!</strong></h5>
             </div>
         </div>
+    </div>
     </div>
 <?php } ?>
 
@@ -97,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET[
             success: function(data) {
                 alert_toast(data, 'danger');
                 console.log(data)
-                searchcourse('<?php echo $curriculum_year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_id; ?>');
+                searchCourse('<?php echo $curriculum_year; ?>', '<?php echo $level; ?>', '<?php echo $period; ?>', '<?php echo $section_id; ?>');
             },
             error: function() {
                 alert('Something Went Wrong');

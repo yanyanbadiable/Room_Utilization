@@ -1,9 +1,23 @@
+<?php $page = isset($_GET['page']) ? $_GET['page'] : 'home'; ?>
+
 <style>
+    #accordionSidebar {
+        background-color: #a91414 !important;
+    }
+
+    hr.sidebar-divider {
+        border-top: 1px solid rgba(255, 255, 255, 0.20) !important;
+    }
+
     img {
         width: 40px;
         height: 40px;
         background-color: #ffffff;
         border-radius: 50%;
+    }
+
+    ._hover:hover {
+        color: #e74a3b !important;
     }
 
     ._hover:hover a {
@@ -13,6 +27,14 @@
     span {
         margin-left: 5px;
     }
+
+    #alert_toast {
+        position: fixed;
+        z-index: 9999;
+        top: 3rem;
+        right: 0;
+        min-width: 14rem;
+    }
 </style>
 
 <body id="page-top">
@@ -21,12 +43,12 @@
     <div id="wrapper">
 
         <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-danger sidebar sidebar-dark accordion" id="accordionSidebar">
+        <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-start" href="index.php?page=home">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php?page=home">
                 <div class="sidebar-brand-icon">
-                    <img src="../assets/img/1-removebg-preview.png" alt="logo">
+                    <img src="../assets/img/1-removebg-preview.jpeg" alt="logo">
                 </div>
                 <div class="sidebar-brand-text ml-3">A D R U M S</div>
             </a>
@@ -35,7 +57,7 @@
             <hr class="sidebar-divider my-0">
 
             <!-- Nav Item - Dashboard -->
-            <li class="nav-item active">
+            <li class="nav-item <?php echo $page == 'home' ? 'active' : ''; ?>">
                 <a class="nav-link" href="index.php?page=home">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Dashboard</span>
@@ -49,7 +71,7 @@
             <div class="sidebar-heading">Main</div>
 
             <!-- Nav Item - Space Management -->
-            <li class="nav-item">
+            <li class="nav-item <?php echo $page == 'user' ? 'active' : ''; ?>">
                 <a class="nav-link" href="index.php?page=user">
                     <i class="fas fa-user"></i>
                     <span>Admin Management</span>
@@ -57,7 +79,7 @@
             </li>
 
             <!-- Nav Item - Course Management -->
-            <li class="nav-item">
+            <li class="nav-item <?php echo $page == 'department' ? 'active' : ''; ?> ">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities" aria-expanded="true" aria-controls="collapseUtilities">
                     <i class="fas fa-book"></i>
                     <span>Program Management</span>
@@ -73,7 +95,7 @@
             </li>
 
             <!-- Nav Item - Report Management -->
-            <li class="nav-item">
+            <li class="nav-item <?php echo in_array($page, ['building', 'unit_loads', 'designation', 'semester']) ? 'active' : ''; ?>">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReport" aria-expanded="true" aria-controls="collapseReport">
                     <i class="fas fa-pencil-alt"></i>
                     <span>Other Management</span>
@@ -84,6 +106,9 @@
                             <i class="fa fa-edit"></i> <span>Manage Building</span>
                         </a>
                         <a class="_hover collapse-item text-white" href="index.php?page=unit_loads">
+                            <i class="far fa-file-alt"></i> <span class="ps-1">Manage Rank</span>
+                        </a>
+                        <a class="_hover collapse-item text-white" href="index.php?page=designation">
                             <i class="far fa-file-alt"></i> <span class="ps-1">Manage Designation</span>
                         </a>
                         <a class="_hover collapse-item text-white" href="index.php?page=semester">
@@ -128,7 +153,7 @@
                                 <img class="img-profile rounded-circle" src="../assets/img/undraw_profile.svg">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#">
+                                <a class="dropdown-item" href="index.php?page=account_settings">
                                     <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                                     Settings
                                 </a>
@@ -146,11 +171,15 @@
                 <!-- Begin Page Content -->
                 <main id="view-panel">
                     <div class="container-fluid">
-                        <div class="toast" id="alert_toast" role="alert" aria-live="assertive" aria-atomic="true">
-                            <div class="toast-body text-white">
+                        <div class="toast mx-3 my-2" id="alert_toast" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="toast-body text-white d-flex align-items-center">
+                                <i class="icon big-icon mr-2"></i>
+                                <div>
+                                    <h6 class="m-0" id="notificationText"></h6>
+                                    <h6 class="message m-0"></h6>
+                                </div>
                             </div>
                         </div>
-
                         <?php $page = isset($_GET['page']) ? $_GET['page'] : 'home'; ?>
                         <?php include $page . '.php'; ?>
                     </div>
@@ -175,7 +204,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Confirmation</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Logout?</h5>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>

@@ -7,10 +7,12 @@ if (isset($_GET['id'])) {
 	$facultyQuery = "
     SELECT faculty.*, 
            program.department, 
-           unit_loads.designation 
+           unit_loads.academic_rank,
+		   designation.designation 
     FROM faculty 
     INNER JOIN program ON faculty.program_id = program.id 
-    INNER JOIN unit_loads ON faculty.designation = unit_loads.id 
+    INNER JOIN unit_loads ON faculty.academic_rank = unit_loads.id 
+	LEFT JOIN designation ON faculty.designation = designation.id 
     WHERE faculty.id = ?";
 
 	if ($stmt = $conn->prepare($facultyQuery)) {
@@ -39,7 +41,7 @@ if (isset($_GET['id'])) {
 		}
 	}
 
-	$designationsQuery = "SELECT DISTINCT id, designation FROM unit_loads";
+	$designationsQuery = "SELECT DISTINCT id, designation FROM designation";
 	$designationResult = mysqli_query($conn, $designationsQuery);
 
 	if ($designationResult) {
@@ -50,6 +52,18 @@ if (isset($_GET['id'])) {
 	} else {
 		echo "Error fetching designations: " . mysqli_error($conn);
 	}
+
+	$academic_ranksQuery = "SELECT DISTINCT id, academic_rank FROM unit_loads";
+	$academic_rankResult = mysqli_query($conn, $academic_ranksQuery);
+
+	if ($academic_rankResult) {
+		$academic_ranks = [];
+		while ($row = mysqli_fetch_assoc($academic_rankResult)) {
+			$academic_ranks[] = $row;
+		}
+	} else {
+		echo "Error fetching academic_ranks: " . mysqli_error($conn);
+	}
 }
 ?>
 
@@ -59,6 +73,7 @@ if (isset($_GET['id'])) {
 		<h3><i class="fa fa-user-edit"></i> Update Instructor</h3>
 		<ol class="breadcrumb bg-transparent p-0 m-0">
 			<li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
+			<li class="breadcrumb-item active"><a href="index.php?page=faculty">View Instructor</a></li>
 			<li class="breadcrumb-item active">Update Instructor</li>
 		</ol>
 	</section>
@@ -128,9 +143,9 @@ if (isset($_GET['id'])) {
 						</div>
 						<div class="form-group row">
 							<div class="col-md-6">
-								<label><b>Sex</b></label>
+								<label><b>Gender</b></label>
 								<select class="form-control" name='gender' required>
-									<option value=''>Select Sex</option>
+									<option value=''>Select Gender</option>
 									<option value='Male' <?php if ($faculty['gender'] == 'Male') echo "selected='selected'"; ?>>Male</option>
 									<option value='Female' <?php if ($faculty['gender'] == 'Female') echo "selected='selected'"; ?>>Female</option>
 								</select>
@@ -153,19 +168,37 @@ if (isset($_GET['id'])) {
 							<div class="col-md-6">
 								<label><b>Department</b></label>
 								<input type="text" class='form-control' name="program" value="<?php echo $program['department']; ?>" disabled>
-								<input type="hidden" name="program_id" value="<?php echo $program['id']; ?>">
 							</div>
 							<div class="col-md-6">
-								<label><b>Employee Status</b></label>
-								<select name="designation" class="form-control" required>
-									<option value="" disabled selected hidden>Select Employee Type</option>
+								<label><b>Post Graduate Studies</b></label>
+								<input class="form-control" name="post_graduate_studies" value="<?php echo $faculty['post_graduate_studies']; ?>" placeholder='Postgraduate Studies' type="text">
+								<!-- <div class="invalid-feedback">Municipality/City is required.</div> -->
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="col-md-6">
+								<label><b>Employee Academic Rank</b></label>
+								<select name="academic_rank" class="form-control select2" required>
+									<option value="" disabled selected hidden>Select Employee Academic Rank</option>
+									<?php foreach ($academic_ranks as $academic_rank) : ?>
+										<option value="<?php echo $academic_rank['id']; ?>" <?php if ($faculty['academic_rank'] == $academic_rank['academic_rank']) echo "selected='selected'"; ?>>
+											<?php echo $academic_rank['academic_rank']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<div class="invalid-feedback">Academic Rank is required.</div>
+							</div>
+							<div class="col-md-6">
+								<label><b>Employee Designation</b></label>
+								<select name="designation" class="form-control select2" required>
+									<option value="" disabled selected hidden>Select Employee Designation</option>
 									<?php foreach ($designations as $designation) : ?>
 										<option value="<?php echo $designation['id']; ?>" <?php if ($faculty['designation'] == $designation['designation']) echo "selected='selected'"; ?>>
 											<?php echo $designation['designation']; ?>
 										</option>
 									<?php endforeach; ?>
 								</select>
-								<div class="invalid-feedback">Employee Status is required.</div>
+								<div class="invalid-feedback">Employee Designation is required.</div>
 							</div>
 						</div>
 					</div>
@@ -210,7 +243,9 @@ if (isset($_GET['id'])) {
 		array['extensionname'] = $("input[name='extensionname']").val();
 		array['program_id'] = $("select[name='program']").val();
 		array['gender'] = $("select[name='gender']").val();
+		array['academic_rank'] = $("select[name='academic_rank']").val();
 		array['designation'] = $("select[name='designation']").val();
+		array['post_graduate_studies'] = $("input[name='post_graduate_studies']").val();
 		array['street'] = $("input[name='street']").val();
 		array['barangay'] = $("input[name='barangay']").val();
 		array['municipality'] = $("input[name='municipality']").val();
@@ -225,8 +260,8 @@ if (isset($_GET['id'])) {
 			success: function(data) {
 				if (data.trim() === '1') {
 					alert_toast('Instructor Successfully Updated', 'success');
-					// resetForm();
-					location.reload();
+					window.location.href = 'index.php?page=faculty';
+					// location.reload();
 				} else {
 					alert_toast('Failed to update instructor', 'danger');
 					$('input[type="submit"]').prop('disabled', false);

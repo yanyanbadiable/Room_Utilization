@@ -74,10 +74,10 @@ if (isset($_GET['id'])) {
             }
 
             /* Add a max-height to the card-body to avoid excessive height */
-            .card-body {
+            /* .card-body {
                 max-height: 60vh;
                 overflow-y: auto;
-            }
+            } */
         </style>
 
         <section class="col-md-8">
@@ -147,6 +147,15 @@ if (isset($_GET['id'])) {
     }
     $('#manage-program').submit(function(e) {
         e.preventDefault()
+
+        var programCode = $("input[name='program_code']").val();
+        var programName = $("input[name='program_name']").val();
+        var department = $("input[name='department']").val();
+
+        if (!programCode || !programName || !department) {
+            alert_toast("Please fill in all fields!", 'warning');
+            return; 
+        }
         start_load()
         $.ajax({
             url: '../admin/ajax.php?action=save_program',
@@ -191,7 +200,7 @@ if (isset($_GET['id'])) {
     function delete_program($id) {
         start_load()
         $.ajax({
-            url: 'ajax.php?action=delete_program',
+            url: '../admin/ajax.php?action=delete_program',
             method: 'POST',
             data: {
                 id: $id

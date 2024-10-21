@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
     $time_end = date('H:i', strtotime($_GET['time_end']));
     $course_offering_info_id = $_GET['course_offering_info_id'];
     $section_id = $_GET['section_id'];
+    $total_hours = $_GET['total_hours'];
 
     $course_query = "SELECT c.is_comlab FROM courses c
                      JOIN course_offering_info coi ON c.id = coi.courses_id
@@ -54,11 +55,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
         $room_conditions = implode(',', array_map('intval', $conflict_schedules));
         $query = "SELECT rooms.*, building.building FROM rooms
                   JOIN building ON rooms.building_id = building.id
-                  WHERE rooms.is_available = 1 AND rooms.id NOT IN ($room_conditions) $lab_condition ORDER BY program_id";
+                  WHERE rooms.is_available = 1 AND rooms.id NOT IN ($room_conditions) $lab_condition ORDER BY program_id, room";
     } else {
         $query = "SELECT rooms.*, building.building FROM rooms
                   JOIN building ON rooms.building_id = building.id
-                  WHERE rooms.is_available = 1 $lab_condition  ORDER BY program_id";
+                  WHERE rooms.is_available = 1 $lab_condition  ORDER BY program_id, room";
     }
 
     $rooms_result = mysqli_query($conn, $query);
@@ -71,6 +72,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
     }
 }
 ?>
+<link href="../assets/select2-4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<script src="../assets/select2-4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    .select2-container .select2-selection--single {
+        height: 38px;
+        line-height: 40px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        border: 1px solid #ccc;
+
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px;
+    }
+</style>
 
 <div class="modal-dialog">
     <!-- Modal content-->
@@ -88,9 +107,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
                 <input type="hidden" name="time_start" value="<?= $time_start ?>">
                 <input type="hidden" name="time_end" value="<?= $time_end ?>">
                 <input type="hidden" name="section_id" value="<?= $section_id ?>">
+                <input type="hidden" name="total_hours" value="<?= $total_hours ?>">
                 <div class="form-group">
                     <label>Available Rooms</label>
-                    <select name="room_id" class="form-control">
+                    <select name="room_id" class="form-control select2 custom-select">
                         <?php foreach ($rooms as $room) : ?>
                             <option value="<?= $room['id'] ?>"><?= $room['room'] ?> <?= $room['building'] ?></option>
                         <?php endforeach; ?>
@@ -106,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
         </div>
     </div>
 </div>
+
 <script>
     $('#submitBtn').click(function() {
         $('#myModal').modal('hide');
@@ -122,11 +143,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
             success: function(resp) {
                 console.log(resp);
                 if (resp.status === 'success') {
+                    window.location.href = "#page-top";
                     alert_toast('Schedule successfully saved', 'success');
                     location.reload();
                 } else if (resp.status === 'error' && resp.message === 'Same schedule already exists.') {
+                    window.location.href = "#page-top";
                     alert_toast('Schedule already exists', 'danger');
                 } else {
+                    window.location.href = "#page-top";
                     alert_toast(resp.message || 'Error occurred while saving schedule', 'danger');
                 }
             },
@@ -135,4 +159,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
             }
         });
     }
+    $('.select2').select2({
+        placeholder: "Please select here",
+        // allowClear: true,
+        width: "100%",
+    })
 </script>

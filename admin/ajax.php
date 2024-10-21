@@ -21,14 +21,19 @@ if ($action == 'save_user') {
 }
 
 if ($action == 'delete_user') {
-	$save = $crud->delete_user();
+	$delete = $crud->delete_user();
+	if ($delete)
+		echo $delete;
+}
+
+if ($action == "change_password") {
+	$save = $crud->change_password();
 	if ($save)
 		echo $save;
 }
 
-
-if ($action == "change_password") {
-	$save = $crud->change_password();
+if ($action == "account_setting") {
+	$save = $crud->account_setting();
 	if ($save)
 		echo $save;
 }
@@ -51,6 +56,17 @@ if ($action == "save_building") {
 }
 if ($action == "delete_building") {
 	$delete = $crud->delete_building();
+	if ($delete)
+		echo $delete;
+}
+
+if ($action == "save_academic_rank") {
+	$save = $crud->save_academic_rank();
+	if ($save)
+		echo $save;
+}
+if ($action == "delete_academic_rank") {
+	$delete = $crud->delete_academic_rank();
 	if ($delete)
 		echo $delete;
 }
@@ -85,6 +101,12 @@ if ($action == "save_course") {
 
 if ($action == "edit_course") {
 	$edit = $crud->edit_course();
+	if ($edit)
+		echo $edit;
+}
+
+if ($action == "edit_year") {
+	$edit = $crud->edit_year();
 	if ($edit)
 		echo $edit;
 }
@@ -175,6 +197,12 @@ if ($action == "remove_schedule") {
 
 if ($action == "add_faculty_load") {
 	$save = $crud->add_faculty_load();
+	if ($save)
+		echo $save;
+}
+
+if ($action == "add_overload") {
+	$save = $crud->add_overload();
 	if ($save)
 		echo $save;
 }

@@ -16,13 +16,25 @@ if ($program) {
     $programs[] = $program;
 }
 
-$query = "SELECT DISTINCT id, designation FROM unit_loads";
+$query = "SELECT DISTINCT id, designation FROM designation";
 $result = mysqli_query($conn, $query);
 
 if ($result) {
     $designations = [];
     while ($row = mysqli_fetch_assoc($result)) {
         $designations[] = $row;
+    }
+} else {
+    echo "Error: " . mysqli_error($conn);
+}
+
+$query = "SELECT DISTINCT id, academic_rank FROM unit_loads";
+$result = mysqli_query($conn, $query);
+
+if ($result) {
+    $academic_ranks = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $academic_ranks[] = $row;
     }
 } else {
     echo "Error: " . mysqli_error($conn);
@@ -107,9 +119,9 @@ if ($result) {
 
                         <div class="form-group row">
                             <div class="col-md-6">
-                                <label><b>Sex</b></label>
+                                <label><b>Gender</b></label>
                                 <select class="form-control" name="gender" required>
-                                    <option value="">Select Sex</option>
+                                    <option value="">Select Gender</option>
                                     <option value="Male">Male</option>
                                     <option value="Female">Female</option>
                                 </select>
@@ -122,7 +134,7 @@ if ($result) {
                                     <div class="input-group-prepend">
                                         <span class="input-group-text">+63</span>
                                     </div>
-                                    <input class="form-control" name="contact" placeholder="Contact Number*" type="number" required pattern="^\+639\d{9}$">
+                                    <input class="form-control" name="contact" placeholder="Contact Number*" type="text" required pattern="^\+639\d{9}$">
                                     <div class="invalid-feedback">Valid Contact Number is required (12 digits starting with +639).</div>
                                 </div>
                             </div>
@@ -141,14 +153,29 @@ if ($result) {
                                 <input type="hidden" name="program_id" value="<?php echo $program['id']; ?>">
                             </div>
                             <div class="col-md-6">
-                                <label><b>Employee Status</b></label>
-                                <select name="designation" class="form-control" required>
-                                    <option value="" disabled selected hidden>Select Employee Type</option>
+                                <label><b>Post Graduate Studies</b></label>
+                                <input class="form-control" name="post_graduate_studies" placeholder="Postgraduate Studies*" type="text" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label><b>Academic Rank </b></label>
+                                <select name="academic_rank" class="form-control select2" required>
+                                    <option value="" disabled selected hidden>Select Academic Rank</option>
+                                    <?php foreach ($academic_ranks as $academic_rank) : ?>
+                                        <option value="<?php echo $academic_rank['id']; ?>"><?php echo $academic_rank['academic_rank']; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="invalid-feedback">Academic Rank is required.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label><b>Designation</b></label>
+                                <select name="designation" class="form-control select2">
+                                    <option value="" disabled selected hidden>Select Designation</option>
                                     <?php foreach ($designations as $designation) : ?>
                                         <option value="<?php echo $designation['id']; ?>"><?php echo $designation['designation']; ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <div class="invalid-feedback">Employee Status is required.</div>
                             </div>
                         </div>
                     </div>
@@ -189,7 +216,9 @@ if ($result) {
             extensionname: $("input[name='extensionname']").val(),
             program_id: $("input[name='program_id']").val(),
             gender: $("select[name='gender']").val(),
+            academic_rank: $("select[name='academic_rank']").val(),
             designation: $("select[name='designation']").val(),
+            post_graduate_studies: $("input[name='post_graduate_studies']").val(),
             street: $("input[name='street']").val(),
             barangay: $("input[name='barangay']").val(),
             municipality: $("input[name='municipality']").val(),
@@ -204,9 +233,11 @@ if ($result) {
             data: array,
             success: function(data) {
                 if (data.trim() === '1') {
+                    window.location.href = "#page-top";
                     alert_toast('Instructor Successfully Saved', 'success');
                     resetForm();
                 } else {
+                    window.location.href = "#page-top";
                     alert_toast('Failed to save instructor', 'danger');
                     $('input[type="submit"]').prop('disabled', false);
                 }

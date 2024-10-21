@@ -147,8 +147,15 @@ if (isset($_GET['id'])) {
     }
     $('#manage-semester').submit(function(e) {
         e.preventDefault()
-        start_load()
+        var sem_name = $("input[name='sem_name']").val();
+        var start_date = $("input[name='start_date']").val();
+        var end_date = $("input[name='end_date']").val();
 
+        if (!sem_name || !start_date || !end_date) {
+            alert_toast("Please fill in all fields!", 'warning');
+            return;
+        }
+        start_load()
         $.ajax({
             url: '../admin/ajax.php?action=save_semester',
             data: new FormData($(this)[0]),

@@ -1,6 +1,22 @@
 <?php include 'db_connect.php';
 $user_program_id = $_SESSION['login_program_id'];
 ?>
+<style>
+    .card {
+        border-left: 0.3rem solid #a91414 !important;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        /* background-color: #f8f9fa; */
+    }
+
+    .card-link {
+        text-decoration: none;
+    }
+</style>
 
 <div class="container-fluid">
     <div class="row">
@@ -29,21 +45,23 @@ $user_program_id = $_SESSION['login_program_id'];
                     $total = $result->fetch_assoc()['total'];
                 ?>
                     <div class="col-xl-4 col-md-6 mb-4">
-                        <div class="card border-left-danger shadow h-100 py-3">
-                            <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <a href="<?php echo $card['link']; ?>" class="text-xs font-weight-bold text-danger text-uppercase mb-1 d-block" style="font-size: 1rem;">
-                                            <?php echo $card['title']; ?>
-                                        </a>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800" style="font-size: 4rem;"><?php echo $total; ?></div>
-                                    </div>
-                                    <div class="col-auto">
-                                        <i class="<?php echo $card['icon']; ?> fa-2x text-gray-300" style="font-size: 4rem;"></i>
+                        <a href="<?php echo $card['link']; ?>" class="card-link">
+                            <div class="card border-left-danger shadow h-100 py-3">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1" style="font-size: 1rem;">
+                                                <?php echo $card['title']; ?>
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800" style="font-size: 4rem;"><?php echo $total; ?></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="<?php echo $card['icon']; ?> fa-2x text-gray-300" style="font-size: 4rem;"></i>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 <?php } ?>
             </div>

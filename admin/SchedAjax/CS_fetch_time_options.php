@@ -65,8 +65,8 @@ if (isset($_GET['day'], $_GET['section_id'])) {
         return $options;
     }
 
-    $startOptions = getAvailableTimeOptions($day, $section_id, '08:00', '19:00', 'start');
-    $endOptions = getAvailableTimeOptions($day, $section_id, '08:00', '19:00', 'end');
+    $startOptions = getAvailableTimeOptions($day, $section_id, '07:00', '19:00', 'start');
+    $endOptions = getAvailableTimeOptions($day, $section_id, '07:00', '19:00', 'end');
 
     echo json_encode([
         'startOptions' => $startOptions,

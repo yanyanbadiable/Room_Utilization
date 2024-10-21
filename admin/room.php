@@ -1,5 +1,6 @@
-<?php include('db_connect.php'); ?>
 <?php
+include 'db_connect.php';
+
 if (isset($_GET['id'])) {
     $qry = $conn->query("SELECT * FROM rooms WHERE id=" . $_GET['id'])->fetch_array();
     foreach ($qry as $k => $v) {
@@ -32,25 +33,27 @@ $row = $program->fetch_assoc();
                 </div>
                 <div class="card-body">
                     <form id="manage-room">
+                        <input type="hidden" name="id">
                         <div class="form-group">
                             <input type="hidden" name="program_id" value="<?php echo $row['id'] ?>">
-                            <label class="control-label">Room</label>
-                            <input type="text" class="form-control" name="room">
+                            <label class="control-label" for="room">Room</label>
+                            <input type="text" class="form-control" name="room" id="room">
                         </div>
                         <div class="form-group">
-                            <label class="control-label">Description</label>
-                            <input type="text" class="form-control" name="description">
+                            <label class="control-label" for="description">Description</label>
+                            <input type="text" class="form-control" name="description" id="description">
                         </div>
                         <div class="form-group">
-                            <label class="control-label">Is Laboratory?</label>
-                            <select class="form-control" name="is_lab">
-                                <option value="1">Yes</option>
+                            <label class="control-label" for="is_lab">Is Laboratory?</label>
+                            <select class="form-control" name="is_lab" id="is_lab">
                                 <option value="0">No</option>
+                                <option value="1">Yes</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="control-label">Building</label>
-                            <select class="form-control" name="building_id">
+                            <label class="control-label" for="building_id">Building</label>
+                            <select class="form-control select2" name="building_id" id="building_id">
+                                <option value="">Please select here</option>
                                 <?php
                                 $building = $conn->query("SELECT id, building FROM building");
                                 while ($row = $building->fetch_assoc()) :
@@ -64,7 +67,7 @@ $row = $program->fetch_assoc();
                 <div class="card-footer">
                     <div class="row">
                         <div class="col-md-12">
-                            <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3" id="submitBtn">Save</button>
+                            <button type="submit" form="manage-room" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
                             <button class="btn btn-sm btn-light col-sm-3" type="button" onclick="_reset()">Cancel</button>
                         </div>
                     </div>
@@ -89,7 +92,7 @@ $row = $program->fetch_assoc();
             }
 
             .card-body {
-                max-height: 60vh;
+                /* max-height: 60vh; */
                 overflow-y: auto;
             }
         </style>
@@ -173,7 +176,7 @@ $row = $program->fetch_assoc();
         var building_id = $('[name="building_id"]').val();
 
         if (!room || !building_id) {
-            alert_toast("Please fill in all fields", 'danger');
+            alert_toast("Please fill in all fields", 'warning');
             return;
         }
 
@@ -201,6 +204,7 @@ $row = $program->fetch_assoc();
                     }, 100);
                 } else {
                     alert_toast("Room Already Exists", 'danger');
+                    _reset()
                 }
             }
         });

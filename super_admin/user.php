@@ -30,18 +30,18 @@ $users = $conn->query("SELECT * FROM users ORDER BY name ASC");
                         <div class="table-responsive">
                             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                 <thead>
-                                    <tr  class="text-center">
+                                    <tr class="text-center">
                                         <th>#</th>
                                         <th>Username</th>
                                         <th>Type</th>
-                                        <th>Department</th>
+                                        <th>Program</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
                                     $i = 1;
-                                    $user = $conn->query("SELECT users.*, program.department
+                                    $user = $conn->query("SELECT users.*, program.program_name
                             FROM users INNER JOIN program ON users.program_id = program.id WHERE users.type = 0 ");
                                     if (!$user) {
                                         die('Invalid query: ' . $conn->error);
@@ -52,10 +52,10 @@ $users = $conn->query("SELECT * FROM users ORDER BY name ASC");
                                             <td class="text-center"><?php echo $i++ ?></td>
                                             <td><?php echo $row['username'] ?></td>
                                             <td><?php echo $type[$row['type']] ?></td>
-                                            <td><?php echo $row['department'] ?></td>
+                                            <td><?php echo $row['program_name'] ?></td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-primary edit_user mr-1" type="button" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>">Edit</button>
-                                                <button class="btn btn-sm btn-danger delete_user" type="button" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>">Delete</button>
+                                                <button class="btn btn-sm btn-danger delete_user" type="button" data-id="<?php echo $row['id'] ?>">Delete</button>
                                             </td>
 
                                         </tr>
@@ -71,25 +71,6 @@ $users = $conn->query("SELECT * FROM users ORDER BY name ASC");
 </div>
 
 <script>
-    function delete_user($id) {
-        start_load();
-        $.ajax({
-            url: 'ajax.php?action=delete_user',
-            method: 'POST',
-            data: {
-                id: $id
-            },
-            success: function(resp) {
-                if (resp == 1) {
-                    alert_toast("Data successfully deleted", 'success');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                }
-            }
-        });
-    }
-
     $(document).ready(function() {
         $('#new_user').click(function() {
             uni_modal('New Admin', 'manage_user.php');
@@ -100,9 +81,29 @@ $users = $conn->query("SELECT * FROM users ORDER BY name ASC");
         });
 
         $('.delete_user').click(function() {
-            _conf("Are you sure to delete this admin?", "delete_user", [$(this).data('id')]);
+            _conf("Are you sure to delete this user?", "delete_user", [$(this).attr('data-id')]);
         });
 
     });
+
+    function delete_user($id) {
+        start_load();
+        $.ajax({
+            url: '../admin/ajax.php?action=delete_user',
+            method: 'POST',
+            data: {
+                id: $id
+            },
+            success: function(resp) {
+                if (resp == 1) {
+                    alert_toast("Data successfully deleted", 'success');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 100);
+                }
+            }
+        });
+    }
+
     $('table').dataTable()
 </script>

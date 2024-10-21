@@ -3,9 +3,13 @@ include('db_connect.php');
 
 $user_program_id = $_SESSION['login_program_id'];
 
-$query = "SELECT * FROM rooms WHERE program_id = $user_program_id";
+$query = "
+    SELECT * 
+    FROM rooms 
+    ORDER BY 
+        CASE WHEN program_id = '$user_program_id' THEN 0 ELSE 1 END
+";
 $result = $conn->query($query);
-
 $rooms = [];
 if ($result) {
     while ($row = $result->fetch_assoc()) {
@@ -13,6 +17,7 @@ if ($result) {
     }
 }
 ?>
+
 <div class="container-fluid p-0">
     <div class="row">
         <div class="col-sm-12">
@@ -35,8 +40,8 @@ if ($result) {
                             <div class="col-sm-8">
                                 <div class="form-group">
                                     <label>Rooms</label>
-                                    <select class="form-control select2" id="room">
-                                        <option>Please Select</option>
+                                    <select class="form-control custom-select select2" id="room">
+                                        <option value="">Please select here</option>
                                         <?php foreach ($rooms as $room) : ?>
                                             <option value="<?php echo $room['id']; ?>"><?php echo $room['room']; ?></option>
                                         <?php endforeach; ?>
@@ -54,29 +59,29 @@ if ($result) {
                 </div>
                 <div id="displaydata"></div>
             </div>
-
-            <script>
-                function searchdata(room) {
-                    if (room === 'Please Select') {
-                        return;
-                    }
-                    var array = {
-                        room_id: room
-                    };
-                    $.ajax({
-                        type: "GET",
-                        url: "reportAjax/get_room_schedule.php",
-                        data: array,
-                        success: function(data) {
-                            $('#displaydata').html(data).fadeIn();
-                        },
-                        error: function() {
-                            alert('Something Went Wrong!');
-                        }
-                    });
-                }
-            </script>
-
         </div>
     </div>
 </div>
+<script>
+    function searchdata(room) {
+        if (room === '') {
+            alert_toast("Please Select a valid room!", 'warning');
+            return;
+        }
+        var array = {
+            room_id: room
+        };
+        $.ajax({
+            type: "GET",
+            url: "reportAjax/get_room_schedule.php",
+            data: array,
+            success: function(data) {
+                $('#displaydata').html(data).fadeIn();
+            },
+            error: function() {
+                alert('Something Went Wrong!');
+            }
+        });
+    }
+    
+</script>

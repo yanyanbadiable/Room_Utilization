@@ -34,13 +34,14 @@ if (isset($_GET['id'])) {
                             <input type="text" class="form-control" name="building">
                         </div>
                         <div class="form-group">
-                            <label class="control-label">Department</label>
+                            <label class="control-label">Program</label>
                             <select class="form-control" name="program_id">
+                                <option value="">Please Select Here</option>
                                 <?php
-                                $department = $conn->query("SELECT id, department FROM program");
-                                while ($row = $department->fetch_assoc()) :
+                                $program_code = $conn->query("SELECT id, program_code FROM program");
+                                while ($row = $program_code->fetch_assoc()) :
                                 ?>
-                                    <option value="<?php echo $row['id'] ?>"><?php echo $row['department'] ?></option>
+                                    <option value="<?php echo $row['id'] ?>"><?php echo $row['program_code'] ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>
@@ -77,7 +78,7 @@ if (isset($_GET['id'])) {
 
             /* Add a max-height to the card-body to avoid excessive height */
             .card-body {
-                max-height: 60vh;
+                /* max-height: 60vh; */
                 overflow-y: auto;
             }
         </style>
@@ -101,7 +102,7 @@ if (isset($_GET['id'])) {
                             <tbody>
                                 <?php
                                 $i = 1;
-                                $building = $conn->query("SELECT building.*, program.department FROM building INNER JOIN program ON building.program_id = program.id");
+                                $building = $conn->query("SELECT building.*, program.id, program.program_name, program.program_code FROM building INNER JOIN program ON building.program_id = program.id");
                                 if (!$building) {
                                     die('Invalid query: ' . $conn->error);
                                 }
@@ -110,14 +111,14 @@ if (isset($_GET['id'])) {
                                     <tr>
                                         <td class="text-center"><?php echo $i++ ?></td>
                                         <td class=""><?php echo $row['building'] ?></td>
-                                        <td class=""><?php echo $row['department'] ?></td>
+                                        <td class=""><?php echo $row['program_name'] ?></td>
                                         <td class="text-center">
                                             <div class="btn-group">
                                                 <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     Action
                                                 </button>
                                                 <div class="dropdown-menu">
-                                                    <a class="dropdown-item edit_building" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-building="<?php echo $row['building'] ?>" data-department="<?php echo $row['department'] ?>">Edit</a>
+                                                    <a class="dropdown-item edit_building" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-building="<?php echo $row['building'] ?>" data-program_id="<?php echo $row['program_id'] ?>">Edit</a>
                                                     <div class="dropdown-divider"></div>
                                                     <a class="dropdown-item delete_building" href="javascript:void(0)" data-id='<?php echo $row['id'] ?>'>Delete</a>
                                                 </div>
@@ -149,8 +150,14 @@ if (isset($_GET['id'])) {
     }
     $('#manage-building').submit(function(e) {
         e.preventDefault()
-        start_load()
+        var building = $("input[name='building']").val();
+        var program_id = $("select[name='program_id']").val();
 
+        if (!building || !program_id ) {
+            alert_toast("Please fill in all fields!", 'warning');
+            return;
+        }
+        start_load()
         $.ajax({
             url: '../admin/ajax.php?action=save_building',
             data: new FormData($(this)[0]),
@@ -184,7 +191,7 @@ if (isset($_GET['id'])) {
         cat.get(0).reset()
         cat.find("[name='id']").val($(this).attr('data-id'))
         cat.find("[name='building']").val($(this).attr('data-building'))
-        cat.find("[name='department']").val($(this).attr('data-department'))
+        cat.find("[name='program_id']").val($(this).attr('data-program_id'))
         end_load()
     })
     $('.delete_Building').click(function() {
@@ -194,7 +201,7 @@ if (isset($_GET['id'])) {
     function delete_building($id) {
         start_load()
         $.ajax({
-            url: 'ajax.php?action=delete_building',
+            url: '../admin/ajax.php?action=delete_building',
             method: 'POST',
             data: {
                 id: $id

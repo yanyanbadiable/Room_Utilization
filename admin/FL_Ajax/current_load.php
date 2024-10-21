@@ -1,9 +1,19 @@
 <?php
 include '../db_connect.php';
 
+session_start();
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['level'])) {
     $instructor = $_GET['instructor'];
     $level = $_GET['level'];
+    $program_id = $_SESSION['login_program_id'];
+
+    $faculty_program_query = "SELECT program_id FROM faculty WHERE id = ?";
+    $faculty_program_stmt = $conn->prepare($faculty_program_query);
+    $faculty_program_stmt->bind_param('i', $instructor);
+    $faculty_program_stmt->execute();
+    $faculty_program_result = $faculty_program_stmt->get_result();
+    $faculty_program = $faculty_program_result->fetch_assoc()['program_id'];
 
     $loads_query = "
         SELECT courses.*, course_offering_info.*, schedules.* 
@@ -22,6 +32,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     while ($row = mysqli_fetch_assoc($loads_result)) {
         if (!array_key_exists($row['course_offering_info_id'], $loads)) {
             $loads[$row['course_offering_info_id']] = $row;
+        }
+    }
+
+    $total_hours_query = "
+    SELECT DISTINCT course_offering_info_id, hours 
+            FROM courses 
+            INNER JOIN course_offering_info ON course_offering_info.courses_id = courses.id  
+            INNER JOIN schedules ON schedules.course_offering_info_id = course_offering_info.id
+            WHERE schedules.faculty_id = ? AND schedules.is_active = 1
+    ";
+    $total_hours_stmt = $conn->prepare($total_hours_query);
+    $total_hours_stmt->bind_param('i', $instructor);
+    $total_hours_stmt->execute();
+    $total_hours_result = $total_hours_stmt->get_result();
+
+    $total_hours = 0;
+    $seen_course_offering_ids = [];
+
+    while ($row = $total_hours_result->fetch_assoc()) {
+        if (!in_array($row['course_offering_info_id'], $seen_course_offering_ids)) {
+            $total_hours += (float) $row['hours']; 
+            $seen_course_offering_ids[] = $row['course_offering_info_id'];
         }
     }
 
@@ -56,7 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
         'W' => 'Wed',
         'Th' => 'Thu',
         'F' => 'Fri',
-        'S' => 'Sat'
+        'S' => 'Sat',
+        'Su' => 'Sun'
     ];
 
     function generateTimeRange($startTime, $endTime)
@@ -110,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
         WHERE 
             s.is_active = 1 AND s.faculty_id = ? AND
             s.day IN ('M', 'T', 'W', 'Th', 'F', 'S') AND
-            s.time_start BETWEEN '08:00' AND '19:00'
+            s.time_start BETWEEN '07:00' AND '19:00'
     ";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("i", $instructor);
@@ -132,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     function generateCalendarData($weekDays, $instructor)
     {
         $calendarData = [];
-        $timeRange = generateTimeRange('08:00', '19:00');
+        $timeRange = generateTimeRange('07:00', '19:00');
         $schedules = fetchSchedules($instructor);
         $skipSlots = [];
         $sectionColors = [];
@@ -186,10 +219,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     $calendarData = generateCalendarData($weekDays, $instructor);
     // End of timetable
 
-    $designation_query = "SELECT faculty.*, unit_loads.designation FROM faculty INNER JOIN unit_loads ON faculty.designation = unit_loads.id;
+    $designation_query = "SELECT faculty.*, designation.designation, unit_loads.academic_rank FROM faculty INNER JOIN unit_loads ON faculty.academic_rank = unit_loads.id LEFT JOIN designation ON faculty.designation = designation.id WHERE faculty.id = $instructor;
     ";
     $designation_result = mysqli_query($conn, $designation_query);
     $designation = mysqli_fetch_assoc($designation_result);
+
+    $display_value = '';
+    if (!empty($designation['designation'])) {
+        $display_value = $designation['designation'];
+    } else if (!empty($designation['academic_rank'])) {
+        $display_value = $designation['academic_rank'];
+    }
 }
 ?>
 
@@ -210,10 +250,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     <div class="nav-tabs-custom">
         <ul class="nav nav-tabs d-flex">
             <li class="mr-auto header mr-auto py-3">
-                <h4><i class="fa fa-calendar"></i>
-                    <span>Faculty Loading <b>(<?php echo $designation['designation']; ?>)</b></span><br>
-                    <span class="small m-0">Total No. of Units Loaded: <?php echo array_sum(array_column($loads, 'units')); ?></span>
+                <h4 class="m-0"><i class="fa fa-calendar"></i>
+                    <span>Faculty Loading <b>(<?php echo $display_value; ?>)</b></span><br>
+                    <span class="small m-0">Total No. of Hours Loaded: <?php echo $total_hours; ?></span> <br>
                 </h4>
+                <h5 class="m-0">
+                    <span class="small m-0">Total No. of Units Loaded: <?php echo array_sum(array_column($loads, 'units')); ?></span>
+                </h5>
             </li>
             <li class="nav-item">
                 <a class="nav-link active" href="#tab_1-1" data-toggle="tab">Calendar View</a>
@@ -267,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                                     <th class="text-center">Units</th>
                                     <th class="text-center">Section</th>
                                     <th class="text-center">Schedule</th>
-                                    <th class="text-center">Action</th>
+                                    <th class="text-center align-middle">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -277,6 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                                     SELECT 
                                     courses.course_code, 
                                     courses.course_name, 
+                                    courses.program_id,
                                     program.program_code, 
                                     sections.level, 
                                     sections.section_name, 
@@ -352,26 +396,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
 
                                             </div>
                                         </td>
-                                        <td class="text-center">
-                                            <button onclick="remove_faculty_load('<?php echo $schedule['course_offering_info_id']; ?>')" class="btn btn-danger btn-flat">
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                        </td>
+                                        <?php if ($course_detail['program_id'] == $_SESSION['login_program_id']): ?>
+                                            <td class="text-center align-middle">
+                                                <button class="btn btn-danger btn-flat remove_faculty_load" data-offering_id="<?php echo $schedule['course_offering_info_id']; ?>">
+                                                    <i class="fa fa-times"></i>
+                                                </button>
+
+                                            </td>
+                                        <?php else : ?>
+                                            <td>
+
+                                            </td>
+                                        <?php endif; ?>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                        <div class="col-sm-12">
-                            <a href="index.php?page=generate_schedule&instructor=<?php echo $instructor; ?>" class="btn btn-primary btn-block">Generate Schedule</a>
-                        </div>
-
+                        <?php if ($faculty_program == $program_id): ?>
+                            <div class="col-sm-12">
+                                <a onclick="window.location.href='index.php?page=reportAjax/teaching_load&faculty_id=<?php echo urlencode($instructor); ?>'" class="btn btn-primary btn-block">View Teaching Load</a>
+                            </div>
+                        <?php endif; ?>
 
                     <?php else : ?>
-                        <div class="callout callout-warning">
-                            <div class="text-center mt-3">
-                                <h5>No Faculty Loading Found!</h5>
-                            </div>
-                        </div>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Course</th>
+                                    <th class="text-center">Units</th>
+                                    <th class="text-center">Section</th>
+                                    <th class="text-center">Schedule</th>
+                                    <th class="text-center align-middle">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <td colspan="5" class="text-center"> No Faculty Loading Found!</td>
+                            </tbody>
+                        </table>
                     <?php endif; ?>
                 </div>
             </div>
@@ -380,6 +441,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
 </div>
 
 <script>
+    $('.remove_faculty_load').click(function() {
+        _conf("Are you sure you want to unload the subject from this instructor?", "remove_faculty_load", [$(this).attr('data-offering_id')]);
+    });
+
     function remove_faculty_load(offering_id) {
         var array = {};
         array['offering_id'] = offering_id;

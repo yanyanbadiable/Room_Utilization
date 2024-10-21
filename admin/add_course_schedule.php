@@ -1,6 +1,5 @@
 <?php
 include 'db_connect.php';
-// include 'SchedAjax/CS_fetch_time_options.php'; 
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['section_id'])) {
     $course_offering_info_id = $_GET['id'];
@@ -45,15 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
         $scheduledHours = 0;
     }
 
-    // var_dump($totalCourseHours);
-    // var_dump($scheduledHours);
-
     $remainingHours = $totalCourseHours - $scheduledHours;
-
-    // echo "Remaining Hours: " . $remainingHours;
-
-    // var_dump($remainingHours);
-    // var_dump($course_offering_info_id);
 
     $weekDays = [
         'M' => 'Mon',
@@ -61,7 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
         'W' => 'Wed',
         'Th' => 'Thu',
         'F' => 'Fri',
-        'S' => 'Sat'
+        'S' => 'Sat',
+        'Su' => 'Sun'
     ];
 
     function generateTimeRange($startTime, $endTime)
@@ -151,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
         WHERE 
             coi.section_id = ? AND
             s.day IN ('M', 'T', 'W', 'Th', 'F', 'S') AND
-            s.time_start BETWEEN '08:00' AND '19:00'
+            s.time_start BETWEEN '07:00' AND '19:00'
     ";
 
         $stmt = $conn->prepare($sql);
@@ -174,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
     function generateCalendarData($weekDays, $section_id)
     {
         $calendarData = [];
-        $timeRange = generateTimeRange('08:00', '19:00');
+        $timeRange = generateTimeRange('07:00', '19:00');
         $schedules = fetchSchedules($section_id);
         $skipSlots = [];
         $coursesColors = [];
@@ -324,7 +316,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
             <div class="col-sm-8">
                 <div class="card card-default shadow mb-4">
                     <div class="card-header bg-transparent">
-                        <h5 class="card-title m-0">Schedule</h5>
+                        <h4 class="card-title m-0 d-inline"><i class="fa fa-calendar-check pr-1"></i> Schedule -
+                            <span><small><b>(Remaining Hour/s: <?php echo $remainingHours; ?>)</b></small></span>
+                        </h4>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -349,10 +343,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                                     <label>Time Start</label>
                                     <select class="form-control" id="time_start">
                                         <option value=" ">Select start time</option>
-                                        <!-- <option disabled selected>Select start time</option> -->
                                         <?php
-                                        $day = 'M'; // Default to Monday for initial load
-                                        echo getAvailableTimeOptions($day, $section_id, '08:00', '19:00', 'start');
+                                        $day = 'M';
+                                        echo getAvailableTimeOptions($day, $section_id, '07:00', '19:00', 'start');
                                         ?>
                                     </select>
                                 </div>
@@ -364,7 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                                         <option value=" ">Select end time</option>
                                         <!-- <option disabled selected>Select end time</option> -->
                                         <?php
-                                        echo getAvailableTimeOptions($day, $section_id, '08:00', '19:00', 'end');
+                                        echo getAvailableTimeOptions($day, $section_id, '07:00', '19:00', 'end');
                                         ?>
                                     </select>
                                 </div>
@@ -434,30 +427,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
     }
 
     function addSchedule(day, time_start, time_end) {
+        var day = $('#day').val();
+        var time_start = $('#time_start').val();
+        var time_end = $('#time_end').val();
         var isValid = true;
-        var startTime = $('#time_start').val();
-        var endTime = $('#time_end').val();
 
-        if (!day || !time_start || !time_end) {
+        if (!day || !time_start || !time_end || day.trim() === 'Day' || time_start.trim() === 'Select start time' || time_end.trim() === 'Select end time') {
             isValid = false;
-            alert_toast('Please fill in all fields.', 'danger');
+            alert_toast('Please fill in all fields.', 'warning');
             return;
         }
 
         var newStart = new Date('1970-01-01T' + time_start + 'Z');
         var newEnd = new Date('1970-01-01T' + time_end + 'Z');
+
         var newScheduleHours = (newEnd - newStart) / (1000 * 60 * 60);
         var remainingHours = totalCourseHours - scheduledHours;
 
         if (remainingHours <= 0) {
-            alert_toast('No remaining hours available for scheduling.', 'danger');
-            _reset();
+            window.location.href = "#page-top";
+            alert_toast('No remaining hours available for scheduling.', 'warning');
             return;
         }
 
         if (newScheduleHours > remainingHours) {
-            alert_toast(`The remaining hours to schedule is only ${remainingHours} hours.`, 'danger');
-            _reset();
+            window.location.href = "#page-top";
+            alert_toast(`The remaining hours to schedule is only ${remainingHours} hours.`, 'warning');
             return;
         }
 
@@ -471,7 +466,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                         time_start: time_start,
                         time_end: time_end,
                         course_offering_info_id: courseOfferingInfoId,
-                        section_id: sectionId
+                        section_id: sectionId,
+                        total_hours: newScheduleHours
                     },
                     success: function(data) {
                         $('#display_room').html(data).fadeIn();
@@ -554,7 +550,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
     });
 
 
-
     function remove_schedule(schedule_id, offering_id) {
         $.ajax({
             type: "POST",
@@ -564,6 +559,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                 offering_id: offering_id
             },
             success: function(data) {
+                window.location.href = "#page-top";
                 alert_toast("Schedule successfully removed!", 'success');
                 location.reload();
             },
@@ -582,15 +578,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                 offering_id: offering_id,
                 section_id: section_id
             },
-            success: function(data) {
-                alert_toast(data, 'success');
-                location.reload();
+            success: function(response) {
+                var data = JSON.parse(response);
+                window.location.href = "#page-top";
+                if (data.status === 'success') {
+                    alert_toast(data.message, 'success');
+                    location.reload();
+                } else {
+                    alert_toast(data.message, 'danger');
+                }
             },
             error: function(xhr, status, error) {
+                window.location.href = "#page-top";
                 alert_toast(xhr.responseText, 'danger');
             }
         });
     }
+
 
     $('.delete_schedule').click(function() {
         var scheduleId = $(this).data('id');
@@ -608,11 +612,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                 offering_id: offering_id
             },
             success: function(data) {
+                window.location.href = "#page-top";
                 alert_toast(data, 'success');
                 location.reload();
             },
             error: function(xhr, status, error) {
-
+                window.location.href = "#page-top";
                 alert_toast(xhr.responseText, 'danger');
             }
         });

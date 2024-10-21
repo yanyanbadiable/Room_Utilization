@@ -7,14 +7,13 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>Room Utilization Management System</title>
+  <title>ADRUFWMS</title>
 
 
   <?php
   if (!isset($_SESSION['login_id']))
     header('location:login.php');
   include '../includes/header.php';
-  // include('./auth.php'); 
   ?>
 
 </head>
@@ -68,15 +67,53 @@
     max-height: calc(100%);
     max-width: calc(100%);
   }
+
+  .select2-container .select2-selection--single {
+    height: 38px;
+    line-height: 40px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 38px;
+  }
+
+  #alert_toast.bg-success {
+    background-color: rgba(40, 167, 69, 0.85) !important;
+  }
+
+  #alert_toast.bg-danger {
+    background-color: rgba(220, 53, 69, 0.85) !important;
+  }
+
+  #alert_toast.bg-info {
+    background-color: rgba(23, 162, 184, 0.85) !important;
+  }
+
+  #alert_toast.bg-warning {
+    background-color: rgba(255, 193, 7, 0.85) !important;
+  }
+
+  .big-icon {
+    font-size: 20px;
+  }
+
+  .toast-body .message {
+    font-size: 12px;
+  }
+
+  .toast-body h6 {
+    font-size: 12px;
+  }
 </style>
 
 <body>
 
   <?php include '../includes/navbar1.php' ?>
-
-
-  <!-- <div id="preloader"></div> -->
-  <!-- <a href="#" class="back-to-top"><i class="icofont-simple-up"></i></a> -->
 
 
   <!-- Generic Modal -->
@@ -192,35 +229,55 @@
     })
   }
   window._conf = function($msg = '', $func = '', $params = []) {
-    $('#confirm_modal #confirm').attr('onclick', $func + "(" + $params.join(',') + ")")
-    $('#confirm_modal .modal-body').html($msg)
-    $('#confirm_modal').modal('show')
+    $('#confirm_modal #confirm').attr('onclick', $func + "(" + $params.join(',') + "); $('#confirm_modal').modal('hide');");
+    $('#confirm_modal .modal-body').html($msg);
+    $('#confirm_modal').modal('show');
   }
   window.alert_toast = function($msg = 'TEST', $bg = 'success') {
-    $('#alert_toast').removeClass('bg-success')
-    $('#alert_toast').removeClass('bg-danger')
-    $('#alert_toast').removeClass('bg-info')
-    $('#alert_toast').removeClass('bg-warning')
 
-    if ($bg == 'success')
-      $('#alert_toast').addClass('bg-success')
-    if ($bg == 'danger')
-      $('#alert_toast').addClass('bg-danger')
-    if ($bg == 'info')
-      $('#alert_toast').addClass('bg-info')
-    if ($bg == 'warning')
-      $('#alert_toast').addClass('bg-warning')
-    $('#alert_toast .toast-body').html($msg)
+    $('#alert_toast').removeClass('bg-success bg-danger bg-info bg-warning');
+    $('#alert_toast .icon').removeClass('fa-check fa-exclamation-circle fa-info fa-exclamation-triangle');
+
+    if ($bg === 'success' || $bg === 'danger') {
+      $('#notificationText').html('<b>Notification!</b>');
+    } else {
+      $('#notificationText').html(''); 
+    }
+
+    if ($bg === 'success') {
+      $('#alert_toast').addClass('bg-success');
+      $('#alert_toast .icon').addClass('fa fa-check');
+    }
+    if ($bg === 'danger') {
+      $('#alert_toast').addClass('bg-danger');
+      $('#alert_toast .icon').addClass('fa fa-exclamation-triangle');
+    }
+    if ($bg === 'info') {
+      $('#alert_toast').addClass('bg-info');
+      $('#alert_toast .icon').addClass('fa fa-info');
+    }
+    if ($bg === 'warning') {
+      $('#alert_toast').addClass('bg-warning');
+      $('#alert_toast .icon').addClass('fa fa-exclamation-circle');
+    }
+
+    $('#alert_toast .message').html($msg);
     $('#alert_toast').toast({
       delay: 3000
     }).toast('show');
   }
+
+
   $(document).ready(function() {
     $('#preloader').fadeOut('fast', function() {
       $(this).remove();
     })
   })
-
+  $('.select2').select2({
+    placeholder: "Please select here",
+    // allowClear: true,
+    width: "100%",
+  })
 </script>
 
 </html>

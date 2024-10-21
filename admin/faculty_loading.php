@@ -1,7 +1,13 @@
 <?php
 include('db_connect.php');
+$program_id = $_SESSION['login_program_id'];
 
-$query = "SELECT * FROM faculty";
+$query = "
+    SELECT * 
+    FROM faculty 
+    ORDER BY 
+        CASE WHEN program_id = '$program_id' THEN 0 ELSE 1 END, lname
+";
 $result = $conn->query($query);
 
 $instructors = [];
@@ -26,7 +32,7 @@ if ($result->num_rows > 0) {
             <div class="container-fluid p-0" style="margin-top: 15px;">
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
-                        <h5 class="m-0" >Search by Instructor</h5>
+                        <h5 class="m-0">Search by Instructor</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -34,7 +40,7 @@ if ($result->num_rows > 0) {
                                 <div class="form-group" id="displayLevel">
                                     <label>Level</label>
                                     <select class="form-control" id="level">
-                                        <option>Please Select</option>
+                                        <option value="">Please Select</option>
                                         <option value="1st Year">1st Year</option>
                                         <option value="2nd Year">2nd Year</option>
                                         <option value="3rd Year">3rd Year</option>
@@ -45,12 +51,12 @@ if ($result->num_rows > 0) {
                             <div class="col-sm-4">
                                 <div class="form-group" id="displayInstructor">
                                     <label>Instructor</label>
-                                    <select class="form-control" id="instructor">
-                                        <option>Please Select</option>
+                                    <select class="form-control select2 custom-select" id="instructor">
+                                        <option value="">Please Select</option>
                                         <?php foreach ($instructors as $instructor) : ?>
                                             <?php
                                             $middle_initial = !empty($instructor['mname']) ? strtoupper(substr($instructor['mname'], 0, 1)) . '.' : '';
-                                            $name = $instructor['lname'] . ', ' . $instructor['fname'] . ' ' . $middle_initial; 
+                                            $name = $instructor['lname'] . ', ' . $instructor['fname'] . ' ' . $middle_initial;
                                             ?>
                                             <option value="<?php echo $instructor['id']; ?>"><?php echo strtoupper($name); ?></option>
                                         <?php endforeach; ?>
@@ -77,7 +83,7 @@ if ($result->num_rows > 0) {
 </div>
 <script>
     $(document).ready(function() {
-        
+
         $('#displayInstructor').hide();
         $('#displaySearch').hide();
 
@@ -89,6 +95,7 @@ if ($result->num_rows > 0) {
             $('#displaySearch').fadeIn();
         })
     })
+
 
 
     function displayCourses(level, instructor) {
@@ -133,5 +140,4 @@ if ($result->num_rows > 0) {
             }
         })
     }
-
 </script>

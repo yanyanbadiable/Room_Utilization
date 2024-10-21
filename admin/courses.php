@@ -55,7 +55,7 @@ while ($row = $result->fetch_assoc()) {
                                                 <td><?php echo $program['program_code'] ?></td>
                                                 <td><?php echo $program['program_name'] ?></td>
                                                 <td class="text-center">
-                                                    <a href="index.php?page=view_course&program_code=<?php echo $program['program_code'] ?>" class="btn btn-primary"><i class="fa fa-eye"></i></a>
+                                                    <a href="index.php?page=view_course&program_code=<?php echo $program['program_code'] ?>" class="btn btn-primary btn-sm"><i class="fa fa-eye"></i></a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

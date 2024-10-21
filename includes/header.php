@@ -9,8 +9,10 @@
 <!-- Template Main CSS File -->
 <link href="../assets/css/sb-admin-2.min.css" rel="stylesheet">
 <link href="../assets/css/sb-admin-2.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
 
-
+<!-- Select2 CSS -->
+<link href="../assets/select2-4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <!-- Vendor CSS Files -->
 <link href="../assets/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
@@ -30,35 +32,9 @@
 <script src="../assets/js/sb-admin-2.js"></script>
 <script src="../assets/js/sb-admin-2.min.js"></script>
 
-<!-- JavaScript Libraries -->
-
+<!-- Select2 JS -->
+<script src="../assets/select2-4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <!-- Page level plugins -->
 <script src="../assets/vendor/chart.js/Chart.min.js"></script>
-<script src="../assets/vendor/datatables/jquery.dataTables.min.js"></script>
-<script src="../assets/vendor/datatables/dataTables.bootstrap4.min.js"></script>
 
-<!-- Page level custom scripts -->
-
-<!-- <script src="../assets/js/demo/datatables-demo.js"></script>
-<script src="../assets/js/demo/chart-area-demo.js"></script>
-<script src="../assets/js/demo/chart-pie-demo.js"></script> -->
-
-
-
-<!-- Calendar -->
-<!-- <script src="/assets/fullcalendar/packages/moment/moment.min.js"></script>
-<script src="/assets/fullcalendar/dist/index.global.min.js"></script>
-<script src="/assets/fullcalendar/dist/index.global.js"></script>
-<script src="/assets/fullcalendar/packages/core/index.global.min.js"></script>
-<script src="/assets/fullcalendar/packages/core/locales-all.global.min.js"></script>
-
-<script src="/assets/fullcalendar/packages/daygrid/index.global.min.js"></script>
-<script src="/assets/fullcalendar/packages/timegrid/index.global.min.js"></script>
-<script src="/assets/fullcalendar/packages/list/index.global.min.js"></script> -->
-
-<!-- <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.11/index.global.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.11/index.global.min.js"></script> -->
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/print-js/1.6.0/print.min.js"></script> -->

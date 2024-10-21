@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['level']) && isset($_GET
         SELECT sections.*, program.program_code
         FROM sections
         INNER JOIN program ON sections.program_id = program.id
-        WHERE sections.level = ? AND sections.is_active = 1 AND program.program_code = ?
+        WHERE sections.level = ? AND program.program_code = ?
         ORDER BY sections.section_name ASC
     ");
 
