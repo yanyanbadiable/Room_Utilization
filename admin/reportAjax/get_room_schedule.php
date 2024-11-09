@@ -189,7 +189,7 @@ if (isset($_GET['room_id'])) {
 
     .underlined {
         border: none;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid #858796;
         width: auto;
         text-align: center;
     }
@@ -247,11 +247,7 @@ if (isset($_GET['room_id'])) {
                 ?>
                         <h6 style="text-transform: uppercase;">
                             <?php echo $row['sem_name'] ?>, AY: <b>
-                                <?php
-                                $currentYear = date("Y");
-                                $nextYear = $currentYear + 1;
-                                echo "$currentYear-$nextYear";
-                                ?>
+                                <input type="text" name="acad_year" id="acad_year" value="" size="9" class="underlined">
                             </b>
                         </h6>
                 <?php
@@ -343,10 +339,11 @@ if (isset($_GET['room_id'])) {
     function generatePDF() {
         var head_planning = document.getElementById('hpdu').value;
         var cd_signature = document.getElementById('cd_signature').value;
+        var acad_year = document.getElementById('acad_year').value;
 
-        if (!cd_signature || !head_planning) {
+        if (!cd_signature || !head_planning || !acad_year) {
             window.location.href = "#page-top";
-            alert_toast("Please fill in all fields.", 'danger');
+            alert_toast("Please fill in all fields.", 'warning');
             return;
         }
 
@@ -355,6 +352,7 @@ if (isset($_GET['room_id'])) {
         var url = 'reportAjax/generate_schedule.php?room_id=<?php echo $room_id; ?>' +
             '&program_dept=' + encodeURIComponent(program_dept) +
             '&head_planning=' + encodeURIComponent(head_planning) +
+            '&acad_year=' + encodeURIComponent(acad_year) +
             '&cd_signature=' + encodeURIComponent(cd_signature);
 
         window.location.href = url;

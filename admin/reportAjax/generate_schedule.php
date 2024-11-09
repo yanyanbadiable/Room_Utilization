@@ -8,6 +8,7 @@ if (isset($_GET['room_id'])) {
     $room_id = $_GET['room_id'];
     $head_planning = $_GET['head_planning'];
     $cd_signature = $_GET['cd_signature'];
+    $acad_year = $_GET['acad_year'];
     $program_id = $_SESSION['login_program_id'];
     $program_dept =  $_GET['program_dept'];
 
@@ -23,7 +24,7 @@ if (isset($_GET['room_id'])) {
         die('Error preparing program query.');
     }
 
-    $head_query = "SELECT * FROM faculty WHERE designation = 31";
+    $head_query = "SELECT * FROM faculty WHERE designation = 1";
     $head_result = mysqli_query($conn, $head_query);
     $head = $head_result->fetch_assoc();
 
@@ -252,9 +253,7 @@ EOD;
 
     if ($result) {
         while ($row = $result->fetch_assoc()) {
-            $currentYear = date("Y");
-            $nextYear = $currentYear + 1;
-            $html .= '<h6 class="medium-text">' . strtoupper($row['sem_name']) . ', AY ' . $currentYear . '-' . $nextYear . '</h6>';
+            $html .= '<h6 class="medium-text">' . strtoupper($row['sem_name']) . ', AY: ' . $acad_year . '</h6>';
         }
     } else {
         $html .= '<h6 class="medium-text">No semester information found.</h6>';

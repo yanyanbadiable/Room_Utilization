@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['level']) && isset($_GET
 }     
 ?>
 <label>Section</label>
-<select class="form-control" id="section_id" onchange='getcoursesoffered(program_code.value,level.value,this.value)'>
+<select class="form-control" id="section_id" onchange='getCoursesOffered(program_code.value,level.value,this.value)'>
     <option>Please Select</option>
     <?php foreach ($sections as $section) {
         $section_name_concatenated = $section['program_code'] . '-' . substr($section['level'], 0, 1) . $section['section_name'];

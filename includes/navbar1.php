@@ -86,13 +86,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
             <!-- Heading -->
             <div class="sidebar-heading">Main</div>
 
-            <!-- Nav Item - Course Scheduling -->
-            <li class="nav-item <?php echo $page == 'course_scheduling' ? 'active' : ''; ?>">
-                <a class="nav-link" href="index.php?page=course_scheduling">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span class="ml-1">Course Scheduling</span>
-                </a>
-            </li>
 
             <!-- Nav Item - Faculty Loading -->
             <li class="nav-item <?php echo $page == 'faculty_loading' ? 'active' : ''; ?>">
@@ -128,6 +121,9 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
                         </a>
                         <a class="_hover collapse-item text-white" href="index.php?page=course_offering">
                             <i class="fa fa-edit"></i> <span class="ml-1">Course Offering</span>
+                        </a>
+                        <a class="_hover collapse-item text-white" href="index.php?page=course_scheduling">
+                            <i class="fa fa-edit"></i> <span class="ml-1">Course Scheduling</span>
                         </a>
                     </div>
                 </div>
@@ -278,8 +274,8 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
                 </div>
                 <div class="modal-body">Are you sure you want to logout?</div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
                     <a class="btn btn-primary" href="ajax.php?action=logout">Logout</a>
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
                 </div>
             </div>
         </div>

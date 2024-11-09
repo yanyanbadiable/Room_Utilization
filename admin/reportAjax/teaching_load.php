@@ -132,14 +132,14 @@ if (isset($_GET['faculty_id'])) {
 <style>
     .underline-text {
         font-size: 14px;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid #858796;
         padding-inline: 10px;
         padding-bottom: 1px;
     }
 
     .underlined {
         border: none;
-        border-bottom: 1px solid black;
+        border-bottom: 1px solid #858796;
         width: auto;
         text-align: center;
     }
@@ -190,19 +190,15 @@ if (isset($_GET['faculty_id'])) {
 
                 <div class="row mt-3">
                     <div class="col-md-8">
-                        <strong>Faculty Member:</strong> <?php echo strtoupper($faculty['fname']) . " " .
-                                                                (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
-                                                                strtoupper($faculty['lname']) . ", " . strtoupper($faculty['post_graduate_studies']); ?><br>
+                        <strong>Faculty Member:</strong>
+                        <?php echo strtoupper($faculty['fname']) . " " . (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
+                        strtoupper($faculty['lname']) . (!empty($faculty['post_graduate_studies']) ? ", " . strtoupper($faculty['post_graduate_studies']) : ""); ?><br>
                         <strong>Academic Rank:</strong> <?php echo strtoupper($faculty['academic_rank']); ?><br>
                         <strong>College/Campus:</strong> CARIGARA CAMPUS
                     </div>
                     <div class="col-md-4">
                         <strong>Semester:</strong> <?php echo $semester_name; ?><br>
-                        <strong>School Year:</strong> <?php
-                                                        $currentYear = date("Y");
-                                                        $nextYear = $currentYear + 1;
-                                                        echo "$currentYear-$nextYear";
-                                                        ?><br>
+                        <strong>School Year:</strong> <input type="text" name="acad_year" id="acad_year" value="" size="9" class="underlined"><br>
                         <strong>Designation:</strong> <?php echo strtoupper($faculty['designation']); ?>
                     </div>
                 </div>
@@ -561,7 +557,7 @@ if (isset($_GET['faculty_id'])) {
                         <div class="mb-1">
                             <strong>Other In-School Involvement/Assignment Per Week:</strong>
                         </div>
-                        <div class="col-md-5 pl-3 text-right">
+                        <div class="col-md-6 pl-3 text-right">
                             <div class="mb-2">
                                 Administrative: <input type="text" id="administrative_hours" value="" size="2" class="underlined"> Hours
                             </div>
@@ -643,10 +639,11 @@ if (isset($_GET['faculty_id'])) {
         var cdSignature = document.getElementById('cd_signature').value;
         var vpaaSignature = document.getElementById('vpaa_signature').value;
         var upSignature = document.getElementById('up_signature').value;
+        var acadYear = document.getElementById('acad_year').value;
 
-        if (!administrativeHours || !researchHours || !extensionHours || !consultationHours || !instructionalHours || !otherHours || !cdSignature || !vpaaSignature || !upSignature) {
+        if (!administrativeHours || !researchHours || !extensionHours || !consultationHours || !instructionalHours || !otherHours || !cdSignature || !vpaaSignature || !upSignature || !acadYear) {
             window.location.href = "#page-top";
-            alert_toast("Please fill in all fields.", 'danger');
+            alert_toast("Please fill in all fields.", 'warning');
             return;
         }
 
@@ -662,6 +659,7 @@ if (isset($_GET['faculty_id'])) {
             '&other_hours=' + encodeURIComponent(otherHours) +
             '&cd_signature=' + encodeURIComponent(cdSignature) +
             '&vpaa_signature=' + encodeURIComponent(vpaaSignature) +
+            '&acad_year=' + encodeURIComponent(acadYear) +
             '&up_signature=' + encodeURIComponent(upSignature);
 
         window.location.href = url;

@@ -38,7 +38,7 @@
                             <div class='col-sm-4'>
                                 <div class='form-group'>
                                     <label>Level</label>
-                                    <select class=' form-control' id='level' onchange='getsection(program_code.value,this.value)'>
+                                    <select class=' form-control' id='level' onchange='getSection(program_code.value,this.value)'>
                                         <option>Please Select</option>
                                         <option value='1st Year'>1st Year</option>
                                         <option value='2nd Year'>2nd Year</option>
@@ -47,19 +47,19 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class='col-sm-4' id='displaysection'>
+                            <div class='col-sm-4' id='displaySection'>
                                 <div></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div id='displayoffered' onchange='getcoursesoffered()'></div>
+                <div id='displayOffered' onchange='getCoursesOffered()'></div>
             </div>
         </div>
     </div>
 </div>
 <script>
-    function getsection(program_code, level) {
+    function getSection(program_code, level) {
         var array = {};
         array['program_code'] = program_code;
         array['level'] = level;
@@ -68,8 +68,8 @@
             url: "SchedAjax/CS_get_section.php",
             data: array,
             success: function(data) {
-                $('#displaysection').html(data).fadeIn();
-                $('#displayoffered').html('').hide();
+                $('#displaySection').html(data).fadeIn();
+                $('#displayOffered').html('').hide();
             },
             error: function() {
                 console.error('Error fetching sections.');
@@ -78,7 +78,7 @@
     }
 
 
-    function getcoursesoffered(program_code, level, section_id) {
+    function getCoursesOffered(program_code, level, section_id) {
         var array = {};
         array['program_code'] = program_code;
         array['level'] = level;
@@ -89,7 +89,7 @@
             data: array,
             success: function(data) {
                 console.log(data);
-                $('#displayoffered').html(data).fadeIn();
+                $('#displayOffered').html(data).fadeIn();
             }
         });
     }

@@ -15,6 +15,7 @@ if (isset($_GET['faculty_id'])) {
     $cd_signature = $_GET['cd_signature'];
     $vpaa_signature = $_GET['vpaa_signature'];
     $up_signature = $_GET['up_signature'];
+    $acad_year = $_GET['acad_year'];
     $program_dept = $_GET['program_dept'];
 
     // Fetch program information
@@ -254,14 +255,15 @@ if (isset($_GET['faculty_id'])) {
             <tr>
                 <td style="width: 66%; vertical-align: top; text-align: left; border: none;">
                     <strong>Faculty Member:</strong> ' . strtoupper($faculty['fname']) . " " .
-        (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
-        strtoupper($faculty['lname']) . ", " . strtoupper($faculty['post_graduate_studies']) . '<br>
+                    (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
+                    strtoupper($faculty['lname']) .
+                    (!empty($faculty['post_graduate_studies']) ? ", " . strtoupper($faculty['post_graduate_studies']) : "") . '<br>
                     <strong>Academic Rank:</strong> ' . strtoupper($faculty['academic_rank']) . '<br>
                     <strong>College/Campus:</strong> CARIGARA CAMPUS
                 </td>
                 <td style="width: 34%; vertical-align: top; text-align: left; border: none;">
                     <strong>Semester:</strong> ' . strtoupper($semester_name) . '<br>
-                    <strong>School Year:</strong> ' . date("Y") . '-' . (date("Y") + 1) . '<br>
+                    <strong>School Year:</strong> ' . $acad_year . '<br>
                     <strong>Designation:</strong> ' . strtoupper($faculty['designation']) . '
                 </td>
             </tr>

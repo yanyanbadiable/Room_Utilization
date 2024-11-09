@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
     <div class="card-body">
         <div class="row">
             <div class="col-sm-12 mb-3">
-                <input type="text" onkeyup="search(event, this.value, '<?php echo $level; ?>')" class="form-control" placeholder="Enter the course code to search..">
+                <input type="text" onkeyup="search(event, this.value, '<?php echo $level; ?>', '<?php echo $instructor; ?>')" class="form-control" placeholder="Enter the course name to search...">
             </div>
         </div>
         <div id="searchCourses">
@@ -206,4 +206,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
             }
         });
     }
+
 </script>

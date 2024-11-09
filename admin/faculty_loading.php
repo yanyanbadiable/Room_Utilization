@@ -113,18 +113,19 @@ if ($result->num_rows > 0) {
         })
     }
 
-    function search(event, value, level) {
-        var array = {};
-        array['value'] = value;
-        array['level'] = level;
+    function search(event, value, level, instructor) {
         $.ajax({
-            type: "GET",
-            url: "FL_Ajax/search_courses.php",
-            data: array,
-            success: function(data) {
-                $('#searchCourses').html(data).fadeIn();
+            type: 'GET',
+            url: 'FL_Ajax/search_courses.php',
+            data: {
+                value: value,
+                level: level,
+                instructor: instructor
+            },
+            success: function(response) {
+                $('#searchCourses').html(response);
             }
-        })
+        });
     }
 
     function getCurrentLoad(instructor, level) {

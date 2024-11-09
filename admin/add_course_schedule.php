@@ -386,13 +386,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                                                 <td class="text-center p-2" style="font-size:0.9rem;"><?php echo $time; ?></td>
                                                 <?php foreach ($days as $dayCode => $value) : ?>
                                                     <?php if (isset($value['rowspan'])) : ?>
-                                                        <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center clickable" style="background-color:<?php echo $value['background_color']; ?>; color: #000; font-size: 0.7rem;" data-schedule-id="<?php echo $value['schedule_id']; ?>" data-offering-id="<?php echo $value['course_offering_info_id']; ?>">
-                                                            <?php echo $value['course_name']; ?><br>
-                                                            <b class="text-uppercase">
-                                                                <?php echo $value['room_name']; ?><br>
-                                                                <?php echo $value['section_name']; ?>
-                                                            </b>
-                                                        </td>
+                                                        <?php if ($value['course_offering_info_id'] == $course_offering_info_id) : ?>
+                                                            <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center clickable" title="Click to Remove Schedule" style="background-color:<?php echo $value['background_color']; ?>; color: #000; font-size: 0.7rem;" data-schedule-id="<?php echo $value['schedule_id']; ?>" data-offering-id="<?php echo $value['course_offering_info_id']; ?>">
+                                                                <?php echo $value['course_name']; ?><br>
+                                                                <b class="text-uppercase">
+                                                                    <?php echo $value['room_name']; ?><br>
+                                                                    <?php echo $value['section_name']; ?>
+                                                                </b>
+                                                            </td>
+                                                        <?php else : ?>
+                                                            <td rowspan="<?php echo $value['rowspan']; ?>" class="align-middle text-center" style="background-color:<?php echo $value['background_color']; ?>; color: #000; font-size: 0.7rem;">
+                                                                <?php echo $value['course_name']; ?><br>
+                                                                <b class="text-uppercase">
+                                                                    <?php echo $value['room_name']; ?><br>
+                                                                    <?php echo $value['section_name']; ?>
+                                                                </b>
+                                                            </td>
+                                                        <?php endif; ?>
                                                     <?php else : ?>
                                                         <td></td>
                                                     <?php endif; ?>

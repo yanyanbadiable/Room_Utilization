@@ -414,7 +414,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                         </table>
                         <?php if ($faculty_program == $program_id): ?>
                             <div class="col-sm-12">
-                                <a onclick="window.location.href='index.php?page=reportAjax/teaching_load&faculty_id=<?php echo urlencode($instructor); ?>'" class="btn btn-primary btn-block">View Teaching Load</a>
+                                <a onclick="window.location.href='index.php?page=reportAjax/teaching_load&faculty_id=<?php echo urlencode($instructor); ?>'" class="btn btn-primary btn-block">View Faculty Workload</a>
                             </div>
                         <?php endif; ?>
 
@@ -442,7 +442,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
 
 <script>
     $('.remove_faculty_load').click(function() {
-        _conf("Are you sure you want to unload the subject from this instructor?", "remove_faculty_load", [$(this).attr('data-offering_id')]);
+        _conf("Are you sure you want to unload the course from this instructor?", "remove_faculty_load", [$(this).attr('data-offering_id')]);
     });
 
     function remove_faculty_load(offering_id) {

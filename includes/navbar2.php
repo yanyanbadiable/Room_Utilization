@@ -211,8 +211,8 @@
                 </div>
                 <div class="modal-body">Are you sure you want to logout?</div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
                     <a class="btn btn-primary" href="../admin/ajax.php?action=logout">Logout</a>
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
                 </div>
             </div>
         </div>
