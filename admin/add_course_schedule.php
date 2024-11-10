@@ -571,7 +571,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
             success: function(data) {
                 window.location.href = "#page-top";
                 alert_toast("Schedule successfully removed!", 'success');
-                location.reload();
+                setTimeout(function() {
+                    location.reload()
+                }, 1500)
             },
             error: function(xhr, status, error) {
                 alert_toast(xhr.responseText, 'danger');
@@ -593,7 +595,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                 window.location.href = "#page-top";
                 if (data.status === 'success') {
                     alert_toast(data.message, 'success');
-                    location.reload();
+                    setTimeout(function() {
+                        location.reload()
+                    }, 1500)
                 } else {
                     alert_toast(data.message, 'danger');
                 }

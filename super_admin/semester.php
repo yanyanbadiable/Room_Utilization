@@ -172,12 +172,12 @@ if (isset($_GET['id'])) {
                     setTimeout(function() {
                         console.log('Reloading page...');
                         location.reload()
-                    }, 100)
+                    }, 1500)
                 } else if (resp == 2) {
                     alert_toast("Data successfully updated", 'success')
                     setTimeout(function() {
                         location.reload()
-                    }, 100)
+                    }, 1500)
 
                 }
             }
@@ -210,7 +210,7 @@ if (isset($_GET['id'])) {
                     alert_toast("Data successfully deleted", 'success')
                     setTimeout(function() {
                         location.reload()
-                    }, 1000)
+                    }, 1500)
 
                 }
             }

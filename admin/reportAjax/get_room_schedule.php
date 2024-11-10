@@ -14,7 +14,7 @@ if (isset($_GET['room_id'])) {
     $program_result = $program_stmt->get_result();
     $program = $program_result->fetch_assoc();
 
-    $room_query = "SELECT rooms.*, program.department FROM rooms INNER JOIN program ON rooms.program_id = program.id WHERE rooms.id = ?";
+    $room_query = "SELECT rooms.*, program.department, program.program_name FROM rooms INNER JOIN program ON rooms.program_id = program.id WHERE rooms.id = ?";
     $room_stmt = $conn->prepare($room_query);
     $room_stmt->bind_param("i", $room_id);
     $room_stmt->execute();
@@ -259,7 +259,7 @@ if (isset($_GET['room_id'])) {
         <img src="../assets/img/Bagong_Pilipinas_logo.jpeg" alt="" class="ml-4">
     </div>
     <div class="form form-group mb-2">
-        <h6><b>Course:</b> <?php echo $program['department'] ?></h6>
+        <h6><b>Course:</b> <?php echo $room['program_name'] ?></h6>
         <h6 class="m-0"><b>Room:</b> <?php echo $room['room']  ?></h6>
     </div>
     <div class="table-responsive">

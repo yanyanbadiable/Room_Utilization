@@ -145,7 +145,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
                 if (resp.status === 'success') {
                     window.location.href = "#page-top";
                     alert_toast('Schedule successfully saved', 'success');
-                    location.reload();
+                    setTimeout(function() {
+                        location.reload()
+                    }, 1500)
                 } else if (resp.status === 'error' && resp.message === 'Same schedule already exists.') {
                     window.location.href = "#page-top";
                     alert_toast('Schedule already exists', 'danger');
@@ -161,7 +163,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
     }
     $('.select2').select2({
         placeholder: "Please select here",
-        // allowClear: true,
         width: "100%",
     })
 </script>

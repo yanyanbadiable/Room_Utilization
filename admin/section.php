@@ -159,14 +159,14 @@ $user_program_id = $_SESSION['login_program_id'];
             success: function(resp) {
                 if (resp == 1) {
                     alert_toast("Data successfully added", 'success');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 100);
+                    setTimeout(function(){
+						location.reload()
+					},1500)
                 } else if (resp == 2) {
                     alert_toast("Data successfully updated", 'success');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 100);
+                    setTimeout(function(){
+						location.reload()
+					},1500)
                 } else {
                     alert_toast("Section Already Exists", 'danger');
                 }
@@ -202,9 +202,9 @@ $user_program_id = $_SESSION['login_program_id'];
             success: function(resp) {
                 if (resp == 1) {
                     alert_toast("Data successfully deleted", 'danger');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1000);
+                    setTimeout(function(){
+						location.reload()
+					},1500)
                 }
             }
         });

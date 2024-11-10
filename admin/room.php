@@ -193,15 +193,15 @@ $row = $program->fetch_assoc();
             success: function(resp) {
                 if (resp == 1) {
                     alert_toast("Data successfully added", 'success');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 100);
+                    setTimeout(function(){
+						location.reload()
+					},1500)
 
                 } else if (resp == 2) {
                     alert_toast("Data successfully updated", 'success');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 100);
+                    setTimeout(function(){
+						location.reload()
+					},1500)
                 } else {
                     alert_toast("Room Already Exists", 'danger');
                     _reset()
@@ -237,9 +237,9 @@ $row = $program->fetch_assoc();
             success: function(resp) {
                 if (resp == 1) {
                     alert_toast("Data successfully deleted", 'success');
-                    setTimeout(function() {
-                        location.reload();
-                    }, 100);
+                    setTimeout(function(){
+						location.reload()
+					},1500)
                 }
             }
         });

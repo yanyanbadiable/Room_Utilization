@@ -99,7 +99,7 @@ $users = $conn->query("SELECT * FROM users ORDER BY name ASC");
                     alert_toast("Data successfully deleted", 'success');
                     setTimeout(function() {
                         location.reload();
-                    }, 100);
+                    }, 1500);
                 }
             }
         });
