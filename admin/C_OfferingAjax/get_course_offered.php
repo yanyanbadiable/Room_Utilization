@@ -18,11 +18,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET[
         SELECT course_offering_info.*, courses.course_code, courses.course_name, courses.lec, courses.lab, courses.units
         FROM course_offering_info
         INNER JOIN courses ON course_offering_info.courses_id = courses.id
-        WHERE course_offering_info.section_id = ?
+        WHERE course_offering_info.section_id = ? AND courses.level = ? AND courses.year = ? AND courses.period = ?
     ");
 
-
-    $offerings_query->bind_param("s", $section_id);
+    $offerings_query->bind_param("isss", $section_id, $level, $curriculum_year, $period);
     $offerings_query->execute();
     $offerings_result = $offerings_query->get_result();
 
@@ -33,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['year']) && isset($_GET[
     }
 }
 ?>
-
 
 
 <?php if (!empty($offerings)) { ?>

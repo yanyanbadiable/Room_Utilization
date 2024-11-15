@@ -288,7 +288,13 @@ class Action
 	{
 		extract($_POST);
 		$data = "designation = '$designation', ";
-		$data .= "hours = '$hours' ";
+		$data .= "hours = '$hours', ";
+		$data .= "administrative = '$administrative', ";
+		$data .= "research = '$research', ";
+		$data .= "ext_service = '$ext_service', ";
+		$data .= "consultation = '$consultation', ";
+		$data .= "instructional = '$instructional', ";
+		$data .= "others = '$others' ";
 
 		if (empty($id)) {
 			$save = $this->db->query("INSERT INTO designation set $data");
@@ -312,15 +318,26 @@ class Action
 	{
 		extract($_POST);
 		$data = "academic_rank = '$academic_rank', ";
-		$data .= "hours = '$hours' ";
+		$data .= "hours = '$hours', ";
+		$data .= "administrative = '$administrative', ";
+		$data .= "research = '$research', ";
+		$data .= "ext_service = '$ext_service', ";
+		$data .= "consultation = '$consultation', ";
+		$data .= "instructional = '$instructional', ";
+		$data .= "others = '$others' ";
 
 		if (empty($id)) {
 			$save = $this->db->query("INSERT INTO unit_loads set $data");
 		} else {
 			$save = $this->db->query("UPDATE unit_loads set $data where id = $id");
 		}
-		if ($save)
-			return 1;
+		if ($save) {
+			return 1; // Success
+		} else {
+			// Log the error and return a failure response
+			error_log("Database Error: " . $this->db->error); 
+			return 0; // Failure
+		}
 	}
 
 	function delete_academic_rank()
@@ -470,10 +487,10 @@ class Action
 			if ($update_result) {
 				return 1;
 			} else {
-				return 0; 
+				return 0;
 			}
 		} else {
-			return 0; 
+			return 0;
 		}
 	}
 

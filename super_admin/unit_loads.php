@@ -20,41 +20,6 @@ if (isset($_GET['id'])) {
         </section>
         <!-- End Section Header -->
 
-        <!-- Academic Rank Form Panel -->
-        <section class="col-md-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Academic Rank Form</h6>
-                </div>
-                <div class="card-body">
-                    <form id="manage-academic_rank">
-                        <input type="hidden" name="id">
-                        <div class="form-group">
-                            <label class="control-label">Academic Rank</label>
-                            <input type="text" class="form-control" name="academic_rank">
-                        </div>
-                        <!-- <div class="form-group">
-                            <label class="control-label">Units</label>
-                            <input type="number" class="form-control" name="units">
-                        </div> -->
-                        <div class="form-group">
-                            <label class="control-label">Hours</label>
-                            <input type="number" class="form-control" name="hours">
-                        </div>
-                        <div class="card-footer">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button type="submit" class="btn btn-sm btn-primary col-sm-3 offset-md-3">Save</button>
-                                    <button class="btn btn-sm btn-outline-secondary col-sm-3" type="button" onclick="_reset()">Cancel</button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </section>
-        <!-- End Program Form Panel -->
-
         <style>
             /* Custom CSS for better visibility */
             th,
@@ -78,10 +43,13 @@ if (isset($_GET['id'])) {
             } */
         </style>
 
-        <section class="col-md-8">
+        <section class="col-md-12">
             <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Academic Rank List</h6>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 font-weight-bold text-primary">Academic Rank List</h5>
+                    <span>
+                        <button class="btn btn-primary btn-md" id="new_rank"><i class="fa fa-plus mr-2"></i> New Academic Rank</button>
+                    </span>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -89,9 +57,14 @@ if (isset($_GET['id'])) {
                             <thead>
                                 <tr>
                                     <th class="text-center">#</th>
-                                    <th class="text-center">Academic Rank</th>
-                                    <!-- <th class="text-center">Units Assigned</th> -->
-                                    <th class="text-center">Regular Hours Assigned</th>
+                                    <th class="text-center">Academic <br> Rank</th>
+                                    <th class="text-center">Regular <br> Hours <br> Assigned</th>
+                                    <th class="text-center">Administrative</th>
+                                    <th class="text-center">Research</th>
+                                    <th class="text-center">Extension<br> Services</th>
+                                    <th class="text-center">Consultation</th>
+                                    <th class="text-center">Instructional<br> Functions</th>
+                                    <th class="text-center">Others</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
@@ -108,13 +81,19 @@ if (isset($_GET['id'])) {
                                         <td><?php echo $i++ ?></td>
                                         <td><?php echo $row['academic_rank'] ?></td>
                                         <td><?php echo $row['hours'] ?></td>
+                                        <td><?php echo $row['administrative'] ?></td>
+                                        <td><?php echo $row['research'] ?></td>
+                                        <td><?php echo $row['ext_service'] ?></td>
+                                        <td><?php echo $row['consultation'] ?></td>
+                                        <td><?php echo $row['instructional'] ?></td>
+                                        <td><?php echo $row['others'] ?></td>
                                         <td>
                                             <div class="btn-group">
                                                 <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     Action
                                                 </button>
                                                 <div class="dropdown-menu">
-                                                    <a class="dropdown-item edit_academic_rank" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-academic_rank="<?php echo $row['academic_rank'] ?>" data-hours="<?php echo $row['hours'] ?>">Edit</a>
+                                                    <a class="dropdown-item edit_academic_rank" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>">Edit</a>
                                                     <div class="dropdown-divider"></div>
                                                     <a class="dropdown-item delete_academic_rank" href="javascript:void(0)" data-id='<?php echo $row['id'] ?>'>Delete</a>
                                                 </div>
@@ -140,78 +119,38 @@ if (isset($_GET['id'])) {
     }
 </style>
 <script>
-    function _reset() {
-        $('#manage-academic_rank').get(0).reset()
-        $('#manage-academic_rank input,#manage-academic_rank textarea').val('')
-    }
-    $('#manage-academic_rank').submit(function(e) {
-        e.preventDefault()
-        var academic_rank = $("input[name='academic_rank']").val();
-        var hours = $("input[name='hours']").val();
+    $(document).ready(function() {
+        $('#new_rank').click(function() {
+            uni_modal('New Academic Rank', 'manage_rank.php');
+        });
 
-        if (!academic_rank || !hours) {
-            alert_toast("Please fill in all fields!", 'warning');
-            return;
+        $('table').on('click', '.edit_academic_rank', function() {
+            uni_modal('Edit Academic Rank', 'manage_rank.php?id=' + $(this).data('id'));
+        });
+
+        $('table').on('click', '.delete_academic_rank', function() {
+            _conf("Are you sure to delete this Designation?", "delete_academic_rank", [$(this).attr('data-id')]);
+        });
+
+        function delete_academic_rank($id) {
+            start_load();
+            $.ajax({
+                url: '../admin/ajax.php?action=delete_academic_rank',
+                method: 'POST',
+                data: {
+                    id: $id
+                },
+                success: function(resp) {
+                    if (resp == 1) {
+                        alert_toast("Data successfully deleted", 'success');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    }
+                }
+            });
         }
-        start_load()
-        $.ajax({
-            url: '../admin/ajax.php?action=save_academic_rank',
-            data: new FormData($(this)[0]),
-            cache: false,
-            contentType: false,
-            processData: false,
-            method: 'POST',
-            type: 'POST',
-            success: function(resp) {
-                console.log(resp)
-                if (resp == 1) {
-                    alert_toast("Data successfully added", 'success')
-                    console.log('Before setTimeout');
-                    setTimeout(function() {
-                        console.log('Reloading page...');
-                        location.reload()
-                    }, 1500)
-                } else if (resp == 2) {
-                    alert_toast("Data successfully updated", 'success')
-                    setTimeout(function() {
-                        location.reload()
-                    }, 1500)
 
-                }
-            }
-        })
-    })
-    $('.edit_academic_rank').click(function() {
-        start_load()
-        var cat = $('#manage-academic_rank')
-        cat.get(0).reset()
-        cat.find("[name='id']").val($(this).attr('data-id'))
-        cat.find("[name='academic_rank']").val($(this).attr('data-academic_rank'))
-        cat.find("[name='hours']").val($(this).attr('data-hours'))
-        end_load()
-    })
-    $('.delete_academic_rank').click(function() {
-        _conf("Are you sure to delete this Designation?", "delete_academic_rank", [$(this).attr('data-id')])
-    })
-
-    function delete_academic_rank($id) {
-        start_load()
-        $.ajax({
-            url: '../admin/ajax.php?action=delete_academic_rank',
-            method: 'POST',
-            data: {
-                id: $id
-            },
-            success: function(resp) {
-                if (resp == 1) {
-                    alert_toast("Data successfully deleted", 'success')
-                    setTimeout(function() {
-                        location.reload()
-                    }, 1500)
-
-                }
-            }
-        })
-    }
-    $('table').dataTable()
+        $('table').DataTable();
+    });
 </script>

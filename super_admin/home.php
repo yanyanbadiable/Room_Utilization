@@ -31,7 +31,8 @@
                     ['icon' => 'fas fa-users', 'title' => 'Admin List', 'link' => 'index.php?page=user', 'query' => 'SELECT count(id) as total FROM users WHERE type = 0'],
                     ['icon' => 'fas fa-cogs', 'title' => 'Program List', 'link' => 'index.php?page=department', 'query' => 'SELECT count(id) as total FROM program'],
                     ['icon' => 'fas fa-building', 'title' => 'Building List', 'link' => 'index.php?page=building', 'query' => 'SELECT count(id) as total FROM building'],
-                    ['icon' => 'fas fa-briefcase', 'title' => 'Designation List', 'link' => 'index.php?page=unit_loads', 'query' => 'SELECT count(id) as total FROM unit_loads'],
+                    ['icon' => 'fas fa-user-graduate', 'title' => 'Academic Rank List', 'link' => 'index.php?page=unit_loads', 'query' => 'SELECT count(id) as total FROM unit_loads'],
+                    ['icon' => 'fas fa-briefcase', 'title' => 'Designation List', 'link' => 'index.php?page=designation', 'query' => 'SELECT count(id) as total FROM designation'],
                     ['icon' => 'fas fa-calendar-week', 'title' => 'Semester List', 'link' => 'index.php?page=semester', 'query' => 'SELECT count(id) as total FROM semester']
                 ];
 

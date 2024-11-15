@@ -25,7 +25,16 @@ if (isset($_GET['room_id'])) {
     $head_result = mysqli_query($conn, $head_query);
     $head = $head_result->fetch_assoc();
 
-    // Timetable
+    $school_year_query = "SELECT YEAR(start_date) as year_only FROM semester WHERE sem_name = '1st Semester'";
+    $school_year_result = mysqli_query($conn, $school_year_query);
+
+    if ($school_year_result && $school_year_row = $school_year_result->fetch_assoc()) {
+        $start_year = $school_year_row['year_only'];
+        $next_year = $start_year + 1;
+        $school_year = $start_year . '-' . $next_year;
+    } else {
+        $school_year = "Year not found";
+    }
 
     $weekDays = [
         'M' => 'Monday',
@@ -246,9 +255,7 @@ if (isset($_GET['room_id'])) {
                     while ($row = $result->fetch_assoc()) :
                 ?>
                         <h6 style="text-transform: uppercase;">
-                            <?php echo $row['sem_name'] ?>, AY: <b>
-                                <input type="text" name="acad_year" id="acad_year" value="" size="9" class="underlined">
-                            </b>
+                            <?php echo $row['sem_name'] ?>, AY: <?php echo $school_year; ?>
                         </h6>
                 <?php
                     endwhile;
@@ -339,9 +346,8 @@ if (isset($_GET['room_id'])) {
     function generatePDF() {
         var head_planning = document.getElementById('hpdu').value;
         var cd_signature = document.getElementById('cd_signature').value;
-        var acad_year = document.getElementById('acad_year').value;
 
-        if (!cd_signature || !head_planning || !acad_year) {
+        if (!cd_signature || !head_planning) {
             window.location.href = "#page-top";
             alert_toast("Please fill in all fields.", 'warning');
             return;
@@ -352,7 +358,6 @@ if (isset($_GET['room_id'])) {
         var url = 'reportAjax/generate_schedule.php?room_id=<?php echo $room_id; ?>' +
             '&program_dept=' + encodeURIComponent(program_dept) +
             '&head_planning=' + encodeURIComponent(head_planning) +
-            '&acad_year=' + encodeURIComponent(acad_year) +
             '&cd_signature=' + encodeURIComponent(cd_signature);
 
         window.location.href = url;

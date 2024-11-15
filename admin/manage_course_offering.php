@@ -52,7 +52,7 @@ if (isset($_GET['program_id'])) {
                         </div>
                         <div class="card-body">
                             <div class="form-group">
-                                <label>Level</label>
+                                <label>Year Level</label>
                                 <select class="form-control" onchange="getSections(this.value)">
                                     <option>Please Select</option>
                                     <option>1st Year</option>
@@ -84,7 +84,7 @@ if (isset($_GET['program_id'])) {
                                 </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
-                                        <label>Level</label>
+                                        <label>Year Level</label>
                                         <select class="form-control" id='level' disabled>
                                             <option>1st Year</option>
                                             <option>2nd Year</option>

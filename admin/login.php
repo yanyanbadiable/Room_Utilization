@@ -160,7 +160,7 @@ ob_end_flush();
 						$('.alert-danger').fadeOut(1500, function() {
 							$(this).remove();
 						});
-					}, 500);
+					}, 3500);
 				}
 			}
 		});

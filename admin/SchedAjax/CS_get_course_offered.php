@@ -50,28 +50,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['program_code']) && isse
                                 <td><?php echo $course['course_code']; ?></td>
                                 <td><?php echo $course['course_name']; ?></td>
                                 <td>
-                                    <div align="center">
+                                    <div class="text-center">
                                         <?php
                                         $schedule3s_query = mysqli_query($conn, "
                                             SELECT DISTINCT r.room
                                             FROM schedules s
                                             JOIN rooms r ON s.room_id = r.id
                                             WHERE s.course_offering_info_id = '" . $course['id'] . "'
-                                            ");
+                                        ");
+                                        $rooms = [];
                                         while ($schedule3 = mysqli_fetch_assoc($schedule3s_query)) {
-                                            echo $schedule3['room'];
+                                            $rooms[] = $schedule3['room'];
                                         }
-                                        ?>
-                                        <br>
-                                        <?php
-                                        $schedule2s_query = mysqli_query($conn, "SELECT DISTINCT time_start, time_end, room_id FROM schedules WHERE course_offering_info_id = '" . $course['id'] . "'");
-                                        while ($schedule2 = mysqli_fetch_assoc($schedule2s_query)) {
-                                            $days_query = mysqli_query($conn, "SELECT day FROM schedules WHERE course_offering_info_id = '" . $course['id'] . "' AND time_start = '" . $schedule2['time_start'] . "' AND time_end = '" . $schedule2['time_end'] . "' AND room_id = '" . $schedule2['room_id'] . "'");
-                                            $days = [];
-                                            while ($day = mysqli_fetch_assoc($days_query)) {
-                                                $days[] = $day['day'];
+                                        foreach ($rooms as $room) {
+                                            echo $room . '<br>';
+                                            $schedule2s_query = mysqli_query($conn, "
+                                                SELECT DISTINCT time_start, time_end
+                                                FROM schedules
+                                                WHERE course_offering_info_id = '" . $course['id'] . "' 
+                                                AND room_id = (SELECT id FROM rooms WHERE room = '$room')
+                                            ");
+
+                                            while ($schedule2 = mysqli_fetch_assoc($schedule2s_query)) {
+                                                $days_query = mysqli_query($conn, "
+                                                    SELECT day 
+                                                    FROM schedules 
+                                                    WHERE course_offering_info_id = '" . $course['id'] . "' 
+                                                    AND time_start = '" . $schedule2['time_start'] . "' 
+                                                    AND time_end = '" . $schedule2['time_end'] . "' 
+                                                    AND room_id = (SELECT id FROM rooms WHERE room = '$room')
+                                                ");
+                                                $days = [];
+                                                while ($day = mysqli_fetch_assoc($days_query)) {
+                                                    $days[] = $day['day'];
+                                                }
+                                                echo '[' . implode(',', $days) . " " . date('g:iA', strtotime($schedule2['time_start'])) . '-' . date('g:iA', strtotime($schedule2['time_end'])) . ']<br>';
                                             }
-                                            echo '[' . implode(',', $days) . " " . date('g:iA', strtotime($schedule2['time_start'])) . '-' . date('g:iA', strtotime($schedule2['time_end']))  . '] ' . '<br>';
                                         }
                                         ?>
                                     </div>

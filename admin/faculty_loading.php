@@ -38,7 +38,7 @@ if ($result->num_rows > 0) {
                         <div class="row">
                             <div class="col-sm-4">
                                 <div class="form-group" id="displayLevel">
-                                    <label>Level</label>
+                                    <label>Year Level</label>
                                     <select class="form-control" id="level">
                                         <option value="">Please Select</option>
                                         <option value="1st Year">1st Year</option>

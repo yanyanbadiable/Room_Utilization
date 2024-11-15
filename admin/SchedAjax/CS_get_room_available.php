@@ -13,65 +13,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
     $section_id = $_GET['section_id'];
     $total_hours = $_GET['total_hours'];
 
-    $course_query = "SELECT c.is_comlab FROM courses c
-                     JOIN course_offering_info coi ON c.id = coi.courses_id
-                     WHERE coi.id = '$course_offering_info_id'";
-    $course_result = mysqli_query($conn, $course_query);
+    $unscheduled_query = "
+        SELECT c.program_id, 
+            COUNT(coi.id) AS total_courses, 
+            SUM(CASE WHEN s.id IS NULL THEN 1 ELSE 0 END) AS unscheduled_courses
+        FROM course_offering_info coi
+        JOIN courses c ON coi.courses_id = c.id
+        LEFT JOIN schedules s ON coi.id = s.course_offering_info_id
+        WHERE c.program_id != $user_program_id 
+        AND s.faculty_id IS NOT NULL
+        GROUP BY c.program_id
+    ";
 
-    $is_comlab = 0;
-    if ($course_result && $course_row = mysqli_fetch_assoc($course_result)) {
-        $is_comlab = $course_row['is_comlab'];
-    } else {
-        echo "Error fetching course information: " . mysqli_error($conn);
-    }
+    $unscheduled_result = mysqli_query($conn, $unscheduled_query);
+    if ($unscheduled_result) {
+        $programs_status = [];
+        while ($row = mysqli_fetch_assoc($unscheduled_result)) {
+            $programs_status[$row['program_id']] = $row['unscheduled_courses'];
+        }
 
-    $conflict_schedules = [];
-    $conflict_query = "SELECT DISTINCT room_id FROM schedules
-                       WHERE room_id IS NOT NULL
-                       AND day = '$day'
-                       AND (
-                           (TIME_FORMAT(time_start, '%H:%i') < '$time_end' AND TIME_FORMAT(time_end, '%H:%i') > '$time_start')
-                           OR (TIME_FORMAT(time_start, '%H:%i') >= '$time_start' AND TIME_FORMAT(time_end, '%H:%i') <= '$time_end')
-                           OR (TIME_FORMAT(time_start, '%H:%i') <= '$time_start' AND TIME_FORMAT(time_end, '%H:%i') >= '$time_end')
-                       )
-                       AND course_offering_info_id != '$course_offering_info_id'";
+        $rooms_condition = "";
+        foreach ($programs_status as $program_id => $unscheduled_courses) {
+            if ($unscheduled_courses == 0) {
+                $rooms_condition .= "rooms.program_id = $program_id OR ";
+            }
+        }
 
-    $conflict_result = mysqli_query($conn, $conflict_query);
-    if ($conflict_result) {
-        while ($row = mysqli_fetch_assoc($conflict_result)) {
-            $conflict_schedules[] = $row['room_id'];
+        $rooms_condition .= "rooms.program_id = $user_program_id";
+
+        $course_query = "SELECT c.is_comlab FROM courses c
+                         JOIN course_offering_info coi ON c.id = coi.courses_id
+                         WHERE coi.id = '$course_offering_info_id'";
+        $course_result = mysqli_query($conn, $course_query);
+
+        $is_comlab = 0;
+        if ($course_result && $course_row = mysqli_fetch_assoc($course_result)) {
+            $is_comlab = $course_row['is_comlab'];
+        } else {
+            echo "Error fetching course information: " . mysqli_error($conn);
+        }
+
+        $conflict_schedules = [];
+        $conflict_query = "SELECT DISTINCT room_id FROM schedules
+                           WHERE room_id IS NOT NULL
+                           AND day = '$day'
+                           AND (
+                               (TIME_FORMAT(time_start, '%H:%i') < '$time_end' AND TIME_FORMAT(time_end, '%H:%i') > '$time_start')
+                               OR (TIME_FORMAT(time_start, '%H:%i') >= '$time_start' AND TIME_FORMAT(time_end, '%H:%i') <= '$time_end')
+                               OR (TIME_FORMAT(time_start, '%H:%i') <= '$time_start' AND TIME_FORMAT(time_end, '%H:%i') >= '$time_end')
+                           )
+                           AND course_offering_info_id != '$course_offering_info_id'";
+
+        $conflict_result = mysqli_query($conn, $conflict_query);
+        if ($conflict_result) {
+            while ($row = mysqli_fetch_assoc($conflict_result)) {
+                $conflict_schedules[] = $row['room_id'];
+            }
+        } else {
+            echo "Error fetching conflict schedules: " . mysqli_error($conn);
+        }
+
+        if ($is_comlab == 1) {
+            $lab_condition = "AND rooms.is_lab = 1";
+        } else {
+            $lab_condition = "AND rooms.is_lab = 0";
+        }
+
+        if (!empty($conflict_schedules)) {
+            $room_conditions = implode(',', array_map('intval', $conflict_schedules));
+            $query = "SELECT rooms.*, building.building FROM rooms
+                      JOIN building ON rooms.building_id = building.id
+                      WHERE rooms.is_available = 1 AND rooms.id NOT IN ($room_conditions) $lab_condition AND ($rooms_condition)
+                      ORDER BY program_id, room";
+        } else {
+            $query = "SELECT rooms.*, building.building FROM rooms
+                      JOIN building ON rooms.building_id = building.id
+                      WHERE rooms.is_available = 1 $lab_condition AND ($rooms_condition)
+                      ORDER BY program_id, room";
+        }
+
+        $rooms_result = mysqli_query($conn, $query);
+        if ($rooms_result) {
+            while ($row = mysqli_fetch_assoc($rooms_result)) {
+                $rooms[] = $row;
+            }
+        } else {
+            echo "Error fetching available rooms: " . mysqli_error($conn);
         }
     } else {
-        echo "Error fetching conflict schedules: " . mysqli_error($conn);
-    }
-
-    if ($is_comlab == 1) {
-        $lab_condition = "AND rooms.is_lab = 1";
-    } else {
-        $lab_condition = "AND rooms.is_lab = 0";
-    }
-
-    if (!empty($conflict_schedules)) {
-        $room_conditions = implode(',', array_map('intval', $conflict_schedules));
-        $query = "SELECT rooms.*, building.building FROM rooms
-                  JOIN building ON rooms.building_id = building.id
-                  WHERE rooms.is_available = 1 AND rooms.id NOT IN ($room_conditions) $lab_condition ORDER BY program_id, room";
-    } else {
-        $query = "SELECT rooms.*, building.building FROM rooms
-                  JOIN building ON rooms.building_id = building.id
-                  WHERE rooms.is_available = 1 $lab_condition  ORDER BY program_id, room";
-    }
-
-    $rooms_result = mysqli_query($conn, $query);
-    if ($rooms_result) {
-        while ($row = mysqli_fetch_assoc($rooms_result)) {
-            $rooms[] = $row;
-        }
-    } else {
-        echo "Error fetching available rooms: " . mysqli_error($conn);
+        echo "Error fetching unscheduled courses: " . mysqli_error($conn);
     }
 }
 ?>
+
 <link href="../assets/select2-4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <script src="../assets/select2-4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -92,7 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
 </style>
 
 <div class="modal-dialog">
-    <!-- Modal content-->
     <div class="modal-content">
         <div class="modal-header bg-secondary text-white">
             <h4 class="modal-title">Available Rooms</h4>

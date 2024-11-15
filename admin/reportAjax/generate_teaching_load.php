@@ -6,19 +6,11 @@ use Mpdf\Mpdf;
 
 if (isset($_GET['faculty_id'])) {
     $faculty_id = $_GET['faculty_id'];
-    $administrative_hours = $_GET['administrative_hours'];
-    $research_hours = $_GET['research_hours'];
-    $extension_hours = $_GET['extension_hours'];
-    $consultation_hours = $_GET['consultation_hours'];
-    $instructional_hours = $_GET['instructional_hours'];
-    $other_hours = $_GET['other_hours'];
     $cd_signature = $_GET['cd_signature'];
     $vpaa_signature = $_GET['vpaa_signature'];
     $up_signature = $_GET['up_signature'];
-    $acad_year = $_GET['acad_year'];
     $program_dept = $_GET['program_dept'];
 
-    // Fetch program information
     $program_query = "SELECT * FROM program WHERE id = ?";
     $program_stmt = $conn->prepare($program_query);
     $program_stmt->bind_param("i", $program_id);
@@ -36,6 +28,47 @@ if (isset($_GET['faculty_id'])) {
     $head_query = "SELECT * FROM faculty WHERE designation = 1";
     $head_result = mysqli_query($conn, $head_query);
     $head = $head_result->fetch_assoc();
+
+    $school_year_query = "SELECT YEAR(start_date) as year_only FROM semester WHERE sem_name = '1st Semester'";
+    $school_year_result = mysqli_query($conn, $school_year_query);
+
+    if ($school_year_result && $school_year_row = $school_year_result->fetch_assoc()) {
+        $start_year = $school_year_row['year_only'];
+        $next_year = $start_year + 1;
+        $school_year = $start_year . '-' . $next_year;
+    } else {
+        $school_year = "Year not found";
+    }
+
+    $designation_query = "SELECT designation.* FROM faculty LEFT JOIN designation ON faculty.designation = designation.id WHERE faculty.id = ?";
+    $designation_stmt = $conn->prepare($designation_query);
+    $designation_stmt->bind_param("i", $faculty_id);
+    $designation_stmt->execute();
+    $designation_result = $designation_stmt->get_result();
+    $designation = $designation_result->fetch_assoc();
+
+    $academic_rank_query = "SELECT unit_loads.* FROM faculty LEFT JOIN unit_loads ON faculty.academic_rank = unit_loads.id WHERE faculty.id = ?";
+    $academic_rank_stmt = $conn->prepare($academic_rank_query);
+    $academic_rank_stmt->bind_param("i", $faculty_id);
+    $academic_rank_stmt->execute();
+    $academic_rank_result = $academic_rank_stmt->get_result();
+    $academic_rank = $academic_rank_result->fetch_assoc();
+
+    if (!empty($faculty['designation'])) {
+        $administrative_hours = $designation['administrative'];
+        $research_hours = $designation['research'];
+        $extension_hours =  $designation['ext_service'];
+        $consultation_hours =  $designation['consultation'];
+        $instructional_hours =  $designation['instructional'];
+        $other_hours =  $designation['others'];
+    } else {
+        $administrative_hours =  $academic_rank['administrative'];
+        $research_hours =  $academic_rank['research'];
+        $extension_hours =  $academic_rank['ext_service'];
+        $consultation_hours =  $academic_rank['consultation'];
+        $instructional_hours =  $academic_rank['instructional'];
+        $other_hours =  $academic_rank['others'];
+    }
 
     $num_class_query = "
     SELECT COUNT(DISTINCT course_offering_info_id) AS num_class 
@@ -63,7 +96,6 @@ if (isset($_GET['faculty_id'])) {
     $prep_class_row = $prep_class_result->fetch_assoc();
     $prep_class = $prep_class_row['prep_class'];
 
-    // Fetch regular schedules for the faculty with combined days
     $regular_schedules_query = "
         SELECT 
             schedules.course_offering_info_id, 
@@ -90,7 +122,6 @@ if (isset($_GET['faculty_id'])) {
         $regular_schedules[] = $row;
     }
 
-    // Fetch overload/part-time schedules for the faculty
     $overload_schedules_query = "
             SELECT 
             schedules.course_offering_info_id, 
@@ -117,7 +148,6 @@ if (isset($_GET['faculty_id'])) {
         $overload_schedules[] = $row;
     }
 
-    // Fetch active semester
     $currentMonthDay = date('m-d');
     $semester_query = "
             SELECT * FROM semester 
@@ -134,13 +164,11 @@ if (isset($_GET['faculty_id'])) {
         $semester_name = "No Active Semester";
     }
 
-    // Initialize mPDF
     $mpdf = new Mpdf(['orientation' => 'L', 'format' => 'A4']);
     $mpdf->SetMargins(12.7, 12.7, 12.7);
     $mpdf->SetAutoPageBreak(true, 12.7);
     $mpdf->AddPage();
 
-    // HTML content
     $html = '
     <style>
         *{
@@ -255,15 +283,15 @@ if (isset($_GET['faculty_id'])) {
             <tr>
                 <td style="width: 66%; vertical-align: top; text-align: left; border: none;">
                     <strong>Faculty Member:</strong> ' . strtoupper($faculty['fname']) . " " .
-                    (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
-                    strtoupper($faculty['lname']) .
-                    (!empty($faculty['post_graduate_studies']) ? ", " . strtoupper($faculty['post_graduate_studies']) : "") . '<br>
+        (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
+        strtoupper($faculty['lname']) .
+        (!empty($faculty['post_graduate_studies']) ? ", " . strtoupper($faculty['post_graduate_studies']) : "") . '<br>
                     <strong>Academic Rank:</strong> ' . strtoupper($faculty['academic_rank']) . '<br>
                     <strong>College/Campus:</strong> CARIGARA CAMPUS
                 </td>
                 <td style="width: 34%; vertical-align: top; text-align: left; border: none;">
                     <strong>Semester:</strong> ' . strtoupper($semester_name) . '<br>
-                    <strong>School Year:</strong> ' . $acad_year . '<br>
+                    <strong>School Year:</strong> ' . $school_year . '<br>
                     <strong>Designation:</strong> ' . strtoupper($faculty['designation']) . '
                 </td>
             </tr>
@@ -271,22 +299,22 @@ if (isset($_GET['faculty_id'])) {
 
         <!-- Regular Workload Table -->
         <h6 style="margin-top: 10px; margin-bottom: 2px; font-size: 8pt;">REGULAR</h6>
-        <table style="width: 100%; border: 1px solid black; font-size: 8pt;">
+        <table style="width: 100%; font-size: 8pt; border-collapse: collapse; table-layout: fixed;">
             <thead>
                 <tr style="background-color: #f2f2f2;">
-                    <th rowspan="2" style="width: 85px;">Course No.</th>
-                    <th rowspan="2" style="width: 190px;">Descriptive Title</th>
-                    <th rowspan="2" style="width: 95px;">Subject Units</th>
-                    <th rowspan="2" style="width: 105px;">TIME</th>
-                    <th rowspan="2" style="width: 60px;">DAYS</th>
-                    <th colspan="2" style="width: 130px;">No. of Hrs/Week</th>
-                    <th rowspan="2" style="width: 100px;">No. of Students</th>
-                    <th rowspan="2" style="width: 80px;">Room No.</th>
-                    <th rowspan="2" style="width: 110px;">Course, Yr., & Sec.</th>
+                    <th rowspan="2" style="width: 10%;">Course No.</th>
+                    <th rowspan="2" style="width: 20%;">Descriptive Title</th>
+                    <th rowspan="2" style="width: 10%;">Subject Units</th>
+                    <th rowspan="2" style="width: 15%;">TIME</th>
+                    <th rowspan="2" style="width: 10%;">DAYS</th>
+                    <th colspan="2" style="width: 13%;">No. of Hrs/Week</th>
+                    <th rowspan="2" style="width: 9%;">No. of Students</th>
+                    <th rowspan="2" style="width: 10%;">Room No.</th>
+                    <th rowspan="2" style="width: 13%;">Course, Yr., & Sec.</th>
                 </tr>
                 <tr style="background-color: #f2f2f2;">
-                    <th style="width: 65px;">Lec</th>
-                    <th style="width: 65px;">Lab</th>
+                    <th class="align-middle text-center p-1" style="width: 6.5%;">Lec</th>
+                    <th class="align-middle text-center p-1" style="width: 6.5%;">Lab</th>
                 </tr>
             </thead>
             <tbody>';
@@ -451,22 +479,22 @@ if (isset($_GET['faculty_id'])) {
     $html .= '</tbody></table>
     <!-- Overload Workload Table -->
     <h6 style="margin-top: 5px; margin-bottom: 2px; font-size: 8pt;">OVERLOAD/PART-TIME</h6>
-    <table style="width: 100%; border: 1px solid black; font-size: 8pt;">
+    <table style="width: 100%; font-size: 8pt; border-collapse: collapse; table-layout: fixed;">
         <thead>
                 <tr style="background-color: #f2f2f2;">
-                    <th rowspan="2" style="width: 85px;">Course No.</th>
-                    <th rowspan="2" style="width: 190px;">Descriptive Title</th>
-                    <th rowspan="2" style="width: 95px;">Subject Units</th>
-                    <th rowspan="2" style="width: 105px;">TIME</th>
-                    <th rowspan="2" style="width: 60px;">DAYS</th>
-                    <th colspan="2" style="width: 130px;">No. of Hrs/Week</th>
-                    <th rowspan="2" style="width: 100px;">No. of Students</th>
-                    <th rowspan="2" style="width: 80px;">Room No.</th>
-                    <th rowspan="2" style="width: 110px;">Course, Yr., & Sec.</th>
+                    <th rowspan="2" style="width: 10%;">Course No.</th>
+                    <th rowspan="2" style="width: 20%;">Descriptive Title</th>
+                    <th rowspan="2" style="width: 10%;">Subject Units</th>
+                    <th rowspan="2" style="width: 15%;">TIME</th>
+                    <th rowspan="2" style="width: 10%;">DAYS</th>
+                    <th colspan="2" style="width: 13%;">No. of Hrs/Week</th>
+                    <th rowspan="2" style="width: 9%;">No. of Students</th>
+                    <th rowspan="2" style="width: 10%;">Room No.</th>
+                    <th rowspan="2" style="width: 13%;">Course, Yr., & Sec.</th>
                 </tr>
                 <tr style="background-color: #f2f2f2;">
-                    <th style="width: 65px;">Lec</th>
-                    <th style="width: 65px;">Lab</th>
+                    <th class="align-middle text-center p-1" style="width: 6.5%;">Lec</th>
+                    <th class="align-middle text-center p-1" style="width: 6.5%;">Lab</th>
                 </tr>
             </thead>
         <tbody>';
@@ -501,9 +529,9 @@ if (isset($_GET['faculty_id'])) {
     } else {
         $previous_course_offering_info_id = null;
         $days_combined = [];
-        $total_units_regular = 0;
-        $total_lec_regular = 0;
-        $total_lab_regular = 0;
+        $total_units_overload = 0;
+        $total_lec_overload = 0;
+        $total_lab_overload = 0;
         $total_lec_hours = 0;
         $total_lab_hours = 0;
 
@@ -555,9 +583,9 @@ if (isset($_GET['faculty_id'])) {
             $section_name_concatenated = $course_detail['program_code'] . '-' . substr($course_detail['level'], 0, 1) . $course_detail['section_name'];
 
             if ($previous_course_offering_info_id !== $schedule['course_offering_info_id']) {
-                $total_units_regular += $course_detail['units'];
-                $total_lec_regular += $course_detail['lec'];
-                $total_lab_regular += $course_detail['lab'];
+                $total_units_overload += $course_detail['units'];
+                $total_lec_overload += $course_detail['lec'];
+                $total_lab_overload += $course_detail['lab'];
             }
 
             if ($previous_course_offering_info_id == $schedule['course_offering_info_id'] || $next_course_offering_info_id == $schedule['course_offering_info_id']) {
@@ -609,16 +637,16 @@ if (isset($_GET['faculty_id'])) {
             $previous_course_offering_info_id = $schedule['course_offering_info_id'];
         }
 
-        $total_lec_lab = $total_lec_regular + $total_lab_regular;
+        $total_lec_lab = $total_lec_overload + $total_lab_overload;
 
         $html .= '<tr style="background-color: #f2f2f2;">
         <td rowspan="2" ></td>
         <td rowspan="2" class="text-center align-middle"><strong>Total</strong></td>
-        <td rowspan="2">' . $total_units_regular . '</td>
+        <td rowspan="2">' . $total_units_overload . '</td>
         <td rowspan="2"></td>
         <td rowspan="2"></td>
-        <td>' . $total_lec_regular . '</td>
-        <td>' . $total_lab_regular . '</td>
+        <td>' . $total_lec_overload . '</td>
+        <td>' . $total_lab_overload . '</td>
         <td rowspan="2"></td>
         <td rowspan="2"></td>
         <td rowspan="2"></td>
@@ -652,7 +680,7 @@ if (isset($_GET['faculty_id'])) {
 
     <!-- Faculty Signature -->
     <div class="signature-section">
-        <strong>' . strtoupper($faculty['fname']) . " " . (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") . strtoupper($faculty['lname']) . ', ' . strtoupper($faculty['post_graduate_studies']) . '</strong><br>
+        <strong>' . strtoupper($faculty['fname']) . " " . (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") . strtoupper($faculty['lname']) . (!empty($faculty['post_graduate_studies']) ? ", " . strtoupper($faculty['post_graduate_studies']) : "") . '</strong><br>
         <small>Faculty</small>
     </div>
 </div>

@@ -44,7 +44,7 @@ if ($result) {
                                         <th class="align-middle text-center">Action</th>
                                         <th class="align-middle text-center" style="width: 8%;">Curriculum Year</th>
                                         <th class="align-middle text-center">Period</th>
-                                        <th class="align-middle text-center">Level</th>
+                                        <th class="align-middle text-center">Year Level</th>
                                         <th class="align-middle text-center" style="width: 12%;">Course Code</th>
                                         <th class="align-middle text-center">Course Name</th>
                                         <th class="align-middle text-center" style="width: 7%;">Lec</th>

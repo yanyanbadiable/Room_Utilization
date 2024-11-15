@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
     $course_offering_info_result = $stmt->get_result();
     $course_offering_info = $course_offering_info_result->fetch_assoc();
 
-    $stmt = $conn->prepare("SELECT is_comlab, hours FROM courses WHERE id = ? ");
+    $stmt = $conn->prepare("SELECT is_comlab, lab, hours FROM courses WHERE id = ? ");
     $stmt->bind_param("i", $course_offering_info['courses_id']);
     $stmt->execute();
     $courseResult = $stmt->get_result()->fetch_assoc();
@@ -19,6 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
     $totalCourseHours = $courseResult['hours'];
     $totalCourseHoursParts = explode(':', $totalCourseHours);
     $totalCourseHours = $totalCourseHoursParts[0] + $totalCourseHoursParts[1] / 60;
+
+    $lab = $courseResult['lab'];
+    $has_lab = $lab > 0 ? 1 : 0;
+
 
     $stmt = $conn->prepare("SELECT * FROM schedules WHERE is_active = 0");
     $stmt->execute();
@@ -287,19 +291,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                                         <?php foreach ($inactive as $schedule) : ?>
                                             <tr>
                                                 <td><?php echo $schedule['day']; ?> <?php echo date('g:iA', strtotime($schedule['time_start'])); ?>-<?php echo date('g:iA', strtotime($schedule['time_end'])); ?></td>
-
                                                 <td class="text-center">
-                                                    <button class="btn btn-flat btn-success" onclick="attach_schedule(<?php echo $schedule['id']; ?>, <?php echo $course_offering_info_id; ?>, <?php echo $section_id; ?>)">
+                                                    <button class="btn btn-flat btn-success"
+                                                        onclick="attach_schedule(<?php echo $schedule['id']; ?>, <?php echo $course_offering_info_id; ?>, <?php echo $section_id; ?>, '<?php echo $schedule['time_start']; ?>', '<?php echo $schedule['time_end']; ?>')">
                                                         <i class="fa fa-plus-circle"></i>
                                                     </button>
                                                 </td>
-
                                                 <td class="text-center">
                                                     <button class="btn btn-flat btn-danger delete_schedule" data-id="<?php echo $schedule['id']; ?>" data-offering-id="<?php echo $course_offering_info_id; ?>">
                                                         <i class="fa fa-times"></i>
                                                     </button>
                                                 </td>
-
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -429,6 +431,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
     var sectionId = "<?php echo $section_id; ?>";
     var totalCourseHours = parseFloat("<?php echo $totalCourseHours; ?>");
     var scheduledHours = parseFloat("<?php echo $scheduledHours; ?>");
+    var hasLab = parseFloat("<?php echo $has_lab; ?>");
 
     function _reset() {
         $('#day').val('');
@@ -466,6 +469,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
             return;
         }
 
+        if (hasLab === 0 && newScheduleHours !== totalCourseHours) {
+            alert_toast('Please ensure all the provided hours are scheduled.', 'warning');
+            return;
+        }
+
         if (isValid) {
             if (courseOfferingInfoId && sectionId && day && time_start && time_end) {
                 $.ajax({
@@ -492,6 +500,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
             }
         }
     }
+
 
     document.addEventListener('DOMContentLoaded', function() {
         const clickableCells = document.querySelectorAll('.clickable');
@@ -581,7 +590,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
         });
     }
 
-    function attach_schedule(schedule_id, offering_id, section_id) {
+    function attach_schedule(schedule_id, offering_id, section_id, time_start, time_end) {
+        var remainingHours = parseFloat("<?php echo $remainingHours; ?>");
+        var totalCourseHours = parseFloat("<?php echo $totalCourseHours; ?>");
+        var scheduledHours = parseFloat("<?php echo $scheduledHours; ?>");
+
+        var newStart = new Date('1970-01-01T' + time_start + 'Z');
+        var newEnd = new Date('1970-01-01T' + time_end + 'Z');
+        var newScheduleHours = (newEnd - newStart) / (1000 * 60 * 60);
+
+        if (remainingHours <= 0) {
+            window.location.href = "#page-top";
+            alert_toast('No remaining hours available for scheduling.', 'warning');
+            return;
+        }
+
+        if (newScheduleHours > remainingHours) {
+            window.location.href = "#page-top";
+            alert_toast(`The remaining hours to schedule is only ${remainingHours} hours.`, 'warning');
+            return;
+        }
+
+        if (hasLab === 0 && newScheduleHours !== totalCourseHours) {
+            alert_toast('Please ensure all the provided hours are scheduled.', 'warning');
+            return;
+        }
+
         $.ajax({
             type: "POST",
             url: "ajax.php?action=attach_schedule",
@@ -596,8 +630,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
                 if (data.status === 'success') {
                     alert_toast(data.message, 'success');
                     setTimeout(function() {
-                        location.reload()
-                    }, 1500)
+                        location.reload();
+                    }, 1500);
                 } else {
                     alert_toast(data.message, 'danger');
                 }
@@ -608,7 +642,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id']) && isset($_GET['s
             }
         });
     }
-
 
     $('.delete_schedule').click(function() {
         var scheduleId = $(this).data('id');

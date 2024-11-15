@@ -8,11 +8,9 @@ if (isset($_GET['room_id'])) {
     $room_id = $_GET['room_id'];
     $head_planning = $_GET['head_planning'];
     $cd_signature = $_GET['cd_signature'];
-    $acad_year = $_GET['acad_year'];
     $program_id = $_SESSION['login_program_id'];
     $program_dept =  $_GET['program_dept'];
 
-    // Fetch program details
     $program_query = "SELECT * FROM program WHERE id = ?";
     if ($program_stmt = $conn->prepare($program_query)) {
         $program_stmt->bind_param("i", $program_id);
@@ -20,15 +18,23 @@ if (isset($_GET['room_id'])) {
         $program_result = $program_stmt->get_result();
         $program = $program_result->fetch_assoc();
         $program_stmt->close();
-    } else {
-        die('Error preparing program query.');
     }
 
     $head_query = "SELECT * FROM faculty WHERE designation = 1";
     $head_result = mysqli_query($conn, $head_query);
     $head = $head_result->fetch_assoc();
 
-    // Fetch room details
+    $school_year_query = "SELECT YEAR(start_date) as year_only FROM semester WHERE sem_name = '1st Semester'";
+    $school_year_result = mysqli_query($conn, $school_year_query);
+
+    if ($school_year_result && $school_year_row = $school_year_result->fetch_assoc()) {
+        $start_year = $school_year_row['year_only'];
+        $next_year = $start_year + 1;
+        $school_year = $start_year . '-' . $next_year;
+    } else {
+        $school_year = "Year not found";
+    }
+
     $room_query = "SELECT * FROM rooms WHERE id = ?";
     if ($room_stmt = $conn->prepare($room_query)) {
         $room_stmt->bind_param("i", $room_id);
@@ -36,11 +42,8 @@ if (isset($_GET['room_id'])) {
         $room_result = $room_stmt->get_result();
         $room = $room_result->fetch_assoc();
         $room_stmt->close();
-    } else {
-        die('Error preparing room query.');
     }
 
-    // Weekdays array
     $weekDays = [
         'M' => 'Monday',
         'T' => 'Tuesday',
@@ -51,7 +54,6 @@ if (isset($_GET['room_id'])) {
         'Su' => 'Sunday'
     ];
 
-    // Function to generate time ranges
     function generateTimeRange($startTime, $endTime)
     {
         $times = [];
@@ -128,7 +130,6 @@ if (isset($_GET['room_id'])) {
         return sprintf('#%02X%02X%02X', $r, $g, $b);
     }
 
-    // Function to generate calendar data
     function generateCalendarData($weekDays, $room_id)
     {
         $calendarData = [];
@@ -185,7 +186,6 @@ if (isset($_GET['room_id'])) {
 
     $calendarData = generateCalendarData($weekDays, $room_id);
 
-    // Create PDF using mPDF
     $mpdf = new \Mpdf\Mpdf(['orientation' => 'L', 'format' => 'A3']);
     $mpdf->SetMargins(12.7, 12.7, 12.7);
     $mpdf->SetAutoPageBreak(true, 12.7);
@@ -197,10 +197,7 @@ if (isset($_GET['room_id'])) {
     $leftImageX = 110;
     $rightImageX = 310 - $imageWidth;
 
-    // Add the left image
     $mpdf->Image('img/1-removebg-preview.jpeg', $leftImageX, 12.4, $imageWidth, $imageHeight, 'jpeg', '', true, false);
-
-    // Add the right image
     $mpdf->Image('img/Bagong_Pilipinas_logo.jpeg', $rightImageX, 12.4, $imageWidth, $imageHeight, 'jpeg', '', true, false);
 
     $html = <<<EOD
@@ -253,7 +250,7 @@ EOD;
 
     if ($result) {
         while ($row = $result->fetch_assoc()) {
-            $html .= '<h6 class="medium-text">' . strtoupper($row['sem_name']) . ', AY: ' . $acad_year . '</h6>';
+            $html .= '<h6 class="medium-text">' . strtoupper($row['sem_name']) . ', AY: ' . $school_year . '</h6>';
         }
     } else {
         $html .= '<h6 class="medium-text">No semester information found.</h6>';
@@ -263,7 +260,7 @@ EOD;
     <br><br>
 </div>
 
-<h6 class="medium-text" style='line-height: 0.1; margin-top: 110px;'><b>Course:</b> {$program['department']}</h6>
+<h6 class="medium-text" style='line-height: 0.1; margin-top: 110px;'><b>Course:</b> {$program['program_name']}</h6>
 <h6 class="medium-text" style='line-height: 0.1;'><b>Room:</b> {$room['room']}</h6>
 
 <table style='width: 100%; table-layout: fixed;'>

@@ -45,7 +45,7 @@ $user_program_id = $_SESSION['login_program_id'];
                             <input type="hidden" name="program_id" value="<?php echo $row['id'] ?>">
                         </div>
                         <div class="form-group">
-                            <label for="" class="control-label">Level</label>
+                            <label for="" class="control-label">Year Level</label>
                             <select class="form-control" name="level" required>
                                 <option>Please Select here</option>
                                 <option value="1st Year" <?php echo isset($level) && $level == '1st Year' ? 'selected' : ''; ?>>1st Year</option>
@@ -89,7 +89,7 @@ $user_program_id = $_SESSION['login_program_id'];
                                 <tr>
                                     <th class="text-center">#</th>
                                     <th class="text-center">Program Code</th>
-                                    <th class="text-center">Level</th>
+                                    <th class="text-center">Year Level</th>
                                     <th class="text-center">Section Name</th>
                                     <th class="text-center">No. of Students</th>
                                     <th class="text-center">Action</th>

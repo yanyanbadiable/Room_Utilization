@@ -37,7 +37,7 @@
                             </div>
                             <div class='col-sm-4'>
                                 <div class='form-group'>
-                                    <label>Level</label>
+                                    <label>Year Level</label>
                                     <select class=' form-control' id='level' onchange='getSection(program_code.value,this.value)'>
                                         <option>Please Select</option>
                                         <option value='1st Year'>1st Year</option>

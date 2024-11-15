@@ -13,7 +13,7 @@ if (isset($_GET['faculty_id'])) {
     $program_result = $program_stmt->get_result();
     $program = $program_result->fetch_assoc();
 
-    $faculty_query = "SELECT faculty.*, designation.designation, unit_loads.academic_rank FROM faculty INNER JOIN unit_loads ON faculty.academic_rank = unit_loads.id LEFT JOIN designation ON faculty.designation = designation.id WHERE faculty.id = ?";
+    $faculty_query = "SELECT faculty.*, designation.*, unit_loads.* FROM faculty INNER JOIN unit_loads ON faculty.academic_rank = unit_loads.id LEFT JOIN designation ON faculty.designation = designation.id WHERE faculty.id = ?";
     $faculty_stmt = $conn->prepare($faculty_query);
     $faculty_stmt->bind_param("i", $faculty_id);
     $faculty_stmt->execute();
@@ -23,6 +23,20 @@ if (isset($_GET['faculty_id'])) {
     $head_query = "SELECT * FROM faculty WHERE designation = 1";
     $head_result = mysqli_query($conn, $head_query);
     $head = $head_result->fetch_assoc();
+
+    $designation_query = "SELECT designation.* FROM faculty LEFT JOIN designation ON faculty.designation = designation.id WHERE faculty.id = ?";
+    $designation_stmt = $conn->prepare($designation_query);
+    $designation_stmt->bind_param("i", $faculty_id);
+    $designation_stmt->execute();
+    $designation_result = $designation_stmt->get_result();
+    $designation = $designation_result->fetch_assoc();
+
+    $academic_rank_query = "SELECT unit_loads.* FROM faculty LEFT JOIN unit_loads ON faculty.academic_rank = unit_loads.id WHERE faculty.id = ?";
+    $academic_rank_stmt = $conn->prepare($academic_rank_query);
+    $academic_rank_stmt->bind_param("i", $faculty_id);
+    $academic_rank_stmt->execute();
+    $academic_rank_result = $academic_rank_stmt->get_result();
+    $academic_rank = $academic_rank_result->fetch_assoc();
 
     $num_class_query = "
     SELECT COUNT(DISTINCT course_offering_info_id) AS num_class 
@@ -102,14 +116,24 @@ if (isset($_GET['faculty_id'])) {
         $overload_schedules[] = $row;
     }
 
-    // Fetch active semester
-    $currentMonthDay = date('m-d');
+    $school_year_query = "SELECT YEAR(start_date) as year_only FROM semester WHERE sem_name = '1st Semester'";
+    $school_year_result = mysqli_query($conn, $school_year_query);
+
+    if ($school_year_result && $school_year_row = $school_year_result->fetch_assoc()) {
+        $start_year = $school_year_row['year_only'];
+        $next_year = $start_year + 1;
+        $school_year = $start_year . '-' . $next_year;
+    } else {
+        $school_year = "Year not found";
+    }
+
+    $currentDate = date('Y-m-d');
     $semester_query = "
-        SELECT * FROM semester 
-        WHERE 
-            DATE_FORMAT(start_date, '%m-%d') <= '$currentMonthDay' 
-            AND DATE_FORMAT(end_date, '%m-%d') >= '$currentMonthDay'
-        LIMIT 1
+    SELECT * FROM semester 
+    WHERE 
+        start_date <= '$currentDate' 
+        AND end_date >= '$currentDate'
+    LIMIT 1
     ";
     $semester_result = mysqli_query($conn, $semester_query);
 
@@ -119,7 +143,7 @@ if (isset($_GET['faculty_id'])) {
         $semester_name = "No Active Semester";
     }
 
-    // Totals
+
     $total_units_regular = 0;
     $total_lec_regular = 0;
     $total_lab_regular = 0;
@@ -130,6 +154,12 @@ if (isset($_GET['faculty_id'])) {
 ?>
 
 <style>
+    /* table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    } */
+
     .underline-text {
         font-size: 14px;
         border-bottom: 1px solid #858796;
@@ -192,13 +222,13 @@ if (isset($_GET['faculty_id'])) {
                     <div class="col-md-8">
                         <strong>Faculty Member:</strong>
                         <?php echo strtoupper($faculty['fname']) . " " . (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
-                        strtoupper($faculty['lname']) . (!empty($faculty['post_graduate_studies']) ? ", " . strtoupper($faculty['post_graduate_studies']) : ""); ?><br>
+                            strtoupper($faculty['lname']) . (!empty($faculty['post_graduate_studies']) ? ", " . strtoupper($faculty['post_graduate_studies']) : ""); ?><br>
                         <strong>Academic Rank:</strong> <?php echo strtoupper($faculty['academic_rank']); ?><br>
                         <strong>College/Campus:</strong> CARIGARA CAMPUS
                     </div>
                     <div class="col-md-4">
-                        <strong>Semester:</strong> <?php echo $semester_name; ?><br>
-                        <strong>School Year:</strong> <input type="text" name="acad_year" id="acad_year" value="" size="9" class="underlined"><br>
+                        <strong>Semester:</strong> <?php echo strtoupper($semester_name); ?><br>
+                        <strong>School Year:</strong> <?php echo strtoupper($school_year); ?><br>
                         <strong>Designation:</strong> <?php echo strtoupper($faculty['designation']); ?>
                     </div>
                 </div>
@@ -208,22 +238,22 @@ if (isset($_GET['faculty_id'])) {
                 <div class="row">
                     <div class="col-12">
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                                 <thead>
                                     <tr>
-                                        <th rowspan="2" class="align-middle text-center p-2">Course No.</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">Descriptive Title</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">Subject Units</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">TIME</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">DAYS</th>
-                                        <th colspan="2" class="align-middle text-center p-2">No. of Hrs/Week</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">No. of Students</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">Room No.</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">Course, Yr., & Sec.</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 10%;">Course No.</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 20%;">Descriptive Title</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 10%;">Subject Units</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 15%;">TIME</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 10%;">DAYS</th>
+                                        <th colspan="2" class="align-middle text-center p-2" style="width: 13%;">No. of Hrs/Week</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 9%;">No. of Students</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 10%;">Room No.</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 13%;">Course, Yr., & Sec.</th>
                                     </tr>
                                     <tr>
-                                        <th class="align-middle text-center p-1">Lec</th>
-                                        <th class="align-middle text-center p-1">Lab</th>
+                                        <th class="align-middle text-center p-1" style="width: 6.5;">Lec</th>
+                                        <th class="align-middle text-center p-1" style="width: 6.5%;">Lab</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -372,22 +402,22 @@ if (isset($_GET['faculty_id'])) {
                 <div class="row">
                     <div class="col-12">
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered" style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                                 <thead>
                                     <tr>
-                                        <th rowspan="2" class="align-middle text-center p-2">Course No.</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">Descriptive Title</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">Subject Units</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">TIME</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">DAYS</th>
-                                        <th colspan="2" class="align-middle text-center p-2">No. of Hrs/Week</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">No. of Students</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">Room No.</th>
-                                        <th rowspan="2" class="align-middle text-center p-2">Course, Yr., & Sec.</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 10%;">Course No.</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 20%;">Descriptive Title</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 10%;">Subject Units</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 15%;">TIME</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 10%;">DAYS</th>
+                                        <th colspan="2" class="align-middle text-center p-2" style="width: 13%;">No. of Hrs/Week</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 9%;">No. of Students</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 10%;">Room No.</th>
+                                        <th rowspan="2" class="align-middle text-center p-2" style="width: 13%;">Course, Yr., & Sec.</th>
                                     </tr>
                                     <tr>
-                                        <th class="align-middle text-center p-1">Lec</th>
-                                        <th class="align-middle text-center p-1">Lab</th>
+                                        <th class="align-middle text-center p-1" style="width: 6.5;">Lec</th>
+                                        <th class="align-middle text-center p-1" style="width: 6.5%;">Lab</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -395,9 +425,9 @@ if (isset($_GET['faculty_id'])) {
                                         <?php
                                         $previous_course_offering_info_id = null;
                                         $days_combined = [];
-                                        $total_units_regular = 0;
-                                        $total_lec_regular = 0;
-                                        $total_lab_regular = 0;
+                                        $total_units_overload = 0;
+                                        $total_lec_overload = 0;
+                                        $total_lab_overload = 0;
                                         $total_lec_hours = 0;
                                         $total_lab_hours = 0;
 
@@ -449,9 +479,9 @@ if (isset($_GET['faculty_id'])) {
                                             $section_name_concatenated = $course_detail['program_code'] . '-' . substr($course_detail['level'], 0, 1) . $course_detail['section_name'];
 
                                             if ($previous_course_offering_info_id !== $schedule['course_offering_info_id']) {
-                                                $total_units_regular += $course_detail['units'];
-                                                $total_lec_regular += $course_detail['lec'];
-                                                $total_lab_regular += $course_detail['lab'];
+                                                $total_units_overload += $course_detail['units'];
+                                                $total_lec_overload += $course_detail['lec'];
+                                                $total_lab_overload += $course_detail['lab'];
                                             }
 
                                             if ($previous_course_offering_info_id == $schedule['course_offering_info_id'] || $next_course_offering_info_id == $schedule['course_offering_info_id']) {
@@ -551,7 +581,7 @@ if (isset($_GET['faculty_id'])) {
                         </div>
                     </div>
                 </div>
-                <!-- Other In-School Involvement/Assignment -->
+
                 <div class="row mt-4 mb-4">
                     <div class="col-md-7 pr-0">
                         <div class="mb-1">
@@ -559,22 +589,58 @@ if (isset($_GET['faculty_id'])) {
                         </div>
                         <div class="col-md-6 pl-3 text-right">
                             <div class="mb-2">
-                                Administrative: <input type="text" id="administrative_hours" value="" size="2" class="underlined"> Hours
+                                <?php
+                                if (!empty($faculty['designation'])) {
+                                    echo 'Administrative: <strong class="pl-1">' . $designation['administrative'] . '</strong> Hours';
+                                } else {
+                                    echo 'Administrative: <strong class="pl-1">' . $academic_rank['administrative'] . '</strong> Hours';
+                                }
+                                ?>
                             </div>
                             <div class="mb-2">
-                                Research: <input type="text" id="research_hours" value="" size="2" class="underlined"> Hours
+                                <?php
+                                if (!empty($faculty['designation'])) {
+                                    echo 'Research <strong class="pl-1">' . $designation['research'] . '</strong> Hours';
+                                } else {
+                                    echo 'Research <strong class="pl-1">' . $academic_rank['research'] . '</strong> Hours';
+                                }
+                                ?>
                             </div>
                             <div class="mb-2">
-                                Extension Services: <input type="text" id="extension_hours" value="" size="2" class="underlined"> Hours
+                                <?php
+                                if (!empty($faculty['designation'])) {
+                                    echo 'Extension Services: <strong class="pl-1">' . $designation['ext_service'] . '</strong> Hours';
+                                } else {
+                                    echo 'Extension Services: <strong class="pl-1">' . $academic_rank['ext_service'] . '</strong> Hours';
+                                }
+                                ?>
                             </div>
                             <div class="mb-2">
-                                Consultation: <input type="text" id="consultation_hours" value="" size="2" class="underlined"> Hours
+                                <?php
+                                if (!empty($faculty['designation'])) {
+                                    echo 'Consultation: <strong class="pl-1">' . $designation['consultation'] . '</strong> Hours';
+                                } else {
+                                    echo 'Consultation: <strong class="pl-1">' . $academic_rank['consultation'] . '</strong> Hours';
+                                }
+                                ?>
                             </div>
                             <div class="mb-2">
-                                Instructional Functions: <input type="text" id="instructional_hours" value="" size="2" class="underlined"> Hours
+                                <?php
+                                if (!empty($faculty['designation'])) {
+                                    echo 'Instructional Functions: <strong class="pl-1">' . $designation['instructional'] . '</strong> Hours';
+                                } else {
+                                    echo 'Instructional Functions: <strong class="pl-1">' . $academic_rank['instructional'] . '</strong> Hours';
+                                }
+                                ?>
                             </div>
                             <div class="mb-2">
-                                Others (Specify): <input type="text" id="other_hours" value="" size="2" class="underlined"> Hours
+                                <?php
+                                if (!empty($faculty['designation'])) {
+                                    echo 'Others (Specify): <strong class="pl-1">' . $designation['others'] . '</strong> Hours';
+                                } else {
+                                    echo 'Others (Specify): <strong class="pl-1">' . $academic_rank['others'] . '</strong> Hours';
+                                }
+                                ?>
                             </div>
                         </div>
                     </div>
@@ -592,9 +658,8 @@ if (isset($_GET['faculty_id'])) {
                 <div class="col-md-12 text-center">
                     <div>
                         <strong class="underline-text text-center">
-                            <?php echo strtoupper($faculty['fname']) . " " .
-                                (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
-                                strtoupper($faculty['lname']) . ", " . strtoupper($faculty['post_graduate_studies']); ?>
+                            <?php echo strtoupper($faculty['fname']) . " " . (!empty($faculty['mname']) ? strtoupper(substr($faculty['mname'], 0, 1)) . ". " : "") .
+                                strtoupper($faculty['lname']) . (!empty($faculty['post_graduate_studies']) ? ", " . strtoupper($faculty['post_graduate_studies']) : ""); ?>
                         </strong>
                     </div>
                     <small class="d-block text-center">Faculty</small>
@@ -623,25 +688,17 @@ if (isset($_GET['faculty_id'])) {
                 </div>
             </div>
 
-            <!-- Button to Generate PDF -->
             <button class="btn btn-block btn-success shadow mb-4" onclick="generatePDF()">Generate PDF</button>
         </section>
     </div>
 </div>
 <script>
     function generatePDF() {
-        var administrativeHours = document.getElementById('administrative_hours').value;
-        var researchHours = document.getElementById('research_hours').value;
-        var extensionHours = document.getElementById('extension_hours').value;
-        var consultationHours = document.getElementById('consultation_hours').value;
-        var instructionalHours = document.getElementById('instructional_hours').value;
-        var otherHours = document.getElementById('other_hours').value;
         var cdSignature = document.getElementById('cd_signature').value;
         var vpaaSignature = document.getElementById('vpaa_signature').value;
         var upSignature = document.getElementById('up_signature').value;
-        var acadYear = document.getElementById('acad_year').value;
 
-        if (!administrativeHours || !researchHours || !extensionHours || !consultationHours || !instructionalHours || !otherHours || !cdSignature || !vpaaSignature || !upSignature || !acadYear) {
+        if (!cdSignature || !vpaaSignature || !upSignature) {
             window.location.href = "#page-top";
             alert_toast("Please fill in all fields.", 'warning');
             return;
@@ -651,15 +708,8 @@ if (isset($_GET['faculty_id'])) {
 
         var url = 'reportAjax/generate_teaching_load.php?faculty_id=<?php echo $faculty_id; ?>' +
             '&program_dept=' + encodeURIComponent(program_dept) +
-            '&administrative_hours=' + encodeURIComponent(administrativeHours) +
-            '&research_hours=' + encodeURIComponent(researchHours) +
-            '&extension_hours=' + encodeURIComponent(extensionHours) +
-            '&consultation_hours=' + encodeURIComponent(consultationHours) +
-            '&instructional_hours=' + encodeURIComponent(instructionalHours) +
-            '&other_hours=' + encodeURIComponent(otherHours) +
             '&cd_signature=' + encodeURIComponent(cdSignature) +
             '&vpaa_signature=' + encodeURIComponent(vpaaSignature) +
-            '&acad_year=' + encodeURIComponent(acadYear) +
             '&up_signature=' + encodeURIComponent(upSignature);
 
         window.location.href = url;
