@@ -241,7 +241,7 @@ if (isset($_GET['room_id'])) {
     <h6 class="large-text"><b>EASTERN VISAYAS STATE UNIVERSITY CARIGARA CAMPUS</b></h6>
     <h6 class="medium-text">Carigara, Leyte</h6>
     <h6 class="medium-text"><b>{$program['department']}</b></h6>
-    <h5 class="large-text"><b>ROOM UTILIZATION</b></h5>
+    <h5 class="large-text"><b>ROOM UTILIZATION PLAN</b></h5>
 EOD;
 
     $currentDate = date('Y-m-d');
@@ -337,7 +337,7 @@ EOD;
 </div>";
 
     $room_name = strtoupper($room['room']);
-    $filename = 'room_utilization_report(' . $room_name . ').pdf';
+    $filename = 'RU_Report(' . $room_name . ').pdf';
 
     // Output the PDF
     $mpdf->WriteHTML($html);

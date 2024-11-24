@@ -15,13 +15,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
 
     $unscheduled_query = "
         SELECT c.program_id, 
-            COUNT(coi.id) AS total_courses, 
-            SUM(CASE WHEN s.id IS NULL THEN 1 ELSE 0 END) AS unscheduled_courses
+           COUNT(coi.id) AS total_courses, 
+           SUM(CASE 
+                   WHEN s.id IS NULL THEN 1 
+                   WHEN s.faculty_id IS NULL THEN 1 
+                   ELSE 0 
+               END) AS unscheduled_courses
         FROM course_offering_info coi
         JOIN courses c ON coi.courses_id = c.id
         LEFT JOIN schedules s ON coi.id = s.course_offering_info_id
-        WHERE c.program_id != $user_program_id 
-        AND s.faculty_id IS NOT NULL
+        WHERE c.program_id != $user_program_id
         GROUP BY c.program_id
     ";
 

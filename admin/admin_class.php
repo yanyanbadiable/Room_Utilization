@@ -335,7 +335,7 @@ class Action
 			return 1; // Success
 		} else {
 			// Log the error and return a failure response
-			error_log("Database Error: " . $this->db->error); 
+			error_log("Database Error: " . $this->db->error);
 			return 0; // Failure
 		}
 	}
@@ -403,12 +403,13 @@ class Action
 		$res = 1;
 		extract($_POST);
 
-		$stmt = $this->db->prepare("INSERT INTO courses (year, period, level, program_id, course_code, course_name, lec, lab, units, is_comlab, hours) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-		$stmt->bind_param("ssssssdddds", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val, $hours_val);
+		$stmt = $this->db->prepare("INSERT INTO courses (year, period, level, program_id, course_code, course_name, lec, lab, units, is_comlab, hours, cmo_no, series) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-		foreach ($year as $key => $value) {
+		$stmt->bind_param("sssissddddsss", $year_val, $period_val, $level_val, $program_id_val, $course_code_val, $course_name_val, $lec_val, $lab_val, $units_val, $is_comlab_val, $hours_val, $cmo_no_val, $series_val);
 
-			$year_val = $year[$key];
+		foreach ($period as $key => $value) {
+			$year_val = $year;
 			$period_val = $period[$key];
 			$level_val = $level[$key];
 			$program_id_val = $program_id[$key];
@@ -419,10 +420,11 @@ class Action
 			$units_val = $units[$key];
 			$is_comlab_val = $is_comlab[$key];
 			$hours_val = $hours[$key];
+			$cmo_no_val = $cmo_no;
+			$series_val = $series;
 
-
-			$check_stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_code = ? AND course_name = ? AND program_id = ?");
-			$check_stmt->bind_param("ssi", $course_code_val, $course_name_val, $program_id_val);
+			$check_stmt = $this->db->prepare("SELECT COUNT(*) FROM courses WHERE course_code = ? AND course_name = ? AND program_id = ? AND year = ?");
+			$check_stmt->bind_param("ssis", $course_code_val, $course_name_val, $program_id_val, $year_val);
 			$check_stmt->execute();
 			$check_stmt->bind_result($count);
 			$check_stmt->fetch();
@@ -442,7 +444,6 @@ class Action
 
 		return $res;
 	}
-
 
 	function edit_course()
 	{
@@ -474,14 +475,20 @@ class Action
 
 	function edit_year()
 	{
-		if (isset($_POST['program_id'], $_POST['year'], $_POST['updated_year'])) {
+		if (isset($_POST['program_id'], $_POST['year'], $_POST['updated_year'], $_POST['cmo_no'], $_POST['series'])) {
 			$program_id = $_POST['program_id'];
 			$year = $_POST['year'];
 			$updated_year = $_POST['updated_year'];
+			$cmo_no = $_POST['cmo_no'];
+			$series = $_POST['series'];
 
-			$update_query = "UPDATE courses SET year = ? WHERE program_id = ? AND year = ?";
+			$update_query = "UPDATE courses 
+                         SET year = ?, cmo_no = ?, series = ? 
+                         WHERE program_id = ? AND year = ?";
 			$update_stmt = $this->db->prepare($update_query);
-			$update_stmt->bind_param("sis", $updated_year, $program_id, $year);
+
+			$update_stmt->bind_param("sssis", $updated_year, $cmo_no, $series, $program_id, $year);
+
 			$update_result = $update_stmt->execute();
 
 			if ($update_result) {
@@ -493,6 +500,7 @@ class Action
 			return 0;
 		}
 	}
+
 
 
 	function delete_course()

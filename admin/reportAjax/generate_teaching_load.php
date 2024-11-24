@@ -710,7 +710,7 @@ if (isset($_GET['faculty_id'])) {
 </div>
 ';
     $faculty_full_name = strtoupper($faculty['fname']) . '_' . strtoupper($faculty['lname']);
-    $filename = 'faculty_workload(' . $faculty_full_name . ').pdf';
+    $filename = 'FW(' . $faculty_full_name . ').pdf';
     // Output PDF
     $mpdf->WriteHTML($html);
     $mpdf->Output($filename, 'D');

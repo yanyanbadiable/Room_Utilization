@@ -3,8 +3,10 @@ include 'db_connect.php';
 session_start();
 $program_id = $_SESSION['login_program_id'];
 
-if (isset($_GET['year'])) {
+if (isset($_GET['year'], $_GET['cmo_no'], $_GET['series'])) {
     $year = $_GET['year'];
+    $cmo_no = $_GET['cmo_no'];
+    $series = $_GET['series'];
 }
 ?>
 
@@ -25,6 +27,14 @@ if (isset($_GET['year'])) {
                     <input type="hidden" name="year" value="<?php echo $year; ?>">
                     <input type="hidden" name="program_id" value="<?php echo $program_id; ?>">
                     <div class="form-group">
+                        <label>CMO No.</label>
+                        <input type="text" name="cmo_no" class="form-control" id="cmo_no" value="<?php echo $cmo_no; ?>">
+                    </div>
+                    <div class="form-group">
+                        <label>Series</label>
+                        <input type="text" name="series" class="form-control" id="series" value="<?php echo $series; ?>">
+                    </div>
+                    <div class="form-group">
                         <label>Curriculum Year</label>
                         <input type="text" name="updated_year" class="form-control" id="year" value="<?php echo $year; ?>">
                     </div>
@@ -38,6 +48,7 @@ if (isset($_GET['year'])) {
         </div>
     </div>
 </div>
+
 <script>
     function submitForm() {
         var formData = $('#edit_year').serialize();
@@ -50,7 +61,7 @@ if (isset($_GET['year'])) {
                     $('#editModal').modal('hide');
                     $('.modal-backdrop').hide();
                     window.location.href = "#page-top";
-                    alert_toast('Curriculum Year Updated Successfully!', 'success');
+                    alert_toast('Curriculum Updated Successfully!', 'success');
                     location.reload();
                 } else {
                     $('#displayEditModal').html(data).fadeIn();

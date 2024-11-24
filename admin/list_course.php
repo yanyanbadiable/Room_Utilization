@@ -58,8 +58,8 @@ if (isset($_GET['program_code']) && isset($_GET['year'])) {
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <th rowspan="2" class="col-sm-2 align-middle text-center p-2">Course No.</th>
-                                                <th rowspan="2" class="col-sm-6 align-middle text-center p-2">Descriptive Title</th>
+                                                <th rowspan="2" class="col-sm-2 align-middle p-2">Course No.</th>
+                                                <th rowspan="2" class="col-sm-6 align-middle p-2">Descriptive Title</th>
                                                 <th colspan="2" class="col-sm-2 align-middle text-center p-2">No. of Hrs/Week</th>
                                                 <th rowspan="2" class='col-sm-1 align-middle text-center p-2'>UNITS</th>
                                                 <th rowspan="2" class='col-sm-1 align-middle text-center p-2'>COMPLAB</th>

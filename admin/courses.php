@@ -46,7 +46,7 @@ while ($row = $result->fetch_assoc()) {
                                         <tr>
                                             <th>Program Code</th>
                                             <th>Program Name</th>
-                                            <th>View</th>
+                                            <th class="text-center">View</th>
                                         </tr>
                                     </thead>
                                     <tbody>

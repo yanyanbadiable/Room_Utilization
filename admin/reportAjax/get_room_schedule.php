@@ -236,7 +236,7 @@ if (isset($_GET['room_id'])) {
                 <h6><b class="text-uppercase"><?php echo $room['department'] ?></b></h6>
             </div>
             <div class="header-text">
-                <h5><b>ROOM UTILIZATION</b></h5>
+                <h5><b>ROOM UTILIZATION PLAN</b></h5>
             </div>
             <div class="sub-header-text">
                 <?php
