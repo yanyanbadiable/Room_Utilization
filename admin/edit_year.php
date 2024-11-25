@@ -16,7 +16,7 @@ if (isset($_GET['year'], $_GET['cmo_no'], $_GET['series'])) {
             <form action="" id="edit_year">
                 <div class="modal-header bg-primary text-white">
                     <h4 class="modal-title">
-                        Edit Curriculum Year
+                        Edit Curriculum
                     </h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
