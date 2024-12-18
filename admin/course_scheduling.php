@@ -1,4 +1,7 @@
-<?php include('db_connect.php'); ?>
+<?php
+include('db_connect.php');
+$user_department_id = $_SESSION['login_department_id'];
+?>
 
 <div class="container-fluid">
     <div class="row">
@@ -20,25 +23,24 @@
                     <div class="card-body">
                         <div class='row'>
                             <div class='col-sm-4'>
-                                <div class='form-group'>
-                                    <label for="program_code">Academic Program</label>
-                                    <?php
-                                    $program_id = $_SESSION['login_program_id'];
-
-                                    $query = "SELECT program_code FROM program WHERE id = ?";
-                                    $stmt = $conn->prepare($query);
-                                    $stmt->bind_param("i", $program_id);
-                                    $stmt->execute();
-                                    $result = $stmt->get_result();
-                                    $program = $result->fetch_assoc();
-                                    ?>
-                                     <input type="text" class='form-control' id='program_code' value="<?php echo $program['program_code']; ?>" disabled>
+                                <div class="form-group">
+                                    <label class="control-label">Program Code</label>
+                                    <select class="form-control" name="program_id" id="program_id" onchange="getSection(this.value, document.getElementById('level').value)">
+                                        <option>Please Select</option>
+                                        <?php
+                                        $program = $conn->query("SELECT id, program_code FROM program WHERE department_id = $user_department_id");
+                                        while ($row = $program->fetch_assoc()) { ?>
+                                            <option value="<?php echo $row['id']; ?>" <?php echo isset($program_id) && $program_id == $row['id'] ? 'selected' : ''; ?>>
+                                                <?php echo $row['program_code']; ?>
+                                            </option>
+                                        <?php } ?>
+                                    </select>
                                 </div>
                             </div>
                             <div class='col-sm-4'>
                                 <div class='form-group'>
                                     <label>Year Level</label>
-                                    <select class=' form-control' id='level' onchange='getSection(program_code.value,this.value)'>
+                                    <select class='form-control' id='level' onchange='getSection(document.getElementById("program_id").value, this.value)'>
                                         <option>Please Select</option>
                                         <option value='1st Year'>1st Year</option>
                                         <option value='2nd Year'>2nd Year</option>
@@ -59,9 +61,9 @@
     </div>
 </div>
 <script>
-    function getSection(program_code, level) {
+    function getSection(program_id, level) {
         var array = {};
-        array['program_code'] = program_code;
+        array['program_id'] = program_id;
         array['level'] = level;
         $.ajax({
             type: "GET",
@@ -77,10 +79,9 @@
         });
     }
 
-
-    function getCoursesOffered(program_code, level, section_id) {
+    function getCoursesOffered(program_id, level, section_id) {
         var array = {};
-        array['program_code'] = program_code;
+        array['program_id'] = program_id;
         array['level'] = level;
         array['section_id'] = section_id;
         $.ajax({

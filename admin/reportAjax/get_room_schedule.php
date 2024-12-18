@@ -5,24 +5,36 @@ session_start();
 
 if (isset($_GET['room_id'])) {
     $room_id = $_GET['room_id'];
-    $program_id = $_SESSION['login_program_id'];
+    $department_id = $_SESSION['login_department_id'];
 
-    $program_query = "SELECT * FROM program WHERE id = ?";
-    $program_stmt = $conn->prepare($program_query);
-    $program_stmt->bind_param("i", $program_id);
-    $program_stmt->execute();
-    $program_result = $program_stmt->get_result();
-    $program = $program_result->fetch_assoc();
-
-    $room_query = "SELECT rooms.*, program.department, program.program_name FROM rooms INNER JOIN program ON rooms.program_id = program.id WHERE rooms.id = ?";
+    $room_query = "
+    SELECT 
+    rooms.*, 
+    department.department_name, 
+    program.program_name
+    FROM 
+        rooms 
+    INNER JOIN department ON rooms.department_id = department.id
+    INNER JOIN building ON rooms.building_id = building.id
+    INNER JOIN program ON building.program_id = program.id
+    WHERE 
+    rooms.id = ?;
+    ";
     $room_stmt = $conn->prepare($room_query);
     $room_stmt->bind_param("i", $room_id);
     $room_stmt->execute();
     $room_result = $room_stmt->get_result();
     $room = $room_result->fetch_assoc();
 
-    $head_query = "SELECT * FROM faculty WHERE designation = 1";
-    $head_result = mysqli_query($conn, $head_query);
+    $head_query = "
+    SELECT * 
+    FROM faculty 
+    WHERE department_id = ? AND designation = 1
+    ";
+    $head_stmt = $conn->prepare($head_query);
+    $head_stmt->bind_param("i", $department_id);
+    $head_stmt->execute();
+    $head_result = $head_stmt->get_result();
     $head = $head_result->fetch_assoc();
 
     $school_year_query = "SELECT YEAR(start_date) as year_only FROM semester WHERE sem_name = '1st Semester'";
@@ -233,7 +245,7 @@ if (isset($_GET['room_id'])) {
                 <h6 class="m-1">Republic of the Philippines</h6>
                 <h6><b>EASTERN VISAYAS STATE UNIVERSITY CARIGARA CAMPUS</b></h6>
                 <h6 class="mb-1">Carigara, Leyte</h6>
-                <h6><b class="text-uppercase"><?php echo $room['department'] ?></b></h6>
+                <h6><b class="text-uppercase"><?php echo $room['department_name'] ?></b></h6>
             </div>
             <div class="header-text">
                 <h5><b>ROOM UTILIZATION PLAN</b></h5>
@@ -305,7 +317,7 @@ if (isset($_GET['room_id'])) {
     </div>
     <br>
     <br>
-    <?php if ($room['program_id'] == $program_id): ?>
+    <?php if ($room['department_id'] == $department_id): ?>
         <div class="row">
             <div class="col-md-4">
                 <h6 style="font-style:italic;" class="text-left mb-3">Prepared by:</h6>
@@ -315,7 +327,7 @@ if (isset($_GET['room_id'])) {
                             (!empty($head['mname']) ? strtoupper(substr($head['mname'], 0, 1)) . ". " : "") .
                             strtoupper($head['lname']) . ", " . strtoupper($head['post_graduate_studies']); ?>
                     </strong><br>
-                    <small>Head, <?php echo $program['department']; ?></small>
+                    <small>Head, <?php echo $room['department_name']; ?></small>
                 </div>
             </div>
             <div class="col-md-4">
@@ -339,7 +351,7 @@ if (isset($_GET['room_id'])) {
         </div>
     <?php endif; ?>
 </div>
-<?php if ($room['program_id'] == $program_id): ?>
+<?php if ($room['department_id'] == $department_id): ?>
     <button class="btn btn-block btn-success shadow mb-4" onclick="generatePDF()">Generate PDF</button>
 <?php endif; ?>
 <script>
@@ -353,7 +365,7 @@ if (isset($_GET['room_id'])) {
             return;
         }
 
-        var program_dept = "<?php echo $program['department']; ?>";
+        var program_dept = "<?php echo $room['department_name']; ?>";
 
         var url = 'reportAjax/generate_schedule.php?room_id=<?php echo $room_id; ?>' +
             '&program_dept=' + encodeURIComponent(program_dept) +

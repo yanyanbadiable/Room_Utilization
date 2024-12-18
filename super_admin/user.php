@@ -34,15 +34,15 @@ $users = $conn->query("SELECT * FROM users ORDER BY name ASC");
                                         <th>#</th>
                                         <th>Username</th>
                                         <th>Type</th>
-                                        <th>Program</th>
+                                        <th>Department</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php
                                     $i = 1;
-                                    $user = $conn->query("SELECT users.*, program.program_name
-                            FROM users INNER JOIN program ON users.program_id = program.id WHERE users.type = 0 ");
+                                    $user = $conn->query("SELECT users.*, department.department_name
+                            FROM users INNER JOIN department ON users.department_id = department.id WHERE users.type = 0 ");
                                     if (!$user) {
                                         die('Invalid query: ' . $conn->error);
                                     }
@@ -52,7 +52,7 @@ $users = $conn->query("SELECT * FROM users ORDER BY name ASC");
                                             <td class="text-center"><?php echo $i++ ?></td>
                                             <td><?php echo $row['username'] ?></td>
                                             <td><?php echo $type[$row['type']] ?></td>
-                                            <td><?php echo $row['program_name'] ?></td>
+                                            <td><?php echo $row['department_name'] ?></td>
                                             <td class="text-center">
                                                 <button class="btn btn-sm btn-primary edit_user mr-1" type="button" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>">Edit</button>
                                                 <button class="btn btn-sm btn-danger delete_user" type="button" data-id="<?php echo $row['id'] ?>">Delete</button>

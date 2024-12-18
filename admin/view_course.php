@@ -69,7 +69,10 @@ if (isset($_GET['program_code'])) {
                                                 </td>
                                                 <td class="text-center">
                                                     <a href="index.php?page=list_course&program_code=<?php echo $program_code; ?>&year=<?php echo $course['year']; ?>" class="btn btn-success btn-sm" title="Click to View"><i class="fa fa-eye"></i></a>
-                                                    <a onclick="editModal('<?php echo $course['year']; ?>', '<?php echo $course['cmo_no']; ?>', '<?php echo $course['series']; ?>')" class="btn btn-info btn-sm" title="Click to Edit"><i class="fa fa-edit"></i></a>
+                                                    <a onclick="editModal('<?php echo $course['year']; ?>', '<?php echo $course['cmo_no']; ?>', '<?php echo $course['series']; ?>', '<?php echo $program_id; ?>')"
+                                                        class="btn btn-info btn-sm" title="Click to Edit">
+                                                        <i class="fa fa-edit"></i>
+                                                    </a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -94,11 +97,12 @@ if (isset($_GET['program_code'])) {
 </style>
 
 <script>
-    function editModal(year, cmo_no, series) {
+    function editModal(year, cmo_no, series, program_id) {
         var array = {};
         array['year'] = year;
         array['cmo_no'] = cmo_no;
         array['series'] = series;
+        array['program_id'] = program_id;
         $.ajax({
             type: "GET",
             url: "edit_year.php",

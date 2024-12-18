@@ -1,11 +1,11 @@
 <?php
-include 'db_connect.php'; // Assuming this file contains database connection logic
+include 'db_connect.php';
 
-$program_id = $_SESSION['login_program_id'];
+$department_id = $_SESSION['login_department_id'];
 
-$query = "SELECT DISTINCT program_code, program_name FROM program WHERE id = ?";
+$query = "SELECT DISTINCT program_code, program_name FROM program WHERE department_id = ?";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $program_id);
+$stmt->bind_param("i", $department_id);
 $stmt->execute();
 $result = $stmt->get_result();
 

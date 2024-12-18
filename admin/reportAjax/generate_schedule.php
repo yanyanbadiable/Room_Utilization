@@ -8,20 +8,37 @@ if (isset($_GET['room_id'])) {
     $room_id = $_GET['room_id'];
     $head_planning = $_GET['head_planning'];
     $cd_signature = $_GET['cd_signature'];
-    $program_id = $_SESSION['login_program_id'];
+    $department_id = $_SESSION['login_department_id'];
     $program_dept =  $_GET['program_dept'];
 
-    $program_query = "SELECT * FROM program WHERE id = ?";
-    if ($program_stmt = $conn->prepare($program_query)) {
-        $program_stmt->bind_param("i", $program_id);
-        $program_stmt->execute();
-        $program_result = $program_stmt->get_result();
-        $program = $program_result->fetch_assoc();
-        $program_stmt->close();
-    }
+    $room_query = "
+    SELECT 
+    rooms.*, 
+    department.department_name, 
+    program.program_name
+    FROM 
+        rooms 
+    INNER JOIN department ON rooms.department_id = department.id
+    INNER JOIN building ON rooms.building_id = building.id
+    INNER JOIN program ON building.program_id = program.id
+    WHERE 
+    rooms.id = ?;
+    ";
+    $room_stmt = $conn->prepare($room_query);
+    $room_stmt->bind_param("i", $room_id);
+    $room_stmt->execute();
+    $room_result = $room_stmt->get_result();
+    $room = $room_result->fetch_assoc();
 
-    $head_query = "SELECT * FROM faculty WHERE designation = 1";
-    $head_result = mysqli_query($conn, $head_query);
+    $head_query = "
+    SELECT * 
+    FROM faculty 
+    WHERE department_id = ? AND designation = 1
+    ";
+    $head_stmt = $conn->prepare($head_query);
+    $head_stmt->bind_param("i", $department_id);
+    $head_stmt->execute();
+    $head_result = $head_stmt->get_result();
     $head = $head_result->fetch_assoc();
 
     $school_year_query = "SELECT YEAR(start_date) as year_only FROM semester WHERE sem_name = '1st Semester'";
@@ -33,15 +50,6 @@ if (isset($_GET['room_id'])) {
         $school_year = $start_year . '-' . $next_year;
     } else {
         $school_year = "Year not found";
-    }
-
-    $room_query = "SELECT * FROM rooms WHERE id = ?";
-    if ($room_stmt = $conn->prepare($room_query)) {
-        $room_stmt->bind_param("i", $room_id);
-        $room_stmt->execute();
-        $room_result = $room_stmt->get_result();
-        $room = $room_result->fetch_assoc();
-        $room_stmt->close();
     }
 
     $weekDays = [
@@ -240,7 +248,7 @@ if (isset($_GET['room_id'])) {
     <h6 class="large-text">Republic of the Philippines</h6>
     <h6 class="large-text"><b>EASTERN VISAYAS STATE UNIVERSITY CARIGARA CAMPUS</b></h6>
     <h6 class="medium-text">Carigara, Leyte</h6>
-    <h6 class="medium-text"><b>{$program['department']}</b></h6>
+    <h6 class="medium-text"><b>{$program_dept}</b></h6>
     <h5 class="large-text"><b>ROOM UTILIZATION PLAN</b></h5>
 EOD;
 
@@ -260,7 +268,7 @@ EOD;
     <br><br>
 </div>
 
-<h6 class="medium-text" style='line-height: 0.1; margin-top: 110px;'><b>Course:</b> {$program['program_name']}</h6>
+<h6 class="medium-text" style='line-height: 0.1; margin-top: 110px;'><b>Course:</b> {$room['program_name']}</h6>
 <h6 class="medium-text" style='line-height: 0.1;'><b>Room:</b> {$room['room']}</h6>
 
 <table style='width: 100%; table-layout: fixed;'>

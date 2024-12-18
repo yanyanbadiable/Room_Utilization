@@ -6,14 +6,20 @@ session_start();
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['level'])) {
     $instructor = $_GET['instructor'];
     $level = $_GET['level'];
-    $program_id = $_SESSION['login_program_id'];
+    $department_id = $_SESSION['login_department_id'];
 
-    $faculty_program_query = "SELECT program_id FROM faculty WHERE id = ?";
+    $faculty_program_query = "
+    SELECT program.department_id 
+    FROM faculty
+    JOIN program ON faculty.program_id = program.id
+    WHERE faculty.id = ?
+    ";
     $faculty_program_stmt = $conn->prepare($faculty_program_query);
     $faculty_program_stmt->bind_param('i', $instructor);
     $faculty_program_stmt->execute();
     $faculty_program_result = $faculty_program_stmt->get_result();
-    $faculty_program = $faculty_program_result->fetch_assoc()['program_id'];
+    $faculty_program = $faculty_program_result->fetch_assoc()['department_id'];
+
 
     $loads_query = "
         SELECT courses.*, course_offering_info.*, schedules.* 
@@ -52,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
 
     while ($row = $total_hours_result->fetch_assoc()) {
         if (!in_array($row['course_offering_info_id'], $seen_course_offering_ids)) {
-            $total_hours += (float) $row['hours']; 
+            $total_hours += (float) $row['hours'];
             $seen_course_offering_ids[] = $row['course_offering_info_id'];
         }
     }
@@ -321,6 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                                     courses.course_code, 
                                     courses.course_name, 
                                     courses.program_id,
+                                    program.department_id,
                                     program.program_code, 
                                     sections.level, 
                                     sections.section_name, 
@@ -332,7 +339,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                                     INNER JOIN 
                                         sections ON course_offering_info.section_id = sections.id
                                     INNER JOIN 
-                                        program ON sections.program_id = program.id
+                                        program ON courses.program_id = program.id
                                     WHERE 
                                         course_offering_info.id = ?
                                     ";
@@ -396,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
 
                                             </div>
                                         </td>
-                                        <?php if ($course_detail['program_id'] == $_SESSION['login_program_id']): ?>
+                                        <?php if ($course_detail['department_id'] == $department_id): ?>
                                             <td class="text-center align-middle">
                                                 <button class="btn btn-danger btn-flat remove_faculty_load" data-offering_id="<?php echo $schedule['course_offering_info_id']; ?>">
                                                     <i class="fa fa-times"></i>
@@ -412,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                        <?php if ($faculty_program == $program_id): ?>
+                        <?php if ($faculty_program == $department_id): ?>
                             <div class="col-sm-12">
                                 <a onclick="window.location.href='index.php?page=reportAjax/teaching_load&faculty_id=<?php echo urlencode($instructor); ?>'" class="btn btn-primary btn-block">View Faculty Workload</a>
                             </div>

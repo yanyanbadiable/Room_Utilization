@@ -1,7 +1,7 @@
 <?php
 include '../db_connect.php';
 session_start();
-$program_id = $_SESSION['login_program_id'];
+$department_id = $_SESSION['login_department_id'];
 $collection = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset($_GET['level'])) {
@@ -17,14 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['instructor']) && isset(
                       JOIN courses c ON coi.courses_id = c.id
                       WHERE s.is_active = 1
                       AND s.faculty_id IS NULL
-                      AND prog.id = ?
+                      AND prog.department_id = ?
                       AND c.level = ?";
 
     $stmt = $conn->prepare($courses_query);
     if (!$stmt) {
         die("Prepare failed: " . $conn->error);
     }
-    $stmt->bind_param('is', $program_id, $level);
+    $stmt->bind_param('is', $department_id, $level);
     $stmt->execute();
     $courses_result = $stmt->get_result();
 

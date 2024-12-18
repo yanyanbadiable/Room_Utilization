@@ -1,13 +1,13 @@
 <?php
 include('db_connect.php');
 
-$user_program_id = $_SESSION['login_program_id'];
+$user_department_id = $_SESSION['login_department_id'];
 
 $query = "
     SELECT * 
     FROM rooms 
     ORDER BY 
-        CASE WHEN program_id = '$user_program_id' THEN 0 ELSE 1 END
+        CASE WHEN department_id = '$user_department_id' THEN 0 ELSE 1 END
 ";
 $result = $conn->query($query);
 $rooms = [];

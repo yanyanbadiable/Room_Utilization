@@ -1,5 +1,7 @@
-<?php include 'db_connect.php';
-$user_program_id = $_SESSION['login_program_id'];
+<?php
+include 'db_connect.php';
+$user_department_id = $_SESSION['login_department_id'];
+// var_dump($user_department_id);
 ?>
 <style>
     .card {
@@ -10,7 +12,6 @@ $user_program_id = $_SESSION['login_program_id'];
     .card:hover {
         transform: translateY(-10px);
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        /* background-color: #f8f9fa; */
     }
 
     .card-link {
@@ -31,15 +32,14 @@ $user_program_id = $_SESSION['login_program_id'];
             <div class="row">
                 <?php
                 $cards = [
-                    ['icon' => 'fas fa-th-list', 'title' => 'Course List', 'link' => 'index.php?page=courses', 'query' => 'SELECT COUNT(id) as total FROM courses WHERE program_id = ?'],
-                    ['icon' => 'fas fa-door-open', 'title' => 'Room List', 'link' => 'index.php?page=room', 'query' => 'SELECT COUNT(id) as total FROM rooms WHERE program_id = ?'],
-                    ['icon' => 'fas fa-layer-group', 'title' => 'Section List', 'link' => 'index.php?page=section', 'query' => 'SELECT COUNT(id) as total FROM sections WHERE program_id = ?'],
-                    ['icon' => 'fas fa-user-tie', 'title' => 'Faculty List', 'link' => 'index.php?page=faculty', 'query' => 'SELECT COUNT(id) as total FROM faculty WHERE program_id = ?']
+                    ['icon' => 'fas fa-th-list', 'title' => 'Course List', 'link' => 'index.php?page=courses', 'query' => 'SELECT COUNT(c.id) as total FROM courses c JOIN program p ON c.program_id = p.id WHERE p.department_id = ?'],
+                    ['icon' => 'fas fa-door-open', 'title' => 'Room List', 'link' => 'index.php?page=room', 'query' => 'SELECT COUNT(r.id) as total FROM rooms r  WHERE r.department_id = ?'],
+                    ['icon' => 'fas fa-layer-group', 'title' => 'Section List', 'link' => 'index.php?page=section', 'query' => 'SELECT COUNT(s.id) as total FROM sections s JOIN program p ON s.program_id = p.id WHERE p.department_id = ?'],
+                    ['icon' => 'fas fa-user-tie', 'title' => 'Faculty List', 'link' => 'index.php?page=faculty', 'query' => 'SELECT COUNT(f.id) as total FROM faculty f JOIN program p ON f.program_id = p.id WHERE p.department_id = ?']
                 ];
-
                 foreach ($cards as $card) {
                     $stmt = $conn->prepare($card['query']);
-                    $stmt->bind_param("i", $user_program_id);
+                    $stmt->bind_param("i", $user_department_id);
                     $stmt->execute();
                     $result = $stmt->get_result();
                     $total = $result->fetch_assoc()['total'];

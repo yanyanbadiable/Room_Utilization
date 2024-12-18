@@ -2,9 +2,9 @@
 include '../admin/db_connect.php';
 
 // Get user program info
-$user_program_id = $_SESSION['login_program_id'];
-$program = $conn->query("SELECT id, program_code FROM program WHERE id = $user_program_id");
-$row = $program->fetch_assoc();
+$user_department_id = $_SESSION['login_department_id'];
+$department = $conn->query("SELECT id, department_code FROM department WHERE id = $user_department_id");
+$row = $department->fetch_assoc();
 
 $page = isset($_GET['page']) ? $_GET['page'] : 'home';
 
@@ -211,7 +211,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
                         <!-- Nav Item - User Information -->
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-3 d-none d-lg-inline text-gray-600 small"><?php echo $row['program_code'] ?> - ADMIN</span>
+                                <span class="mr-3 d-none d-lg-inline text-gray-600 small"><?php echo $row['department_code'] ?> - ADMIN</span>
                                 <img class="img-profile rounded-circle" src="../assets/img/undraw_profile.svg">
                             </a>
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">

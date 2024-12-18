@@ -58,7 +58,6 @@ if (isset($_GET['id'])) {
                                 <tr>
                                     <th class="text-center">#</th>
                                     <th class="text-center">Academic <br> Rank</th>
-                                    <th class="text-center">Regular <br> Hours <br> Assigned</th>
                                     <th class="text-center">Administrative</th>
                                     <th class="text-center">Research</th>
                                     <th class="text-center">Extension<br> Services</th>
@@ -80,12 +79,11 @@ if (isset($_GET['id'])) {
                                     <tr class="text-center">
                                         <td><?php echo $i++ ?></td>
                                         <td><?php echo $row['academic_rank'] ?></td>
-                                        <td><?php echo $row['hours'] ?></td>
                                         <td><?php echo $row['administrative'] ?></td>
                                         <td><?php echo $row['research'] ?></td>
                                         <td><?php echo $row['ext_service'] ?></td>
                                         <td><?php echo $row['consultation'] ?></td>
-                                        <td><?php echo $row['instructional'] ?></td>
+                                        <td><?php echo $row['hours'] ?></td>
                                         <td><?php echo $row['others'] ?></td>
                                         <td>
                                             <div class="btn-group">

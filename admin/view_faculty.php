@@ -6,11 +6,11 @@ if (isset($_GET['id'])) {
 
 	$facultyQuery = "
     SELECT faculty.*, 
-           program.department, 
+           program.program_name, 
            unit_loads.academic_rank,
 		   designation.designation 
     FROM faculty 
-    INNER JOIN program ON faculty.program_id = program.id 
+    LEFT JOIN program ON faculty.program_id = program.id 
     INNER JOIN unit_loads ON faculty.academic_rank = unit_loads.id 
 	LEFT JOIN designation ON faculty.designation = designation.id 
     WHERE faculty.id = ?";
@@ -25,18 +25,17 @@ if (isset($_GET['id'])) {
 		echo "Error preparing statement: (" . $conn->errno . ") " . $conn->error;
 	}
 
-	$program_id = $_SESSION['login_program_id'];
-	$programsQuery = "SELECT id, department FROM program WHERE id = ?";
+	$program_id = $_SESSION['login_department_id'];
+	$programsQuery = "SELECT id, program_name FROM program WHERE department_id = ?";
 	$stmt = $conn->prepare($programsQuery);
+
 	if ($stmt) {
 		$stmt->bind_param("i", $program_id);
 		$stmt->execute();
 		$result = $stmt->get_result();
 
-		$program = $result->fetch_assoc();
-
 		$programs = [];
-		if ($program) {
+		while ($program = $result->fetch_assoc()) {
 			$programs[] = $program;
 		}
 	}
@@ -166,17 +165,6 @@ if (isset($_GET['id'])) {
 					<div class="card-body">
 						<div class="form-group row">
 							<div class="col-md-6">
-								<label><b>Department</b></label>
-								<input type="text" class='form-control' name="program" value="<?php echo $program['department']; ?>" disabled>
-							</div>
-							<div class="col-md-6">
-								<label><b>Post Graduate Studies</b></label>
-								<input class="form-control" name="post_graduate_studies" value="<?php echo $faculty['post_graduate_studies']; ?>" placeholder='Postgraduate Studies' type="text">
-								<!-- <div class="invalid-feedback">Municipality/City is required.</div> -->
-							</div>
-						</div>
-						<div class="form-group row">
-							<div class="col-md-6">
 								<label><b>Employee Academic Rank</b></label>
 								<select name="academic_rank" class="form-control select2" required>
 									<option value="" disabled selected hidden>Select Employee Academic Rank</option>
@@ -190,7 +178,7 @@ if (isset($_GET['id'])) {
 							</div>
 							<div class="col-md-6">
 								<label><b>Employee Designation</b></label>
-								<select name="designation" class="form-control select2" required>
+								<select name="designation" id="designation" class="form-control select2">
 									<option value="" disabled selected hidden>Select Employee Designation</option>
 									<?php foreach ($designations as $designation) : ?>
 										<option value="<?php echo $designation['id']; ?>" <?php if ($faculty['designation'] == $designation['designation']) echo "selected='selected'"; ?>>
@@ -198,7 +186,26 @@ if (isset($_GET['id'])) {
 										</option>
 									<?php endforeach; ?>
 								</select>
-								<div class="invalid-feedback">Employee Designation is required.</div>
+								<!-- <div class="invalid-feedback">Employee Designation is required.</div> -->
+							</div>
+						</div>
+						<div class="form-group row">
+							<div class="col-md-6">
+								<label><b>Program</b></label>
+								<select class="form-control select2" name="program_id" id="program_id" required>
+									<option value="" disabled selected hidden>Select Program</option>
+									<?php foreach ($programs as $program) : ?>
+										<option value="<?php echo $program['id']; ?>" <?php if ($faculty['program_name'] == $program['program_name']) echo "selected='selected'"; ?>>
+											<?php echo $program['program_name']; ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<div class="invalid-feedback">Program is required.</div>
+							</div>
+							<div class="col-md-6">
+								<label><b>Post Graduate Studies</b></label>
+								<input class="form-control" name="post_graduate_studies" value="<?php echo $faculty['post_graduate_studies']; ?>" placeholder='Postgraduate Studies' type="text">
+								<!-- <div class="invalid-feedback">Municipality/City is required.</div> -->
 							</div>
 						</div>
 					</div>
@@ -216,6 +223,16 @@ if (isset($_GET['id'])) {
 
 <script>
 	$(document).ready(function() {
+		$('#designation').change(function() {
+			var selectedDesignation = $(this).find('option:selected').text().trim();
+			console.log(selectedDesignation);
+
+			if (selectedDesignation === "Head") {
+				$('#program_id').prop('disabled', true).val('');
+			} else {
+				$('#program_id').prop('disabled', false);
+			}
+		});
 
 		$('#instructorForm').submit(function(event) {
 			event.preventDefault();
@@ -241,7 +258,7 @@ if (isset($_GET['id'])) {
 		array['middlename'] = $("input[name='middlename']").val();
 		array['lastname'] = $("input[name='lastname']").val();
 		array['extensionname'] = $("input[name='extensionname']").val();
-		array['program_id'] = $("select[name='program']").val();
+		array['program_id'] = $("select[name='program_id']").val();
 		array['gender'] = $("select[name='gender']").val();
 		array['academic_rank'] = $("select[name='academic_rank']").val();
 		array['designation'] = $("select[name='designation']").val();

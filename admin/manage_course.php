@@ -1,6 +1,6 @@
 <?php
 include('db_connect.php');
-$program_id = $_SESSION['login_program_id'];
+$department_id = $_SESSION['login_department_id'];
 ?>
 
 <style>
@@ -29,18 +29,30 @@ $program_id = $_SESSION['login_program_id'];
                     </div>
                     <div class="card-body">
                         <div class="row mb-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="cmo_no">CMO No.</label>
                                 <input type="text" class="form-control" id="cmo_no" name="cmo_no" placeholder="Enter CMO No.">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="series">Series</label>
                                 <input type="text" class="form-control" id="series" name="series" placeholder="Enter Series">
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="year">Effective A.Y</label>
                                 <input type="text" class="form-control" id="year" name="year" placeholder="Enter Effective Academic Year">
                             </div>
+                            <div class="col-md-3">
+                                <label for="program_id">Program</label>
+                                <select class="form-control" id="program_id" name="program_id" required>
+                                    <option value="" disabled selected>Select Program</option>
+                                    <?php
+                                    $query = $conn->query("SELECT id, program_code FROM program WHERE department_id = '$department_id' ORDER BY program_code ASC");
+                                    while ($row = $query->fetch_assoc()): ?>
+                                        <option value="<?php echo $row['id']; ?>"><?php echo $row['program_code']; ?></option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -66,7 +78,6 @@ $program_id = $_SESSION['login_program_id'];
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <input type="hidden" name="program_id[]" value="<?php echo $program_id; ?>">
                                         <input type="hidden" class="form-control" name="hours[]" id="hours1">
                                         <td class="align-middle text-center">
                                             <button type="button" class="add btn btn-primary btn-block btn-sm"><i class="fa fa-plus-circle"></i></button>
@@ -141,10 +152,8 @@ $program_id = $_SESSION['login_program_id'];
 
         $('.add').on('click', function(e) {
             no++;
-            var program_id = <?php echo $_SESSION['login_program_id']; ?>;
 
             $('#dynamic_field').append(`<tr id='row${no}'>
-                <input type="hidden" class="form-control" name="program_id[]" value="${program_id}">
                 <input type="hidden" class="form-control" name="hours[]" id="hours${no}">
                 <td class="align-middle text-center"><button class='btn btn-sm btn-danger remove btn-block' id='${no}'><i class='fa fa-times'></i></button></td>
                 <td><select class='form-control' name='period[]' id='period${no}'><option value='1st Semester'>1st Semester</option><option value='2nd Semester'>2nd Semester</option><option value='Mid Year'>Mid Year</option></select></td>

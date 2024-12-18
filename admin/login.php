@@ -73,6 +73,13 @@ ob_end_flush();
 		border-radius: 5px;
 		background-color: #d30707;
 		box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+		cursor: pointer;
+	}
+
+	button:disabled {
+		box-shadow: none;
+		cursor: not-allowed;
+		opacity: 0.7;
 	}
 
 	.password-container {

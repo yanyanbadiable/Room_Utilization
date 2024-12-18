@@ -1,8 +1,8 @@
 <?php
 include '../db_connect.php';
 // var_dump($_GET);
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['program_code']) && isset($_GET['level']) && isset($_GET['section_id'])) {
-    $program_code = $_GET['program_code'];
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['program_id']) && isset($_GET['level']) && isset($_GET['section_id'])) {
+    $program_id = $_GET['program_id'];
     $level = $_GET['level'];
     $section_id = $_GET['section_id'];
 

@@ -3,7 +3,7 @@ session_start();
 include('../db_connect.php');
 
 $rooms = [];
-$user_program_id = $_SESSION['login_program_id'];
+$user_department_id = $_SESSION['login_department_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['time_start']) && isset($_GET['time_end']) && isset($_GET['course_offering_info_id']) && isset($_GET['section_id'])) {
     $day = $_GET['day'];
@@ -14,35 +14,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
     $total_hours = $_GET['total_hours'];
 
     $unscheduled_query = "
-        SELECT c.program_id, 
-           COUNT(coi.id) AS total_courses, 
-           SUM(CASE 
-                   WHEN s.id IS NULL THEN 1 
-                   WHEN s.faculty_id IS NULL THEN 1 
-                   ELSE 0 
-               END) AS unscheduled_courses
-        FROM course_offering_info coi
-        JOIN courses c ON coi.courses_id = c.id
-        LEFT JOIN schedules s ON coi.id = s.course_offering_info_id
-        WHERE c.program_id != $user_program_id
-        GROUP BY c.program_id
+    SELECT p.department_id, 
+    COUNT(coi.id) AS total_courses, 
+    SUM(CASE 
+        WHEN s.id IS NULL THEN 1 
+        WHEN s.faculty_id IS NULL THEN 1 
+        ELSE 0 
+        END) AS unscheduled_courses
+    FROM course_offering_info coi
+    JOIN courses c ON coi.courses_id = c.id
+    JOIN program p ON c.program_id = p.id
+    LEFT JOIN schedules s ON coi.id = s.course_offering_info_id
+    WHERE p.department_id != $user_department_id
+    GROUP BY p.department_id
     ";
 
     $unscheduled_result = mysqli_query($conn, $unscheduled_query);
     if ($unscheduled_result) {
         $programs_status = [];
         while ($row = mysqli_fetch_assoc($unscheduled_result)) {
-            $programs_status[$row['program_id']] = $row['unscheduled_courses'];
+            $programs_status[$row['department_id']] = $row['unscheduled_courses'];
         }
 
         $rooms_condition = "";
-        foreach ($programs_status as $program_id => $unscheduled_courses) {
+        foreach ($programs_status as $department_id => $unscheduled_courses) {
             if ($unscheduled_courses == 0) {
-                $rooms_condition .= "rooms.program_id = $program_id OR ";
+                $rooms_condition .= "rooms.department_id = $department_id OR ";
             }
         }
 
-        $rooms_condition .= "rooms.program_id = $user_program_id";
+        $rooms_condition .= "rooms.department_id = $user_department_id";
 
         $course_query = "SELECT c.is_comlab FROM courses c
                          JOIN course_offering_info coi ON c.id = coi.courses_id
@@ -87,12 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['day']) && isset($_GET['
             $query = "SELECT rooms.*, building.building FROM rooms
                       JOIN building ON rooms.building_id = building.id
                       WHERE rooms.is_available = 1 AND rooms.id NOT IN ($room_conditions) $lab_condition AND ($rooms_condition)
-                      ORDER BY program_id, room";
+                      ORDER BY CASE WHEN rooms.department_id = $user_department_id THEN 0 ELSE 1 END,
+                      rooms.room";
         } else {
             $query = "SELECT rooms.*, building.building FROM rooms
                       JOIN building ON rooms.building_id = building.id
                       WHERE rooms.is_available = 1 $lab_condition AND ($rooms_condition)
-                      ORDER BY program_id, room";
+                       ORDER BY CASE WHEN rooms.department_id = $user_department_id THEN 0 ELSE 1 END,
+                      rooms.room";
         }
 
         $rooms_result = mysqli_query($conn, $query);

@@ -1,20 +1,23 @@
 <?php
 include('db_connect.php');
-$program_id = $_SESSION['login_program_id'];
+$department_id = $_SESSION['login_department_id'];
 
 $query = "
-    SELECT * 
-    FROM faculty 
+    SELECT faculty.* 
+    FROM faculty
+    JOIN program ON faculty.program_id = program.id
     ORDER BY 
-        CASE WHEN program_id = '$program_id' THEN 0 ELSE 1 END, lname
+        CASE WHEN program.department_id = ? THEN 0 ELSE 1 END,
+        faculty.lname
 ";
-$result = $conn->query($query);
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $department_id);
+$stmt->execute();
+$result = $stmt->get_result();
 
 $instructors = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $instructors[] = $row;
-    }
+while ($row = $result->fetch_assoc()) {
+    $instructors[] = $row;
 }
 ?>
 

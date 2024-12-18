@@ -45,18 +45,17 @@ if (isset($_GET['id'])) {
 			<?php endif; ?>
 		</div>
 		<div class="form-group">
-			<label class="control-label">Program</label>
-			<select class="form-control" name="program_id" id="program_name">
+			<label class="control-label">Department</label>
+			<select class="form-control" name="department_id" id="department_name">
 				<?php
-				$program_name = $conn->query("SELECT id, program_name FROM program");
-				while ($row = $program_name->fetch_assoc()) :
-					$selected = isset($meta['program_id']) && $meta['program_id'] == $row['id'] ? 'selected' : '';
+				$department_name = $conn->query("SELECT id, department_name FROM department");
+				while ($row = $department_name->fetch_assoc()) :
+					$selected = isset($meta['department_id']) && $meta['department_id'] == $row['id'] ? 'selected' : '';
 				?>
-					<option value="<?php echo $row['id'] ?>" <?php echo $selected ?>><?php echo $row['program_name'] ?></option>
+					<option value="<?php echo $row['id'] ?>" <?php echo $selected ?>><?php echo $row['department_name'] ?></option>
 				<?php endwhile; ?>
 			</select>
 		</div>
-
 	</form>
 </div>
 <script>
@@ -100,7 +99,7 @@ if (isset($_GET['id'])) {
 						location.reload();
 					}, 1500);
 				} else if (resp === 3) {
-					$('#msg').html('<div class="alert alert-danger">A user account for this program already exists.</div>');
+					$('#msg').html('<div class="alert alert-danger">A user account for this department already exists.</div>');
 					end_load();
 				} else {
 					$('#msg').html('<div class="alert alert-danger">Invalid Credentials</div>');

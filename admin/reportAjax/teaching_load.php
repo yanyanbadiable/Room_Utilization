@@ -3,24 +3,16 @@ include 'db_connect.php';
 
 if (isset($_GET['faculty_id'])) {
     $faculty_id = $_GET['faculty_id'];
-    $program_id = $_SESSION['login_program_id'];
+    $department_id = $_SESSION['login_department_id'];
 
-    // Fetch program information
-    $program_query = "SELECT * FROM program WHERE id = ?";
-    $program_stmt = $conn->prepare($program_query);
-    $program_stmt->bind_param("i", $program_id);
-    $program_stmt->execute();
-    $program_result = $program_stmt->get_result();
-    $program = $program_result->fetch_assoc();
-
-    $faculty_query = "SELECT faculty.*, designation.*, unit_loads.* FROM faculty INNER JOIN unit_loads ON faculty.academic_rank = unit_loads.id LEFT JOIN designation ON faculty.designation = designation.id WHERE faculty.id = ?";
+    $faculty_query = "SELECT faculty.*, department.department_name, designation.designation, unit_loads.academic_rank FROM faculty INNER JOIN unit_loads ON faculty.academic_rank = unit_loads.id LEFT JOIN designation ON faculty.designation = designation.id LEFT JOIN department ON faculty.department_id = department.id WHERE faculty.id = ? AND faculty.department_id = ?";
     $faculty_stmt = $conn->prepare($faculty_query);
-    $faculty_stmt->bind_param("i", $faculty_id);
+    $faculty_stmt->bind_param("ii", $faculty_id, $department_id);
     $faculty_stmt->execute();
     $faculty_result = $faculty_stmt->get_result();
     $faculty = $faculty_result->fetch_assoc();
 
-    $head_query = "SELECT * FROM faculty WHERE designation = 1";
+    $head_query = "SELECT * FROM faculty WHERE designation = 1 and department_id = $department_id";
     $head_result = mysqli_query($conn, $head_query);
     $head = $head_result->fetch_assoc();
 
@@ -626,11 +618,7 @@ if (isset($_GET['faculty_id'])) {
                             </div>
                             <div class="mb-2">
                                 <?php
-                                if (!empty($faculty['designation'])) {
-                                    echo 'Instructional Functions: <strong class="pl-1">' . $designation['instructional'] . '</strong> Hours';
-                                } else {
-                                    echo 'Instructional Functions: <strong class="pl-1">' . $academic_rank['instructional'] . '</strong> Hours';
-                                }
+                                echo 'Instructional Functions: <strong class="pl-1">' . $total_lec_regular + $total_lab_regular . '</strong> Hours';
                                 ?>
                             </div>
                             <div class="mb-2">
@@ -671,7 +659,7 @@ if (isset($_GET['faculty_id'])) {
                         <strong class="underline-text"><?php echo strtoupper($head['fname']) . " " .
                                                             (!empty($head['mname']) ? strtoupper(substr($head['mname'], 0, 1)) . ". " : "") .
                                                             strtoupper($head['lname']) . ", " . strtoupper($head['post_graduate_studies']); ?></strong><br>
-                        <small>Head, <?php echo $program['department']; ?></small>
+                        <small>Head, <?php echo $faculty['department_name']; ?></small>
                     </div>
                     <div class="col-md-3 text-center">
                         <strong><input type="text" name="cd_signature" id="cd_signature" value="" size="20" class="underlined"></strong><br>
@@ -704,7 +692,7 @@ if (isset($_GET['faculty_id'])) {
             return;
         }
 
-        var program_dept = "<?php echo $program['department']; ?>";
+        var program_dept = "<?php echo $faculty['department_name']; ?>";
 
         var url = 'reportAjax/generate_teaching_load.php?faculty_id=<?php echo $faculty_id; ?>' +
             '&program_dept=' + encodeURIComponent(program_dept) +

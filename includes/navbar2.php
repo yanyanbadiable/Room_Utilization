@@ -86,10 +86,12 @@
                 </a>
                 <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
                     <div class="bg-danger py-2 collapse-inner rounded ">
-                        <a class="_hover collapse-item text-white" href="index.php?page=department">
+                        <a class="_hover collapse-item text-white" href="index.php?page=program">
                             <i class="fa fa-edit"></i> <span>Manage Program</span>
                         </a>
-
+                        <a class="_hover collapse-item text-white" href="index.php?page=department">
+                            <i class="fa fa-edit"></i> <span>Manage Department</span>
+                        </a>
                     </div>
                 </div>
             </li>

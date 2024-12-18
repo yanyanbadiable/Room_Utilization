@@ -2,7 +2,7 @@
 
 <?php
 if (isset($_GET['id'])) {
-    $qry = $conn->query("SELECT * FROM department WHERE id=" . $_GET['id'])->fetch_array();
+    $qry = $conn->query("SELECT * FROM program WHERE id=" . $_GET['id'])->fetch_array();
     foreach ($qry as $k => $v) {
         $$k = $v;
     }
@@ -12,31 +12,43 @@ if (isset($_GET['id'])) {
     <div class="row">
         <!-- Section Header -->
         <section class="content-header col-md-12 d-flex align-items-center justify-content-between mb-3">
-            <h3><i class="fas fa-cogs"></i> Manage Departments</h3>
+            <h3><i class="fas fa-cogs"></i> Manage Programs</h3>
             <ol class="breadcrumb bg-transparent p-0 m-0">
                 <li class="breadcrumb-item"><a href="index.php?page=home"><i class="fa fa-home"></i> Home</a></li>
-                <li class="breadcrumb-item"><a href="#"> Department Management</a></li>
-                <li class="breadcrumb-item active">Manage Departments</li>
+                <li class="breadcrumb-item"><a href="#"> Program Management</a></li>
+                <li class="breadcrumb-item active">Manage Programs</li>
             </ol>
         </section>
         <!-- End Section Header -->
 
-        <!-- Department Form Panel -->
+        <!-- Program Form Panel -->
         <section class="col-md-4">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Department Form</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Program Form</h6>
                 </div>
                 <div class="card-body">
-                    <form id="manage-department">
+                    <form id="manage-program">
                         <input type="hidden" name="id">
                         <div class="form-group">
-                            <label class="control-label">Department Code</label>
-                            <input type="text" class="form-control" name="department_code">
+                            <label class="control-label">Program Code</label>
+                            <input type="text" class="form-control" name="program_code">
                         </div>
                         <div class="form-group">
-                            <label class="control-label">Department Name</label>
-                            <input type="text" class="form-control" name="department_name">
+                            <label class="control-label">Program Name</label>
+                            <input type="text" class="form-control" name="program_name">
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Department</label>
+                            <select class="form-control" name="department_id" id="department_name">
+                                <?php
+                                $department_name = $conn->query("SELECT id, department_name FROM department");
+                                while ($row = $department_name->fetch_assoc()) :
+                                    $selected = isset($meta['department_id']) && $meta['department_id'] == $row['id'] ? 'selected' : '';
+                                ?>
+                                    <option value="<?php echo $row['id'] ?>" <?php echo $selected ?>><?php echo $row['department_name'] ?></option>
+                                <?php endwhile; ?>
+                            </select>
                         </div>
 
                         <div class="card-footer">
@@ -51,7 +63,7 @@ if (isset($_GET['id'])) {
                 </div>
             </div>
         </section>
-        <!-- End Department Form Panel -->
+        <!-- End Program Form Panel -->
 
         <style>
             /* Custom CSS for better visibility */
@@ -79,7 +91,7 @@ if (isset($_GET['id'])) {
         <section class="col-md-8">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Department List</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Program List</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -87,23 +99,26 @@ if (isset($_GET['id'])) {
                             <thead>
                                 <tr>
                                     <th class="text-center">#</th>
-                                    <th class="text-center">Department Code</th>
-                                    <th class="text-center">Department Name</th>
+                                    <th class="text-center">Program Code</th>
+                                    <th class="text-center">Program Name</th>
+                                    <th class="text-center">Department</th>
                                     <th class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
                                 $i = 1;
-                                $department = $conn->query("SELECT department.* FROM department");
-                                if (!$department) {
+                                $program = $conn->query("SELECT program.* , department.department_name
+                                FROM program INNER JOIN department ON program.department_id = department.id");
+                                if (!$program) {
                                     die('Invalid query: ' . $conn->error);
                                 }
-                                while ($row = $department->fetch_assoc()) :
+                                while ($row = $program->fetch_assoc()) :
                                 ?>
                                     <tr>
                                         <td class="text-center"><?php echo $i++ ?></td>
-                                        <td class=""><?php echo $row['department_code'] ?></td>
+                                        <td class=""><?php echo $row['program_code'] ?></td>
+                                        <td class=""><?php echo $row['program_name'] ?></td>
                                         <td class=""><?php echo $row['department_name'] ?></td>
                                         <td class="text-center">
                                             <div class="btn-group">
@@ -111,9 +126,9 @@ if (isset($_GET['id'])) {
                                                     Action
                                                 </button>
                                                 <div class="dropdown-menu">
-                                                    <a class="dropdown-item edit_department" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-department_code="<?php echo $row['department_code'] ?>" data-department_name="<?php echo $row['department_name'] ?>">Edit</a>
+                                                    <a class="dropdown-item edit_program" href="javascript:void(0)" data-id="<?php echo $row['id'] ?>" data-program_code="<?php echo $row['program_code'] ?>" data-program_name="<?php echo $row['program_name'] ?>" data-department="<?php echo $row['department_id'] ?>">Edit</a>
                                                     <div class="dropdown-divider"></div>
-                                                    <a class="dropdown-item delete_department" href="javascript:void(0)" data-id='<?php echo $row['id'] ?>'>Delete</a>
+                                                    <a class="dropdown-item delete_program" href="javascript:void(0)" data-id='<?php echo $row['id'] ?>'>Delete</a>
                                                 </div>
                                             </div>
                                         </td>
@@ -136,22 +151,23 @@ if (isset($_GET['id'])) {
 </style>
 <script>
     function _reset() {
-        $('#manage-department').get(0).reset()
-        $('#manage-department input,#manage-department textarea').val('')
+        $('#manage-program').get(0).reset()
+        $('#manage-program input,#manage-program textarea').val('')
     }
-    $('#manage-department').submit(function(e) {
+    $('#manage-program').submit(function(e) {
         e.preventDefault()
 
-        var departmentCode = $("input[name='department_code']").val();
-        var departmentName = $("input[name='department_name']").val();
+        var programCode = $("input[name='program_code']").val();
+        var programName = $("input[name='program_name']").val();
+        var department = $("select[name='department_id']").val();
 
-        if (!departmentCode || !departmentName) {
+        if (!programCode || !programName || !department) {
             alert_toast("Please fill in all fields!", 'warning');
-            return; 
+            return;
         }
         start_load()
         $.ajax({
-            url: '../admin/ajax.php?action=save_department',
+            url: '../admin/ajax.php?action=save_program',
             data: new FormData($(this)[0]),
             cache: false,
             contentType: false,
@@ -176,23 +192,24 @@ if (isset($_GET['id'])) {
             }
         })
     })
-    $('.edit_department').click(function() {
+    $('.edit_program').click(function() {
         start_load()
-        var cat = $('#manage-department')
+        var cat = $('#manage-program')
         cat.get(0).reset()
         cat.find("[name='id']").val($(this).attr('data-id'))
-        cat.find("[name='department_code']").val($(this).attr('data-department_code'))
-        cat.find("[name='department_name']").val($(this).attr('data-department_name'))
+        cat.find("[name='program_code']").val($(this).attr('data-program_code'))
+        cat.find("[name='program_name']").val($(this).attr('data-program_name'))
+        cat.find("[name='department_id']").val($(this).attr('data-department'));
         end_load()
     })
-    $('.delete_department').click(function() {
-        _conf("Are you sure to delete this department?", "delete_department", [$(this).attr('data-id')])
+    $('.delete_program').click(function() {
+        _conf("Are you sure to delete this program?", "delete_program", [$(this).attr('data-id')])
     })
 
-    function delete_department($id) {
+    function delete_program($id) {
         start_load()
         $.ajax({
-            url: '../admin/ajax.php?action=delete_department',
+            url: '../admin/ajax.php?action=delete_program',
             method: 'POST',
             data: {
                 id: $id

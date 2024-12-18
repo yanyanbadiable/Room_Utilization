@@ -8,7 +8,7 @@ if (isset($_GET['id'])) {
         $$k = $v;
     }
 }
-$user_program_id = $_SESSION['login_program_id'];
+$user_department_id = $_SESSION['login_department_id'];
 ?>
 
 <div class="container-fluid p-3">
@@ -35,14 +35,16 @@ $user_program_id = $_SESSION['login_program_id'];
                         <input type="hidden" name="id">
                         <div class="form-group">
                             <label class="control-label">Program Code</label>
-                            <select class="form-control" name="program_id" disabled>
+                            <select class="form-control" name="program_id">
+                                <option>Please Select here</option>
                                 <?php
-                                $program = $conn->query("SELECT id, program_code FROM program WHERE id = $user_program_id");
-                                $row = $program->fetch_assoc();
-                                ?>
-                                <option value="<?php echo $row['id'] ?>"><?php echo $row['program_code'] ?></option>
+                                $program = $conn->query("SELECT id, program_code FROM program WHERE department_id = $user_department_id");
+                                while ($row = $program->fetch_assoc()) { ?>
+                                    <option value="<?php echo $row['id']; ?>" <?php echo isset($program_id) && $program_id == $row['id'] ? 'selected' : ''; ?>>
+                                        <?php echo $row['program_code']; ?>
+                                    </option>
+                                <?php } ?>
                             </select>
-                            <input type="hidden" name="program_id" value="<?php echo $row['id'] ?>">
                         </div>
                         <div class="form-group">
                             <label for="" class="control-label">Year Level</label>
@@ -98,7 +100,7 @@ $user_program_id = $_SESSION['login_program_id'];
                             <tbody>
                                 <?php
                                 $i = 1;
-                                $section = $conn->query("SELECT sections.*, program.program_code FROM sections INNER JOIN program ON sections.program_id = program.id WHERE sections.program_id = $user_program_id ORDER BY level ASC, section_name ASC");
+                                $section = $conn->query("SELECT sections.*, program.program_code, program.department_id FROM sections INNER JOIN program ON sections.program_id = program.id WHERE program.department_id = $user_department_id ORDER BY level ASC, section_name ASC");
                                 if (!$section) {
                                     die('Invalid query: ' . $conn->error);
                                 }
@@ -137,14 +139,13 @@ $user_program_id = $_SESSION['login_program_id'];
     $('#manage-section').submit(function(e) {
         e.preventDefault();
 
-        // Validate input fields
         var level = $('[name="level"]').val();
         var section_name = $('[name="section_name"]').val();
         var no_of_students = $('[name="no_of_students"]').val();
 
         if (!level || level == "Please Select here" || !section_name || !no_of_students) {
             alert_toast("Please fill in all fields", 'warning');
-            return; 
+            return;
         }
 
         start_load();
@@ -159,14 +160,14 @@ $user_program_id = $_SESSION['login_program_id'];
             success: function(resp) {
                 if (resp == 1) {
                     alert_toast("Data successfully added", 'success');
-                    setTimeout(function(){
-						location.reload()
-					},1500)
+                    setTimeout(function() {
+                        location.reload()
+                    }, 1500)
                 } else if (resp == 2) {
                     alert_toast("Data successfully updated", 'success');
-                    setTimeout(function(){
-						location.reload()
-					},1500)
+                    setTimeout(function() {
+                        location.reload()
+                    }, 1500)
                 } else {
                     alert_toast("Section Already Exists", 'danger');
                 }
@@ -202,9 +203,9 @@ $user_program_id = $_SESSION['login_program_id'];
             success: function(resp) {
                 if (resp == 1) {
                     alert_toast("Data successfully deleted", 'danger');
-                    setTimeout(function(){
-						location.reload()
-					},1500)
+                    setTimeout(function() {
+                        location.reload()
+                    }, 1500)
                 }
             }
         });

@@ -29,12 +29,14 @@
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $program_id = $_SESSION['login_program_id'];
+                                        $department_id = $_SESSION['login_department_id'];
 
-                                        $stmt = $conn->prepare("SELECT * FROM program WHERE id = ?");
-                                        $stmt->bind_param("i", $program_id);
+                                        $query = "SELECT DISTINCT id, program_code, program_name FROM program WHERE department_id = ?";
+                                        $stmt = $conn->prepare($query);
+                                        $stmt->bind_param("i", $department_id);
                                         $stmt->execute();
                                         $result = $stmt->get_result();
+
                                         if (!$result) {
                                             die('Invalid query: ' . $conn->error);
                                         }

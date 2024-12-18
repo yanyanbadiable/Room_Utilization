@@ -7,9 +7,7 @@ if (isset($_GET['id'])) {
         $$k = $v;
     }
 }
-$user_program_id = $_SESSION['login_program_id'];
-$program = $conn->query("SELECT id, program_code FROM program WHERE id = $user_program_id");
-$row = $program->fetch_assoc();
+$user_department_id = $_SESSION['login_department_id'];
 ?>
 
 <div class="container-fluid p-3">
@@ -118,7 +116,7 @@ $row = $program->fetch_assoc();
                             <tbody>
                                 <?php
                                 $i = 1;
-                                $room = $conn->query("SELECT rooms.*, building.building FROM rooms INNER JOIN building ON rooms.building_id = building.id AND rooms.program_id = $user_program_id");
+                                $room = $conn->query("SELECT rooms.*, building.building FROM rooms INNER JOIN building ON rooms.building_id = building.id AND rooms.department_id = $user_department_id");
                                 if (!$room) {
                                     die('Invalid query: ' . $conn->error);
                                 }

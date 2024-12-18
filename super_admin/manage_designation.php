@@ -13,13 +13,9 @@ if (isset($_GET['id'])) {
         <input type="hidden" name="id" value="<?php echo isset($meta['id']) ? $meta['id'] : '' ?>">
 
         <div class="form-group row">
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <label class="control-label">Designation</label>
                 <input type="text" class="form-control" name="designation" value="<?php echo isset($meta['designation']) ? $meta['designation'] : '' ?>">
-            </div>
-            <div class="col-md-4">
-                <label class="control-label">Hours</label>
-                <input type="number" class="form-control" name="hours" value="<?php echo isset($meta['hours']) ? $meta['hours'] : '' ?>">
             </div>
         </div>
         <div class="form-group row">
@@ -45,7 +41,7 @@ if (isset($_GET['id'])) {
         <div class="form-group row">
             <div class="col-md-6">
                 <label class="control-label">Instructional Functions</label>
-                <input type="number" class="form-control" name="instructional" value="<?php echo isset($meta['instructional']) ? $meta['instructional'] : '' ?>">
+                <input type="number" class="form-control" name="hours" value="<?php echo isset($meta['hours']) ? $meta['hours'] : '' ?>">
             </div>
             <div class="col-md-6">
                 <label class="control-label">Others</label>
@@ -69,10 +65,9 @@ if (isset($_GET['id'])) {
         var research = $("input[name='research']").val();
         var ext_service = $("input[name='ext_service']").val();
         var consultation = $("input[name='consultation']").val();
-        var instructional = $("input[name='instructional']").val();
         var others = $("input[name='others']").val();
 
-        if (!designation || !hours || !administrative || !research || !ext_service || !consultation || !instructional || !others) {
+        if (!designation || !hours || !administrative || !research || !ext_service || !consultation || !others) {
             alert_toast("Please fill in all fields!", 'warning');
             return;
         }

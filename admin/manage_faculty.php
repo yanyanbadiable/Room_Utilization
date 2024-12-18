@@ -1,19 +1,15 @@
 <?php
 include 'db_connect.php';
+$user_department_id = $_SESSION['login_department_id'];
 
-$program_id = $_SESSION['login_program_id'];
+$query = "SELECT id, program_name FROM program WHERE department_id = $user_department_id";
+$result = mysqli_query($conn, $query);
 
-$query = "SELECT id, program_name, department FROM program WHERE id = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $program_id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$program = $result->fetch_assoc();
-
-$programs = [];
-if ($program) {
-    $programs[] = $program;
+if ($result) {
+    $programs = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $programs[] = $row;
+    }
 }
 
 $query = "SELECT DISTINCT id, designation FROM designation";
@@ -24,8 +20,6 @@ if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
         $designations[] = $row;
     }
-} else {
-    echo "Error: " . mysqli_error($conn);
 }
 
 $query = "SELECT DISTINCT id, academic_rank FROM unit_loads";
@@ -36,10 +30,7 @@ if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
         $academic_ranks[] = $row;
     }
-} else {
-    echo "Error: " . mysqli_error($conn);
 }
-
 ?>
 
 <div class="container-fluid p-3">
@@ -64,6 +55,7 @@ if ($result) {
                     <div class="card-body">
                         <div class="form-group row">
                             <div class="col-md-3">
+                                <input type="hidden" name="department_id" value="<?php echo $user_department_id ?>">
                                 <label><b>ID Number</b></label>
                                 <input class="form-control" name="id_number" placeholder="ID Number*" value="<?php echo isset($instructor_id) ? $instructor_id : ''; ?>" type="text" required>
                                 <div class="invalid-feedback">ID Number is required.</div>
@@ -148,34 +140,46 @@ if ($result) {
                     <div class="card-body">
                         <div class="form-group row">
                             <div class="col-md-6">
-                                <label><b>Department</b></label>
-                                <input type="text" class='form-control' name="program" value="<?php echo $program['department']; ?>" disabled>
-                                <input type="hidden" name="program_id" value="<?php echo $program['id']; ?>">
-                            </div>
-                            <div class="col-md-6">
-                                <label><b>Post Graduate Studies</b></label>
-                                <input class="form-control" name="post_graduate_studies" placeholder="Postgraduate Studies*" type="text" required>
-                            </div>
-                        </div>
-                        <div class="form-group row">
-                            <div class="col-md-6">
                                 <label><b>Academic Rank </b></label>
                                 <select name="academic_rank" class="form-control select2" required>
                                     <option value="" disabled selected hidden>Select Academic Rank</option>
                                     <?php foreach ($academic_ranks as $academic_rank) : ?>
-                                        <option value="<?php echo $academic_rank['id']; ?>"><?php echo $academic_rank['academic_rank']; ?></option>
+                                        <option value="<?php echo $academic_rank['id']; ?>">
+                                            <?php echo $academic_rank['academic_rank']; ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                                 <div class="invalid-feedback">Academic Rank is required.</div>
                             </div>
                             <div class="col-md-6">
                                 <label><b>Designation</b></label>
-                                <select name="designation" class="form-control select2">
+                                <select name="designation" id="designation" class="form-control select2">
                                     <option value="" disabled selected hidden>Select Designation</option>
                                     <?php foreach ($designations as $designation) : ?>
-                                        <option value="<?php echo $designation['id']; ?>"><?php echo $designation['designation']; ?></option>
+                                        <option value="<?php echo $designation['id']; ?>">
+                                            <?php echo $designation['designation']; ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-md-6">
+                                <label><b>Program</b></label>
+                                <select class="form-control select2" name="program_id" id="program_id" required>
+                                    <option value="" disabled selected hidden>Select Program</option>
+                                    <?php foreach ($programs as $program) : ?>
+                                        <option value="<?php echo $program['id']; ?>">
+                                            <?php echo $program['program_name']; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="invalid-feedback">Program is required.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label><b>Post Graduate Studies</b></label>
+                                <input class="form-control" name="post_graduate_studies" placeholder="Postgraduate Studies*" type="text" required>
+                                <div class="invalid-feedback">Postgraduate Studies is required.</div>
                             </div>
                         </div>
                     </div>
@@ -193,6 +197,16 @@ if ($result) {
 
 <script>
     $(document).ready(function() {
+        $('#designation').change(function() {
+            var selectedDesignation = $(this).find('option:selected').text().trim();
+            console.log(selectedDesignation);
+
+            if (selectedDesignation === "Head") {
+                $('#program_id').prop('disabled', true).val('');
+            } else {
+                $('#program_id').prop('disabled', false);
+            }
+        });
 
         $('#instructorForm').submit(function(event) {
             event.preventDefault();
@@ -214,7 +228,8 @@ if ($result) {
             middlename: $("input[name='middlename']").val(),
             lastname: $("input[name='lastname']").val(),
             extensionname: $("input[name='extensionname']").val(),
-            program_id: $("input[name='program_id']").val(),
+            program_id: $("select[name='program_id']").val(),
+            department_id: $("select[name='department_id']").val(),
             gender: $("select[name='gender']").val(),
             academic_rank: $("select[name='academic_rank']").val(),
             designation: $("select[name='designation']").val(),
@@ -252,6 +267,7 @@ if ($result) {
     function resetForm() {
         $('#instructorForm')[0].reset();
         $('#instructorForm').removeClass('was-validated');
+        $('select').val('').trigger('change');
         $('input[type="submit"]').prop('disabled', false);
     }
 </script>

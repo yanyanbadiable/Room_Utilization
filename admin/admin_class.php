@@ -64,13 +64,13 @@ class Action
 			$id = isset($_POST['id']) ? $_POST['id'] : null;
 			$username = $_POST['username'];
 			$password = !empty($_POST['password']) ? password_hash($_POST['password'], PASSWORD_DEFAULT) : null;
-			$program_id = $_POST['program_id'];
+			$department_id = $_POST['department_id'];
 			$type = 0;
 
 			if (!$id) {
-				$check_query = "SELECT * FROM users WHERE program_id = ?";
+				$check_query = "SELECT * FROM users WHERE department_id = ?";
 				$stmt = mysqli_prepare($this->db, $check_query);
-				mysqli_stmt_bind_param($stmt, "i", $program_id);
+				mysqli_stmt_bind_param($stmt, "i", $department_id);
 				mysqli_stmt_execute($stmt);
 				mysqli_stmt_store_result($stmt);
 
@@ -84,13 +84,13 @@ class Action
 
 			if ($id) {
 				if ($password) {
-					$query = "UPDATE users SET username = ?, password = ?, program_id = ?, type = ? WHERE id = ?";
+					$query = "UPDATE users SET username = ?, password = ?, department_id = ?, type = ? WHERE id = ?";
 					$stmt = mysqli_prepare($this->db, $query);
-					mysqli_stmt_bind_param($stmt, "sssii", $username, $password, $program_id, $type, $id);
+					mysqli_stmt_bind_param($stmt, "sssii", $username, $password, $department_id, $type, $id);
 				} else {
-					$query = "UPDATE users SET username = ?, program_id = ?, type = ? WHERE id = ?";
+					$query = "UPDATE users SET username = ?, department_id = ?, type = ? WHERE id = ?";
 					$stmt = mysqli_prepare($this->db, $query);
-					mysqli_stmt_bind_param($stmt, "siii", $username, $program_id, $type, $id);
+					mysqli_stmt_bind_param($stmt, "siii", $username, $department_id, $type, $id);
 				}
 
 				if (mysqli_stmt_execute($stmt)) {
@@ -99,9 +99,9 @@ class Action
 					echo 'Error: ' . mysqli_stmt_error($stmt);
 				}
 			} else {
-				$query = "INSERT INTO users (username, password, program_id, type) VALUES (?, ?, ?, ?)";
+				$query = "INSERT INTO users (username, password, department_id, type) VALUES (?, ?, ?, ?)";
 				$stmt = mysqli_prepare($this->db, $query);
-				mysqli_stmt_bind_param($stmt, "ssii", $username, $password, $program_id, $type);
+				mysqli_stmt_bind_param($stmt, "ssii", $username, $password, $department_id, $type);
 
 				if (mysqli_stmt_execute($stmt)) {
 					echo '1';
@@ -113,6 +113,7 @@ class Action
 			mysqli_stmt_close($stmt);
 		}
 	}
+
 
 	function delete_user()
 	{
@@ -293,7 +294,6 @@ class Action
 		$data .= "research = '$research', ";
 		$data .= "ext_service = '$ext_service', ";
 		$data .= "consultation = '$consultation', ";
-		$data .= "instructional = '$instructional', ";
 		$data .= "others = '$others' ";
 
 		if (empty($id)) {
@@ -323,7 +323,6 @@ class Action
 		$data .= "research = '$research', ";
 		$data .= "ext_service = '$ext_service', ";
 		$data .= "consultation = '$consultation', ";
-		$data .= "instructional = '$instructional', ";
 		$data .= "others = '$others' ";
 
 		if (empty($id)) {
@@ -332,11 +331,10 @@ class Action
 			$save = $this->db->query("UPDATE unit_loads set $data where id = $id");
 		}
 		if ($save) {
-			return 1; // Success
+			return 1;
 		} else {
-			// Log the error and return a failure response
 			error_log("Database Error: " . $this->db->error);
-			return 0; // Failure
+			return 0;
 		}
 	}
 
@@ -379,7 +377,7 @@ class Action
 		extract($_POST);
 		$data = " program_code = '$program_code' ";
 		$data .= ", program_name = '$program_name' ";
-		$data .= ", department = '$department' ";
+		$data .= ", department_id = '$department' ";
 
 		if (empty($id)) {
 			$save = $this->db->query("INSERT INTO program set $data");
@@ -393,6 +391,29 @@ class Action
 	{
 		extract($_POST);
 		$delete = $this->db->query("DELETE FROM program where id = " . $id);
+		if ($delete) {
+			return 1;
+		}
+	}
+
+	function save_department()
+	{
+		extract($_POST);
+		$data = " department_code = '$department_code' ";
+		$data .= ", department_name = '$department_name' ";
+
+		if (empty($id)) {
+			$save = $this->db->query("INSERT INTO department set $data");
+		} else {
+			$save = $this->db->query("UPDATE department set $data where id = $id");
+		}
+		if ($save)
+			return 1;
+	}
+	function delete_department()
+	{
+		extract($_POST);
+		$delete = $this->db->query("DELETE FROM department where id = " . $id);
 		if ($delete) {
 			return 1;
 		}
@@ -523,7 +544,7 @@ class Action
 				$data = "room = '$room', ";
 				$data .= "description = '$description', ";
 				$data .= "is_lab = '$is_lab', ";
-				$data .= "program_id = '$program_id', ";
+				$data .= "department_id = '$department_id', ";
 				$data .= "building_id = '$building_id' ";
 				$save = $this->db->query("INSERT INTO rooms SET $data");
 				return 1;
@@ -608,10 +629,11 @@ class Action
 			$mname = $_POST['middlename'];
 			$lname = $_POST['lastname'];
 			$extname = $_POST['extensionname'];
-			$program_id = $_POST['program_id'];
+			$program_id = empty($_POST['program_id']) ? null : $_POST['program_id'];
+			$department_id = $_POST['department_id'];
 			$gender = $_POST['gender'];
 			$academic_rank = $_POST['academic_rank'];
-			$designation = $_POST['designation'];
+			$designation = empty($_POST['designation']) ? null : $_POST['designation'];	
 			$post_graduate_studies = $_POST['post_graduate_studies'];
 			$street = $_POST['street'];
 			$barangay = $_POST['barangay'];
@@ -620,13 +642,13 @@ class Action
 			$contact = $_POST['contact'];
 			$email = $_POST['email'];
 
-			$query = "INSERT INTO faculty (id_number, fname, mname, lname, extname, program_id, gender, academic_rank, designation, post_graduate_studies, street, barangay, municipality, province, contact, email) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			$query = "INSERT INTO faculty (id_number, fname, mname, lname, extname, program_id, department_id, gender, academic_rank, designation, post_graduate_studies, street, barangay, municipality, province, contact, email) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			$stmt = mysqli_prepare($this->db, $query);
 
 			if ($stmt) {
-				mysqli_stmt_bind_param($stmt, "sssssisiisssssss", $id_number, $fname, $mname, $lname, $extname, $program_id, $gender, $academic_rank, $designation, $post_graduate_studies, $street, $barangay, $municipality, $province, $contact, $email);
+				mysqli_stmt_bind_param($stmt, "sssssiisiisssssss", $id_number, $fname, $mname, $lname, $extname, $program_id, $department_id, $gender, $academic_rank, $designation, $post_graduate_studies, $street, $barangay, $municipality, $province, $contact, $email);
 
 				if (mysqli_stmt_execute($stmt)) {
 					echo '1';
@@ -643,16 +665,17 @@ class Action
 	function edit_faculty()
 	{
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			// Retrieve POST data
+
 			$idno = $_POST['id'];
 			$id_number = $_POST['id_number'];
 			$fname = $_POST['firstname'];
 			$mname = $_POST['middlename'];
 			$lname = $_POST['lastname'];
 			$extname = $_POST['extensionname'];
+			$program_id = empty($_POST['program_id']) ? null : $_POST['program_id'];
 			$gender = $_POST['gender'];
 			$academic_rank = $_POST['academic_rank'];
-			$designation = $_POST['designation'];
+			$designation = empty($_POST['designation']) ? null : $_POST['designation'];
 			$post_graduate_studies = $_POST['post_graduate_studies'];
 			$street = $_POST['street'];
 			$barangay = $_POST['barangay'];
@@ -679,7 +702,8 @@ class Action
                     fname = ?, 
                     mname = ?, 
                     lname = ?, 
-                    extname = ?, 
+                    extname = ?,
+					program_id = ?, 
                     gender = ?, 
 					academic_rank = ?,
                     designation = ?,
@@ -698,12 +722,13 @@ class Action
 					return;
 				}
 				$stmt->bind_param(
-					"ssssssiisssssssi",
+					"sssssisiisssssssi",
 					$id_number,
 					$fname,
 					$mname,
 					$lname,
 					$extname,
+					$program_id,
 					$gender,
 					$academic_rank,
 					$designation,
@@ -981,7 +1006,7 @@ class Action
             FROM courses 
             INNER JOIN course_offering_info ON course_offering_info.courses_id = courses.id  
             INNER JOIN schedules ON schedules.course_offering_info_id = course_offering_info.id
-            WHERE schedules.faculty_id = ? AND schedules.is_active = 1
+            WHERE schedules.faculty_id = ? AND schedules.is_active = 1 AND is_overload = 0
         	";
 			$total_hours_stmt = $this->db->prepare($total_hours_query);
 			$total_hours_stmt->bind_param('i', $instructor);
@@ -1022,15 +1047,15 @@ class Action
 
 			if (empty($info['designation'])) {
 				$effective_load_hours = $total_load_hours;
-				// var_dump($load_hours_row['hours']);
+				var_dump($load_hours_row['hours']);
 			} else {
 				$effective_load_hours = $info['hours'];
 			}
-			// var_dump($total_hours);
-			// var_dump($course_hours);
-			// var_dump($total_load_hours);
-			// var_dump($check_course_hour);
-			// var_dump($info['hours']);
+			var_dump($total_hours);
+			var_dump($course_hours);
+			var_dump($total_load_hours);
+			var_dump($check_course_hour);
+			var_dump($info['hours']);
 
 			$schedules_query = "SELECT * FROM schedules WHERE course_offering_info_id = ? AND faculty_id IS NULL";
 			$schedules_stmt = $this->db->prepare($schedules_query);

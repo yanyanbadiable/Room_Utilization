@@ -59,14 +59,12 @@ if (isset($_GET['faculty_id'])) {
         $research_hours = $designation['research'];
         $extension_hours =  $designation['ext_service'];
         $consultation_hours =  $designation['consultation'];
-        $instructional_hours =  $designation['instructional'];
         $other_hours =  $designation['others'];
     } else {
         $administrative_hours =  $academic_rank['administrative'];
         $research_hours =  $academic_rank['research'];
         $extension_hours =  $academic_rank['ext_service'];
         $consultation_hours =  $academic_rank['consultation'];
-        $instructional_hours =  $academic_rank['instructional'];
         $other_hours =  $academic_rank['others'];
     }
 
@@ -637,7 +635,7 @@ if (isset($_GET['faculty_id'])) {
             $previous_course_offering_info_id = $schedule['course_offering_info_id'];
         }
 
-        $total_lec_lab = $total_lec_overload + $total_lab_overload;
+        $total_lec_lab_overload = $total_lec_overload + $total_lab_overload;
 
         $html .= '<tr style="background-color: #f2f2f2;">
         <td rowspan="2" ></td>
@@ -652,7 +650,7 @@ if (isset($_GET['faculty_id'])) {
         <td rowspan="2"></td>
     </tr>
     <tr style="background-color: #f2f2f2;">
-        <td colspan="2">' . $total_lec_lab . '</td>
+        <td colspan="2">' . $total_lec_lab_overload . '</td>
     </tr>';
     }
 
@@ -667,7 +665,7 @@ if (isset($_GET['faculty_id'])) {
             <p>Research: <strong>' . htmlspecialchars($research_hours) . '</strong> Hours</p>
             <p>Extension Services: <strong>' . htmlspecialchars($extension_hours) . '</strong> Hours</p>
             <p>Consultation: <strong>' . htmlspecialchars($consultation_hours) . '</strong> Hours</p>
-            <p>Instructional Functions: <strong>' . htmlspecialchars($instructional_hours) . '</strong> Hours</p>
+            <p>Instructional Functions: <strong>' . htmlspecialchars($total_lec_lab) . '</strong> Hours</p>
             <p>Others (Specify): <strong>' . htmlspecialchars($other_hours) . '</strong> Hours</p>
         </td>
         <td width="25%" style="border: none;"></td>
@@ -713,5 +711,5 @@ if (isset($_GET['faculty_id'])) {
     $filename = 'FW(' . $faculty_full_name . ').pdf';
     // Output PDF
     $mpdf->WriteHTML($html);
-    $mpdf->Output($filename, 'D');
+    $mpdf->Output($filename, 'I');
 }
