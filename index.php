@@ -12,8 +12,8 @@
 
   <?php
   if (!isset($_SESSION['login_id']))
-    header('location:login.php');
-  include '../includes/header.php';
+    header('location:admin/login.php');
+  include './includes/header.php';
   ?>
 
 </head>
