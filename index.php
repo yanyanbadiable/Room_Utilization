@@ -10,12 +10,7 @@
   <title>ADRUFWMS</title>
 
 
-  <?php
-  if (!isset($_SESSION['login_id']))
-    // header('location:admin/login.php');
-  include './includes/header.php';
-  ?>
-
+  
 </head>
 <style>
   /* *{
