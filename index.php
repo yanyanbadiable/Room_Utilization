@@ -108,7 +108,6 @@
 
 <body>
 
-  <?php include './includes/navbar1.php' ?>
 
 
   <!-- Generic Modal -->
