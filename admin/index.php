@@ -12,10 +12,10 @@
 
     <?php
     if (!isset($_SESSION['login_id'])) {
-        header('Location: /admin/login.php');
+        header('Location: login.php');
         exit;
     }
-    include './includes/header.php';
+    include '../includes/header.php';
     ?>
 
 
@@ -116,7 +116,7 @@
 
 <body>
 
-    <?php include './includes/navbar1.php' ?>
+    <?php include '../includes/navbar1.php' ?>
 
 
     <!-- Generic Modal -->
